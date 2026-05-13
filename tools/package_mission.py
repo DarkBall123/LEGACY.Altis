@@ -15,6 +15,7 @@ MISSION_FILES = [
     "initServer.sqf",
     "mission.sqm",
     "preview.jpg",
+    "Alfa",
     "functions",
     "scripts",
     "sound",
