@@ -1,2 +1,7 @@
 .hemttout/
 .hemtt/cache/
+.DS_Store
+docs/
+AGENTS.md
+AGENTS.MD
+agents.md
