@@ -13,5 +13,7 @@ DZ_RadioTracks =
     ["sound\ZOV_3.ogg", "V", 89]
 ];
 call DZ_fnc_initMissionSystem;
-
+call compile preprocessFileLineNumbers "Alfa\Civilians\Reputation\Reputation.sqf";
+call compile preprocessFileLineNumbers "Alfa\Civilians\Init.sqf";
+call compile preprocessFileLineNumbers "Alfa\Traffic\Init.sqf";
 
