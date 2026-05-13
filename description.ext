@@ -1,0 +1,170 @@
+onLoadName = "Операция: Красные Пески";
+briefingName = "Операция: Красные Пески";
+overviewPicture = "preview.jpg";
+loadScreen = "preview.jpg";
+respawn = 3;
+respawnDelay = 30;
+respawnOnStart = -1;
+respawnTemplates[] = { "MenuPosition" };
+respawnTemplatesEast[] = { "MenuPosition" };
+
+// disabledAI = 1 — empty playable slots stay empty when the mission
+// starts. Without this, Arma fills unfilled slots with AI bots.
+class Header
+{
+    gameType   = "Coop";
+    minPlayers = 1;
+    maxPlayers = 16;
+    disabledAI = 1;
+};
+
+class CfgFunctions
+{
+    class DZ
+    {
+        // ── Sector grid + loadouts ─────────────────────
+        class grid
+        {
+            file = "functions";
+
+            class applyOriginalLoadout {};
+            class buildSectorGrid {};
+            class applySavedLoadout {};
+            class canSpawnVehicleType {};
+            class clientInit { postInit = 1; };
+            class controlParams { preInit = 1; };
+            class flushSavedLoadouts {};
+            class getUrbanCells {};
+            class handleStateUpdate {};
+            class handleZonesPFH {};
+            class initRespawnMarkers {};
+            class initSectorVisualState {};
+            class initServer { preInit = 0; };
+            class requestSavedLoadout {};
+            class savePlayerLoadout {};
+            class isForbiddenSpawnPos {};
+            class isLandSector {};
+            class processTriggerZones {};
+            class prepareSpawnedUnit {};
+            class publishSectorState {};
+            class renderSectorState {};
+            class resolveSpawnGroupDef {};
+            class selectSpawnProfile {};
+            class setSectorVisualState {};
+            class spawnCheckpoint {};
+            class spawnCounterattackForce {};
+            class spawnForZone {};
+            class startAmbientSound {};
+            class storeOriginalLoadout {};
+            class manualSaveProgress {};
+        };
+
+        // ── Mission system ─────────────────────────────
+        class missions
+        {
+            file = "functions";
+
+            // Core dispatcher / lifecycle
+            class initMissionSystem    {};
+            class startMission         {};
+            class endMission           {};
+            class prepareMissionState  {};
+            class addMissionAssets     {};
+
+            // Definitions / selection
+            class getMissionDefinitions {};
+            class getMissionDefinition  {};
+            class selectRandomMission   {};
+
+            // Scheduler (auto-missions)
+            class startMissionScheduler {};
+            class missionSchedulerTick  {};
+            class startRandomMission    {};
+
+            // Individual missions
+            class startInterdictionMission   {};
+            class startAssassinationMission  {};
+            class collectAssassinationIntel  {};
+            class startDownedPilotMission    {};
+            class startDestroyCacheMission   {};
+            class startArtilleryHuntMission  {};
+            class startHumanitarianAidMission  {};
+
+            // UI helpers
+            class missionUi             {};
+            class showHint              {};
+            class sideMessage           {};
+            class requestMissionStatus  {};
+
+            // Object-init entry points (called from editor init fields)
+            class initHqLaptop          {};
+            class initTransportMenu     {};
+            class initEwJammer          {};
+            class initKshmVehicle       {};
+            class initRadio             {};
+
+            // Action handlers (server-side, from remoteExecCall)
+            class requestTransport      {};
+            class setKshmDeployed       {};
+            class radioControl          {};
+            class radioPlayLocal        {};
+
+            // Background workers
+            class updateEwJammers       {};
+
+            // Forest spawner
+            //class spawnForest           {};
+        };
+
+        // ── Cleanup / housekeeping ─────────────────────
+        // Abandoned-vehicle cleanup + Zeus state recovery hook.
+        // Both are called once from initServer.sqf.
+        class cleanup
+        {
+            file = "functions";
+
+            class initAbandonedVehicleCleanup {};
+            class initZeusCleanupHook         {};
+        };
+    };
+};
+
+class CfgSounds
+{
+    class DZ_SoundAmbience
+    {
+        name = "DZ_SoundAmbience";
+        sound[] = { "sound\ambience.ogg", 0.8, 1 };
+        titles[] = {};
+    };
+};
+
+#include "scripts\Discord.cpp"
+
+// ── Remote execution security ─────────────────────────────
+//
+// mode = 2: BLACKLIST mode. All functions/commands are allowed by
+// default, except those explicitly listed here. With empty lists,
+// everything is allowed — needed for ZHC, Simplex Support Services,
+// Chemical Warfare PLUS, Impact, and other mods that use remoteExec
+// to coordinate between server, headless clients, and players.
+//
+// SECURITY NOTE: this trusts all connected clients. For a private
+// community server with known players, this is the standard config.
+// For a public/anonymous server you would need to whitelist (mode = 1)
+// and explicitly list every function each mod uses — impractical for
+// a heavy modset like ours.
+class CfgRemoteExec
+{
+    class Functions
+    {
+        mode = 2;
+        jip = 0;
+    };
+
+    class Commands
+    {
+        mode = 2;
+        jip = 0;
+    };
+};
