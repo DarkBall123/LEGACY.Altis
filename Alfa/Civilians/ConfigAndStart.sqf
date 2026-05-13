@@ -15,6 +15,7 @@ _parameters = [
 	["MAX_GROUPS_COUNT", 15],
 	["MIN_SPAWN_DISTANCE", 50],
 	["MAX_SPAWN_DISTANCE", 500],
+	["MAX_CIVILIAN_LIFETIME", 600],
 	["BLACKLIST_MARKERS", []],
 	["HIDE_BLACKLIST_MARKERS", true],
 	["ON_UNIT_SPAWNED_CALLBACK", { params ["_unit"]; [_unit] execVM "Alfa\Civilians\setupCivilianReaction.sqf"; }],

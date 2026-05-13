@@ -188,7 +188,6 @@ ENGIMA_CIVILIANS_GetPlayerBuildings = {
 	_blackListMarkers = _this select 2;
 
 	_playerBuildings = [];
-	_allPlayerPositions = call ENGIMA_CIVILIANS_GetAllPlayersPositions;
 	
 	{
 		_buildings = nearestObjects [_x, ["house"], _maxSpawnDistance];
@@ -241,6 +240,7 @@ ENGIMA_CIVILIANS_StartCivilians = {
 	private _fnc_OnSpawnedCallback = [_this, "ON_UNIT_SPAWNED_CALLBACK", {}] call ENGIMA_CIVILIANS_GetParamValue;
 	private _fnc_OnRemoveCallback = [_this, "ON_UNIT_REMOVE_CALLBACK", { true }] call ENGIMA_CIVILIANS_GetParamValue;
 	private _debug = [_this, "DEBUG", false] call ENGIMA_CIVILIANS_GetParamValue;
+	private _maxCivilianLifetime = [_this, "MAX_CIVILIAN_LIFETIME", 600] call ENGIMA_CIVILIANS_GetParamValue;
 
 	if (_hideBlacklistMarkers) then {
 		{
@@ -288,7 +288,7 @@ ENGIMA_CIVILIANS_StartCivilians = {
 
 	sleep 0.5;
 	
-	_civilianItems = []; // Items of type [unit, behavior, destination pos, last pos, isMoving, nextActionTime, isRunning].
+	_civilianItems = []; // Items of type [unit, behavior, destination pos, last pos, isMoving, nextActionTime, isRunning, spawnTime].
 	
 	while { true } do {
         private _civilianCount = count _civilianItems;
@@ -302,57 +302,103 @@ ENGIMA_CIVILIANS_StartCivilians = {
 			_maxUnitsCount = _maxGroupsCount;
 		};
 		
-		if (_civilianCount < _maxUnitsCount) then {		
-			_unit = [_side, _minSpawnDistance, _unitClasses, _playerBuildings, _blackListMarkers, _fnc_OnSpawningCallback, _fnc_OnSpawnedCallback, _civilianCount, _maxUnitsCount] call _spawnUnit;
-			if (!isNull _unit) then {
-				_unit setSkill _minSkill + random (_maxSkill - _minSkill);
-				_civilianItems pushBack [_unit, "CITIZEN", [], getPos _unit, false, time, random 1 < ENGIMA_CIVILIANS_RUNNINGCHANCE];
+		if (_civilianCount < _maxUnitsCount && { (count _allPlayerPositions) > 0 }) then {
+			private _civilianCountsByPlayer = [];
+			{
+				_civilianCountsByPlayer pushBack 0;
+			} foreach _allPlayerPositions;
+
+			{
+				private _civilian = _x select 0;
+				private _nearestPlayerIndex = -1;
+				private _nearestPlayerDistance = 1e10;
+
+				{
+					private _distance = _x distance _civilian;
+					if (_distance < _nearestPlayerDistance) then {
+						_nearestPlayerDistance = _distance;
+						_nearestPlayerIndex = _forEachIndex;
+					};
+				} foreach _allPlayerPositions;
+
+				if (_nearestPlayerIndex >= 0) then {
+					_civilianCountsByPlayer set [_nearestPlayerIndex, (_civilianCountsByPlayer select _nearestPlayerIndex) + 1];
+				};
+			} foreach _civilianItems;
+
+			private _targetPerPlayer = _maxUnitsCount / (count _allPlayerPositions);
+			private _spawnPlayerIndex = -1;
+			private _spawnPlayerBuildings = [];
+			private _lowestQuotaFill = 1e10;
+
+			{
+				private _playerCivilianCount = _civilianCountsByPlayer select _forEachIndex;
+				private _quotaFill = _playerCivilianCount - _targetPerPlayer;
+
+				if (_playerCivilianCount < (ceil _targetPerPlayer) && { _quotaFill < _lowestQuotaFill }) then {
+					private _candidateBuildings = [[_x], _maxSpawnDistance, _blackListMarkers] call ENGIMA_CIVILIANS_GetPlayerBuildings;
+					if (count _candidateBuildings > 0) then {
+						_lowestQuotaFill = _quotaFill;
+						_spawnPlayerIndex = _forEachIndex;
+						_spawnPlayerBuildings = _candidateBuildings;
+					};
+				};
+			} foreach _allPlayerPositions;
+
+			if (_spawnPlayerIndex >= 0) then {
+				_unit = [_side, _minSpawnDistance, _unitClasses, _spawnPlayerBuildings, _blackListMarkers, _fnc_OnSpawningCallback, _fnc_OnSpawnedCallback, _civilianCount, _maxUnitsCount] call _spawnUnit;
+				if (!isNull _unit) then {
+					_unit setSkill _minSkill + random (_maxSkill - _minSkill);
+					_civilianItems pushBack [_unit, "CITIZEN", [], getPos _unit, false, time, random 1 < ENGIMA_CIVILIANS_RUNNINGCHANCE, time];
+				};
 			};
 			
 			sleep 0.1;
 		};
 		
 		private _civilianItemsToKeep = [];
-		{
-			private ["_civilian"];
-			private ["_tooCloseToRemove", "_removeUnit", "_group"];
-			
-			_civilian = _x select 0;
-			_tooCloseToRemove = false;
-			
-			{
-				if (_x distance _civilian < _maxSpawnDistance) then {
-					_tooCloseToRemove = true;
-				};
-			} foreach _allPlayerPositions;
-			
-			if (_tooCloseToRemove) then {
-				_civilianItemsToKeep pushBack _x;
-			}
-			else {
-				_removeUnit = [_civilian, count _civilianItems] call _fnc_OnRemoveCallback;
-				
-				if (isNil "_removeUnit") then {
-					_removeUnit = true;
-				};
-				
-				if (typeName _removeUnit != "BOOL") then {
-					_removeUnit = true;
-				};
-				
-				if (!_removeUnit) then {
-					_civilianItemsToKeep pushBack _x;
-				}
-				else {
-					_group = group _civilian;
-					[vehicleVarName _civilian] call ENGIMA_CIVILIANS_DeleteDebugMarkerAllClients;
-					deleteVehicle _civilian;
-					deleteGroup _group;
-				};
-			};
-			
-			sleep 0.01;
-		} foreach _civilianItems;
+        {
+            private ["_civilian"];
+            private ["_keepBecausePlayerNear", "_removeUnit", "_group", "_spawnTime", "_expired"];
+            
+            _civilian = _x select 0;
+            _keepBecausePlayerNear = false;
+            _spawnTime = if (count _x > 7) then { _x select 7 } else { time };
+            _expired = (time - _spawnTime) >= _maxCivilianLifetime;
+            
+            {
+                if (_x distance _civilian < _maxSpawnDistance) then {
+                    _keepBecausePlayerNear = true;
+                };
+            } foreach _allPlayerPositions;
+            
+            if (_keepBecausePlayerNear && { !_expired }) then {
+                _civilianItemsToKeep pushBack _x;
+            }
+            else {
+                _removeUnit = [_civilian, count _civilianItems] call _fnc_OnRemoveCallback;
+                
+                if (isNil "_removeUnit") then {
+                    _removeUnit = true;
+                };
+                
+                if (typeName _removeUnit != "BOOL") then {
+                    _removeUnit = true;
+                };
+                
+                if (!_removeUnit && { !_expired }) then {
+                    _civilianItemsToKeep pushBack _x;
+                }
+                else {
+                    _group = group _civilian;
+                    [vehicleVarName _civilian] call ENGIMA_CIVILIANS_DeleteDebugMarkerAllClients;
+                    deleteVehicle _civilian;
+                    deleteGroup _group;
+                };
+            };
+            
+            sleep 0.01;
+        } foreach _civilianItems;
 		
 		_civilianItems = _civilianItemsToKeep;
 		
@@ -415,3 +461,4 @@ ENGIMA_CIVILIANS_StartCivilians = {
 		sleep 3;
 	};
 };
+

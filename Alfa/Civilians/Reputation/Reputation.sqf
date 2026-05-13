@@ -18,7 +18,12 @@ if (isNil { missionNamespace getVariable "ALFA_repWaterItems" }) then {
         "ACE_Canteen",
         "ACE_Can_Franta",
         "ACE_Can_RedGull",
-        "ACE_Humanitarian_Ration",
+        "ACE_Humanitarian_Ration"
+    ]];
+};
+
+if (isNil { missionNamespace getVariable "ALFA_repRationItems" }) then {
+    missionNamespace setVariable ["ALFA_repRationItems", [
         "ACE_MRE_BeefStew"
     ]];
 };
@@ -124,6 +129,46 @@ ALFA_fnc_repTakeWaterItem = {
     _taken
 };
 
+ALFA_fnc_repTakeRationItem = {
+    params [["_player", objNull, [objNull]]];
+
+    if (isNull _player) exitWith { false };
+
+    private _rationItems = missionNamespace getVariable ["ALFA_repRationItems", ["ACE_MRE_BeefStew"]];
+    private _taken = false;
+
+    {
+        if (_x in items _player) exitWith {
+            _player removeItem _x;
+            _taken = true;
+        };
+
+        if (_x in magazines _player) exitWith {
+            _player removeMagazine _x;
+            _taken = true;
+        };
+    } forEach _rationItems;
+
+    _taken
+};
+
+ALFA_fnc_repGiveRation = {
+    params [
+        ["_civilian", objNull, [objNull]],
+        ["_player", objNull, [objNull]]
+    ];
+
+    if (isNull _civilian || { isNull _player }) exitWith {};
+    if (!alive _civilian || { !alive _player }) exitWith {};
+    if !(_civilian getVariable ["ALFA_repTrackedCivilian", false]) exitWith {};
+    if (_civilian getVariable ["ALFA_repWaterGiven", false]) exitWith {};
+    if (_player distance2D _civilian > 4) exitWith {};
+    if !([_player] call ALFA_fnc_repTakeRationItem) exitWith {};
+
+    _civilian setVariable ["ALFA_repWaterGiven", true, true];
+    [missionNamespace getVariable ["ALFA_repWaterReward", 0.1], format ["%1 gave a ration to a civilian.", name _player]] call ALFA_fnc_repAdjust;
+};
+
 ALFA_fnc_repGiveWater = {
     params [
         ["_civilian", objNull, [objNull]],
@@ -173,8 +218,10 @@ ALFA_fnc_repRegisterCivilian = {
 
     _civilian setVariable ["ALFA_repTrackedCivilian", true, true];
 
-    _civilian addEventHandler ["Killed", {
+    _civilian addMPEventHandler ["MPKilled", {
         params ["_unit", "_killer", "_instigator"];
+
+        if (!isServer) exitWith {};
 
         if (_unit getVariable ["ALFA_repDeathHandled", false]) exitWith {};
         _unit setVariable ["ALFA_repDeathHandled", true, true];
@@ -195,6 +242,24 @@ ALFA_fnc_repRegisterCivilian = {
             true,
             "",
             "alive _target && {vehicle _target isEqualTo _target} && {!(_target getVariable ['ALFA_repWaterGiven', false])} && {_this distance _target < 3}",
+            3,
+            false,
+            "",
+            ""
+        ]
+    ] remoteExec ["addAction", 0, _civilian];
+
+    [
+        _civilian,
+        [
+            "Give ration",
+            "[(_this select 0), (_this select 1)] remoteExecCall ['ALFA_fnc_repGiveRation', 2];",
+            nil,
+            1.5,
+            true,
+            true,
+            "",
+            "alive _target && {vehicle _target isEqualTo _target} && {!(_target getVariable ['ALFA_repWaterGiven', false])} && {_this distance _target < 3} && {('ACE_MRE_BeefStew' in items _this) || {'ACE_MRE_BeefStew' in magazines _this}}",
             3,
             false,
             "",
