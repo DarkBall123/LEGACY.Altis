@@ -1,0 +1,25 @@
+name = "SOF Campaign"
+prefix = "sof_campaign"
+author = "DarkBall123"
+
+[files]
+include = [
+    "description.ext",
+    "initPlayerLocal.sqf",
+    "initServer.sqf",
+    "mission.sqm",
+    "preview.jpg",
+    "functions/**",
+    "scripts/**",
+    "sound/**",
+]
+exclude = [
+    ".github/**",
+    ".hemtt/**",
+    ".hemttout/**",
+    "docs/**",
+    "tools/**",
+]
+
+[hemtt.build]
+optional_mod_folders = false

@@ -1,0 +1,64 @@
+name: HEMTT
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - cicd/**
+  pull_request_target:
+    branches:
+      - main
+      - develop
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Install Arma 3 Tools
+        uses: arma-actions/arma3-tools@master
+        with:
+          toolsUrl: ${{ secrets.ARMA3_TOOLS_URL }}
+
+      - name: Checkout the source code
+        uses: actions/checkout@v4
+
+      - name: Setup HEMTT
+        uses: arma-actions/hemtt@v1
+
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+        if: ${{ github.event_name == 'pull_request_target' }}
+        with:
+          path: pullrequest
+          ref: refs/pull/${{ github.event.number }}/merge
+
+      - name: Replace source with pull request
+        if: ${{ github.event_name == 'pull_request_target' }}
+        shell: pwsh
+        run: |
+          $preserve = @(".git", "pullrequest")
+          Get-ChildItem -Force | Where-Object { $preserve -notcontains $_.Name } | Remove-Item -Recurse -Force
+          Get-ChildItem -Path pullrequest -Force | ForEach-Object {
+            Copy-Item -Path $_.FullName -Destination . -Recurse -Force
+          }
+          Remove-Item -Path pullrequest -Recurse -Force
+
+      - name: Run HEMTT check
+        run: hemtt check
+
+      - name: Run HEMTT build
+        run: hemtt build
+
+      - name: Package mission folder
+        shell: pwsh
+        run: python tools/package_mission.py --output .hemttout/Mali.kunduz_valley
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sof-campaign-${{ github.sha }}
+          path: |
+            .hemttout/build
+            .hemttout/Mali.kunduz_valley
+          include-hidden-files: true
