@@ -2,6 +2,12 @@ name = "SOF Campaign"
 prefix = "sof_campaign"
 author = "DarkBall123"
 
+[version]
+major = 0
+minor = 1
+patch = 0
+build = 0
+
 [files]
 include = [
     "description.ext",
