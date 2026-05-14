@@ -13,6 +13,7 @@ private _counterGlobalCooldown = missionNamespace getVariable ["DZ_counterGlobal
 private _counterFirstChance = missionNamespace getVariable ["DZ_counterFirstChance", 0.03];
 private _counterRepeatChance = missionNamespace getVariable ["DZ_counterRepeatChance", 0.02];
 private _counterMaxActive = missionNamespace getVariable ["DZ_counterMaxActive", 2];
+private _counterEnabled = missionNamespace getVariable ["DZ_counterAttacksEnabled", true];
 private _frontMinEnemyNeighbors = missionNamespace getVariable ["DZ_frontMinEnemyNeighbors", 2];
 private _spawnRetryCooldown = missionNamespace getVariable ["DZ_spawnRetryCooldown", 30];
 
@@ -564,7 +565,7 @@ private _activeCounters = 0;
 
 private _counterCandidates = [];
 
-if (_now >= _nextGlobalCounterAt) then
+if (_counterEnabled && { _now >= _nextGlobalCounterAt }) then
 {
     for "_idx" from 0 to (_sectorCount - 1) do
     {
