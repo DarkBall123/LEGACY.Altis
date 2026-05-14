@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_getUrbanCells
+ * Finds sector cells that contain enough buildings to count as urban areas.
+ */
+
 private _sectorGrid = missionNamespace getVariable ["DZ_sectorGrid", []];
 
 private _types =

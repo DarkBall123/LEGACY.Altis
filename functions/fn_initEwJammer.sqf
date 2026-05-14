@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initEwJammer
+ * Adds ACE interaction for deploying or folding an EW jammer object.
+ */
+
 params
 [
     ["_jammer", objNull, [objNull]],

@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_addMissionAssets
+ * Registers mission-spawned units, vehicles, markers, and PFH handles for cleanup.
+ */
+
 params [
     ["_unitsToAdd", [], [[]]],
     ["_vehiclesToAdd", [], [[]]],

@@ -1,7 +1,7 @@
 /*
-    Adds danger reactions to Engima pedestrian civilians only.
-    Server-side: one shared shot monitor handles all registered civilians.
-*/
+ * Alfa/Civilians/setupCivilianReaction.sqf
+ * Adds combat reaction behaviour to a spawned civilian unit.
+ */
 
 if (!isServer) exitWith {};
 

@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initServer
+ * Initializes server-side sector control state and starts the sector PFH.
+ */
+
 diag_log "[DZ] === Dynamic Zones INIT ===";
 
 private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];

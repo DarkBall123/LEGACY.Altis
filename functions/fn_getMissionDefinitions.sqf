@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_getMissionDefinitions
+ * Builds the registered mission definition table used by manual and random starts.
+ */
+
 private _definitions = createHashMap;
 
 private _register =

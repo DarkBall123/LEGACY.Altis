@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initTransportMenu
+ * Adds ACE transport request actions to the transport support object.
+ */
+
 params [["_object", objNull, [objNull]]];
 
 if (isNull _object) exitWith { false };

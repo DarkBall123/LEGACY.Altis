@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_processTriggerZones
+ * Reads editor trigger zones and applies sector ownership or restrictions.
+ */
+
 private _sectorGrid = missionNamespace getVariable ["DZ_sectorGrid", []];
 private _zoneData = missionNamespace getVariable ["DZ_zoneData", []];
 private _urbanHash = missionNamespace getVariable ["DZ_urbanHash", createHashMap];

@@ -1,14 +1,11 @@
-/* 
- * This file contains config parameters and a function call to start the civilian script.
- * The parameters in this file may be edited by the mission developer.
- *
- * See file Alfa\Civilians\Documentation.txt for documentation and a full reference of 
- * how to customize and use Engima's Civilians.
+/*
+ * Alfa/Civilians/ConfigAndStart.sqf
+ * Configures civilian classes, spawn limits, callbacks, and starts the civilian subsystem.
  */
- 
+
 private ["_parameters"];
 
-// Set civilian parameters.
+
 _parameters = [
 	["UNIT_CLASSES", ["LOP_AFR_Civ_Man_01", "LOP_AFR_Civ_Man_01_S", "LOP_AFR_Civ_Man_02", "LOP_AFR_Civ_Man_02_S", "LOP_AFR_Civ_Man_03", "LOP_AFR_Civ_Man_03_S", "LOP_AFR_Civ_Man_04", "LOP_AFR_Civ_Man_04_S", "LOP_AFR_Civ_Man_05", "LOP_AFR_Civ_Man_05_S", "LOP_AFR_Civ_Man_06", "LOP_AFR_Civ_Man_06_S"]],
 	["UNITS_PER_BUILDING", 0.2],
@@ -23,5 +20,5 @@ _parameters = [
 	["DEBUG", false]
 ];
 
-// Start the script
+
 _parameters spawn ENGIMA_CIVILIANS_StartCivilians;

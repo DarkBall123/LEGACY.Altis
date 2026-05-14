@@ -1,3 +1,8 @@
+/*
+ * Alfa/Traffic/Init.sqf
+ * Selects the machine that should run Alfa traffic and starts the subsystem there.
+ */
+
 call compile preprocessFileLineNumbers "Alfa\Traffic\Common\Common.sqf";
 call compile preprocessFileLineNumbers "Alfa\Traffic\Common\Debug.sqf";
 call compile preprocessFileLineNumbers "Alfa\Traffic\HeadlessClient.sqf";
@@ -21,7 +26,7 @@ if (_headlessClientPresent && isMultiplayer) then {
 }
 else {
     if (isServer) then {
-        _runOnThisMachine = true;;   
+        _runOnThisMachine = true;;
     };
 };
 

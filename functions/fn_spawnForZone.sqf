@@ -1,6 +1,6 @@
 /*
- * Spawns an urban sector package using custom squad arrays, mech packages, and vehicle pools.
- * Returns: [groupsArr, vehiclesArr, totalUnits]
+ * DZ_fnc_spawnForZone
+ * Spawns patrol infantry, packages, and vehicles for one active sector zone.
  */
 
 params ["_center", "_pCount"];
@@ -18,7 +18,7 @@ private _buildingPool = nearestObjects [_center, ["House"], _eps - 40, true]
                           { ({ !([_x] call DZ_fnc_isForbiddenSpawnPos) } count (_x buildingPos -1)) > 0 }
                       };
 private _buildingCount = count _buildingPool;
-private _taskKey = if (_buildingCount >= 10) then { "urban_dense" } else { "urban_sparse" };
+private _taskKey = ["urban_sparse", "urban_dense"] select (_buildingCount >= 10);
 private _spawnProfile = [_taskKey] call DZ_fnc_selectSpawnProfile;
 private _groupDefs = _spawnProfile # 0;
 private _packageDefs = _spawnProfile # 1;

@@ -1,12 +1,6 @@
 /*
  * DZ_fnc_collectAssassinationIntel
- *
- * Server-side handler called when a player uses the "Забрать документы"
- * action on the target's corpse. Validates the request, marks intel as
- * collected, and lets the assassination mission's PFH transition to
- * success.
- *
- *     [_target, _caller] remoteExecCall ["DZ_fnc_collectAssassinationIntel", 2];
+ * Handles intel pickup for the assassination mission and reveals the target area.
  */
 
 if (!isServer) exitWith {};
@@ -19,9 +13,7 @@ params [
 if (isNull _target) exitWith {};
 if (isNull _caller) exitWith {};
 
-// Light spoof check — caller must be near the body, alive, and on the
-// player side. Saves us from accepting bogus calls (e.g. from a desynced
-// or rogue client passing a different _target).
+
 if (!alive _caller)                  exitWith {};
 if (_caller distance _target > 5)    exitWith {};
 if (_target getVariable ["intel_collected", false]) exitWith {};

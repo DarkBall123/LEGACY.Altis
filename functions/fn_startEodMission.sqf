@@ -1,21 +1,6 @@
 /*
  * DZ_fnc_startEodMission
- *
- * Mission: AFR has planted IEDs along a road. Players (with ACE
- * defusal kit) must find and disarm them. An ambush waits at the
- * midpoint of the route.
- *
- * Per design choices:
- *   - Variable 5-7 IEDs (3-7 actual, capped to road points found)
- *   - No timer (methodical play)
- *   - Heavy enemy presence: ambush at midpoint + watchers near IEDs
- *   - Defusal kit assumed to be in arsenal (placed by user in Eden)
- *   - Mix of visible and camouflaged IEDs
- *
- * Markers:
- *   - Start point + end point only
- *   - IED warning markers appear individually when player gets
- *     within 50m (scanning the road is the gameplay)
+ * Starts the EOD road-clearing mission with IEDs, watchers, ambush, and completion checks.
  */
 
 if (!isServer) exitWith { false };
@@ -44,7 +29,7 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-// ── Find candidate enemy sectors ─────────────────────────
+
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -86,7 +71,7 @@ if ((count _enemyCandidates) < 2) exitWith
     false
 };
 
-// ── Pick a sector pair, sample road points ───────────────
+
 private _routeStart = [0, 0, 0];
 private _routeEnd = [0, 0, 0];
 private _routePoints = [];
@@ -178,7 +163,7 @@ private _routeMidpoint = [
 
 private _routeLength = _routeStart distance2D _routeEnd;
 
-// ── Place IEDs at the road-snapped points ────────────────
+
 private _iedClasses = [
     "IEDLandSmall_F",
     "IEDLandBig_F",
@@ -261,7 +246,7 @@ for "_i" from 0 to (_iedCount - 1) do
         _i + 1, _placePos, _hidden, _iedClass];
 };
 
-// ── Spawn watchers near some IEDs ────────────────────────
+
 private _watchers = [];
 private _watcherGroup = createGroup [_sideEnemy, true];
 _watcherGroup setBehaviour "SAFE";
@@ -303,7 +288,7 @@ _watcherGroup setCombatMode "YELLOW";
 
 diag_log format ["[EOD] Spawned %1 watchers", count _watchers];
 
-// ── Ambush at midpoint ───────────────────────────────────
+
 private _ambushGroup = createGroup [_sideEnemy, true];
 _ambushGroup setBehaviour "AWARE";
 _ambushGroup setCombatMode "RED";
@@ -355,7 +340,7 @@ _wp setWaypointCombatMode "RED";
 diag_log format ["[EOD] Ambush spawned at midpoint %1 (%2 units)",
     _routeMidpoint, count (units _ambushGroup)];
 
-// ── Markers (ONLY start/end — IED markers appear on proximity) ──
+
 private _allUnits = (units _watcherGroup) + (units _ambushGroup);
 
 ["create", "marker_eod_start", _routeStart, "loc_Bunker", "Маршрут: начало"] call DZ_fnc_missionUi;
@@ -384,7 +369,7 @@ missionNamespace setVariable ["DZ_eodIedMarkersRevealed", []];
 ["Разминирование маршрута. Двигайтесь медленно. Подозрительные предметы - возможные СВУ.", east]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-// ── State PFH ────────────────────────────────────────────
+
 private _stateHandle = [
     {
         params ["_args", "_handle"];
@@ -397,7 +382,7 @@ private _stateHandle = [
 
         private _revealed = missionNamespace getVariable ["DZ_eodIedMarkersRevealed", []];
 
-        // Reveal IED markers when players approach
+
         {
             private _ied = _x;
             private _iedIdx = _ied getVariable ["DZ_eodIedIndex", -1];
@@ -441,7 +426,7 @@ private _stateHandle = [
             };
         } forEach _ieds;
 
-        // Watcher detonation logic
+
         {
             private _watcher = _x;
             if (!alive _watcher) then { continue };
@@ -483,7 +468,7 @@ private _stateHandle = [
             };
         } forEach _watchers;
 
-        // Win check
+
         private _liveIeds = _ieds select { !isNull _x && { alive _x } };
         if (_liveIeds isEqualTo []) exitWith
         {

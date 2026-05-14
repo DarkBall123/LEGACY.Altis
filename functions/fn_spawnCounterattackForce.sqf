@@ -1,6 +1,6 @@
 /*
- * Spawns a counterattack force using task-based custom squads, packages, and vehicle pools.
- * Returns: [groupsArr, vehiclesArr, totalUnits]
+ * DZ_fnc_spawnCounterattackForce
+ * Spawns and orders a counterattack force toward a target sector.
  */
 
 params

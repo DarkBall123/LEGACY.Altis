@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_selectRandomMission
+ * Selects a random available mission by weight and cooldown state.
+ */
+
 if (!isServer) exitWith { "" };
 
 call DZ_fnc_initMissionSystem;

@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_isForbiddenSpawnPos
+ * Checks whether a position is inside water or a forbidden spawn marker.
+ */
+
 params [["_pos", []]];
 
 if !(_pos isEqualType []) exitWith { false };

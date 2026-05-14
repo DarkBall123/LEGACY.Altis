@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_showHint
+ * Shows a local formatted hint with title and message text.
+ */
+
 params [
     ["_title", "", [""]],
     ["_body", "", [""]]

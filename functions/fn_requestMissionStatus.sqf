@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_requestMissionStatus
+ * Sends the current mission status to the requesting player.
+ */
+
 params [
     ["_caller", objNull, [objNull]]
 ];
