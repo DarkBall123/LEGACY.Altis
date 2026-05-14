@@ -28,3 +28,5 @@ if (_originalLoadout isEqualTo []) exitWith { false };
 ] call CBA_fnc_addPerFrameHandler;
 
 true
+
+// 123
