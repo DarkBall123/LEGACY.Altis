@@ -39,8 +39,8 @@ if (_tracks isEqualTo []) exitWith
     diag_log "[RADIO] DZ_RadioTracks not defined. Set it in initServer.sqf.";
 };
 
-// ── Helper: play a specific track and chain the next one ──────────
-// Kept before the switch so the first "play" action can call it safely.
+// Helper: play a specific track and chain the next one.
+// Registered before the switch so "play" and "next" can call it immediately.
 DZ_fnc_radioControl_playTrack =
 {
     params ["_radio", "_trackIdx", "_session"];

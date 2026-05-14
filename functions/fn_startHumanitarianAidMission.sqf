@@ -11,11 +11,22 @@
  *   - Mission-scoped tracking only (no persistence)
  *
  * Bug fixes from previous version:
- *   - Village markers now placed at the BUILDING CLUSTER CENTER, not
- *     at the sector grid center. Previously the sector center could be
- *     up to ~250m off from the actual village.
- *   - Crate marker icon changed from "loc_RockArea" (invalid in some
- *     modsets) to "mil_dot" (always available).
+ *
+ *   - PER-CRATE DELIVERY TRACKING: each crate can only count toward
+ *     ONE village. Previously a truck full of 3 crates parked in a
+ *     marker zone would mass-deliver everything. Now each crate must
+ *     individually reach a village WHILE OUT OF VEHICLE.
+ *
+ *   - STRICT IN-VEHICLE CHECK: combines isNull objectParent + proximity
+ *     to any vehicle with crew + the crate's Z-axis height. A crate
+ *     sitting on the floor of a moving truck shouldn't count as
+ *     "delivered" even if objectParent unexpectedly returns null.
+ *
+ *   - VILLAGE SEPARATION INCREASED: 800m -> 1500m apart. With sector
+ *     grid = 350m and building search radius = 200m, adjacent sectors
+ *     would share buildings in their cluster average, producing village
+ *     candidates only 200-300m apart. 1500m guarantees real distinct
+ *     villages.
  */
 
 if (!isServer) exitWith { false };
@@ -45,12 +56,7 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-// ── Find candidate villages ──────────────────────────────
-//
-// For each sector with 3+ buildings within 200m, compute the actual
-// building cluster center by averaging house positions. Use THAT as
-// the village marker position, not the sector grid center.
-
+// ── Find candidate villages (building cluster centers) ───
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -68,7 +74,6 @@ private _villageCandidates = [];
 
     if (count _nearBuildings >= 3) then
     {
-        // Proximity-band check
         private _minDist = 99999;
         {
             private _d = _sectorPos distance2D _x;
@@ -78,9 +83,7 @@ private _villageCandidates = [];
         if (_playerHeldPositions isEqualTo [] ||
             { _minDist >= 1500 && _minDist <= 2500 }) then
         {
-            // Compute actual village center as the average of building
-            // positions. Use only the closest 8 buildings to the sector
-            // center to avoid pulling toward stray outlier buildings.
+            // Average building positions for true village center
             private _closeBuildings = _nearBuildings select [0, 8 min (count _nearBuildings)];
             private _sumX = 0;
             private _sumY = 0;
@@ -108,7 +111,8 @@ if ((count _villageCandidates) < 3) exitWith
     false
 };
 
-// Pick 3 villages 800m+ apart
+// Pick 3 villages — minimum 1500m apart (was 800m, increased to prevent
+// adjacent sectors picking nearly-identical building cluster centers)
 private _chosenVillages = [];
 private _shuffled = +_villageCandidates;
 
@@ -126,7 +130,7 @@ for "_i" from (count _shuffled - 1) to 1 step -1 do
     private _candidate = _x;
     private _tooClose = false;
     {
-        if (_candidate distance2D _x < 800) exitWith { _tooClose = true; };
+        if (_candidate distance2D _x < 1500) exitWith { _tooClose = true; };
     } forEach _chosenVillages;
 
     if (!_tooClose) then
@@ -137,14 +141,17 @@ for "_i" from (count _shuffled - 1) to 1 step -1 do
 
 if ((count _chosenVillages) < 3) exitWith
 {
-    diag_log format ["[HUMANITARIAN] Could not find 3 villages 800m+ apart (got %1). Aborting.",
+    diag_log format ["[HUMANITARIAN] Could not find 3 villages 1500m+ apart (got %1). Aborting.",
         count _chosenVillages];
     ["failure"] call DZ_fnc_endMission;
-    ["Подходящих деревень не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["Деревни слишком близко друг к другу. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
 diag_log format ["[HUMANITARIAN] Chosen villages: %1", _chosenVillages];
+{
+    diag_log format ["[HUMANITARIAN] Village %1: %2", _forEachIndex + 1, _x];
+} forEach _chosenVillages;
 
 // ── Spawn supply crates at base ──────────────────────────
 private _basePos = [1577.408, 8535.449, 0];
@@ -188,6 +195,7 @@ for "_i" from 0 to 2 do
 
     _crate setVariable ["DZ_isAidCrate", true, true];
     _crate setVariable ["DZ_aidCrateIndex", _i, true];
+    _crate setVariable ["DZ_aidCrateDeliveredTo", -1, true];   // -1 = not yet delivered
 
     clearWeaponCargoGlobal _crate;
     clearMagazineCargoGlobal _crate;
@@ -201,7 +209,7 @@ for "_i" from 0 to 2 do
         "create",
         _markerName,
         _cratePos,
-        "mil_dot",                              // changed from loc_RockArea
+        "mil_dot",
         format ["Груз %1", _i + 1]
     ] call DZ_fnc_missionUi;
 
@@ -210,7 +218,7 @@ for "_i" from 0 to 2 do
 
 diag_log format ["[HUMANITARIAN] Spawned %1 crates near base", count _crates];
 
-// ── Village markers (placed at building cluster centers) ──
+// ── Village markers ──────────────────────────────────────
 private _villageMarkers = [];
 {
     private _markerName = format ["marker_aid_village_%1", _forEachIndex + 1];
@@ -240,11 +248,45 @@ missionNamespace setVariable ["DZ_aidAmbushTriggered",   [false, false, false]];
 [
     "hint",
     "MISSION: ГУМАНИТАРНАЯ ПОМОЩЬ",
-    "Три мирные деревни нуждаются в продовольствии и медикаментах. Возьмите 3 ящика с гуманитарной помощью на базе. Доставьте по одному в каждую отмеченную деревню. Сбросьте ящик в радиусе 30 м от центра деревни. ВНИМАНИЕ: разведка сообщает, что боевики готовят засады на пути следования. Будьте готовы к бою."
+    "Три мирные деревни нуждаются в продовольствии и медикаментах. Возьмите 3 ящика с гуманитарной помощью на базе. Доставьте по одному в каждую отмеченную деревню. ВЫГРУЗИТЕ ящик из машины в радиусе 30 м от центра деревни. ВАЖНО: ящик должен быть на земле (не в машине) и в радиусе 30 м от деревни. ВНИМАНИЕ: разведка сообщает, что боевики готовят засады на пути следования. Будьте готовы к бою."
 ] call DZ_fnc_missionUi;
 
 ["Гуманитарная миссия активна. Возьмите ящики на базе и доставьте в деревни.", east]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
+
+// ── Helper: is crate genuinely on the ground (not in/on vehicle) ──
+//
+// Multi-layer check:
+//   1. objectParent must be null (not in cargo)
+//   2. attachedTo must be null (not attached as child)
+//   3. No alive vehicle with crew within 5m of the crate (defensive
+//      check — even if the crate's parent is null due to engine quirks,
+//      if there's a manned vehicle right on top of it, it's still
+//      basically inside that vehicle)
+//
+// This is conservative: if there's any doubt, the crate is treated
+// as "not delivered."
+
+private _fnc_crateOnGround = {
+    params ["_crate"];
+
+    if (!isNull (objectParent _crate)) exitWith { false };
+    if (!isNull (attachedTo _crate)) exitWith { false };
+
+    private _onGround = true;
+    {
+        if (alive _x &&
+            { _x isKindOf "AllVehicles" } &&
+            { !(_x isKindOf "Man") } &&
+            { (count (crew _x)) > 0 } &&
+            { _crate distance _x < 5 }) exitWith
+        {
+            _onGround = false;
+        };
+    } forEach (_crate nearObjects 8);
+
+    _onGround
+};
 
 // ── Ambush spawn helper ──────────────────────────────────
 private _spawnAmbush = {
@@ -303,17 +345,25 @@ private _spawnAmbush = {
 };
 
 // ── Master state PFH ─────────────────────────────────────
+//
+// Per-crate delivery model:
+//   - Each crate has DZ_aidCrateDeliveredTo = village index, or -1
+//   - For each NOT-YET-DELIVERED crate, if it's on the ground AND
+//     within 30m of an undelivered village, deliver it to THAT village.
+//   - One crate can only be delivered to one village. One village can
+//     only receive one delivery.
+
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_crates", "_crateMarkers", "_villages", "_villageMarkers", "_startTime", "_spawnAmbushFn"];
+        _args params ["_crates", "_crateMarkers", "_villages", "_villageMarkers", "_startTime", "_spawnAmbushFn", "_fnc_crateOnGround"];
 
         if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
 
-        if ((time - _startTime) > 4000) exitWith
+        if ((time - _startTime) > 4200) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["failure"] call DZ_fnc_endMission;
@@ -334,58 +384,68 @@ private _stateHandle = [
             };
         } forEach _crates;
 
-        // Check each village for delivery
+        // Per-crate delivery check
+        {
+            private _crate = _x;
+            if (!isNull _crate && { alive _crate }) then
+            {
+                private _crateAlreadyDelivered = (_crate getVariable ["DZ_aidCrateDeliveredTo", -1]) >= 0;
+
+                if (!_crateAlreadyDelivered) then
+                {
+                    // Crate must be on the ground
+                    private _onGround = [_crate] call _fnc_crateOnGround;
+
+                    if (_onGround) then
+                    {
+                        // Find which undelivered village (if any) this crate is in range of
+                        {
+                            private _villagePos = _x;
+                            private _villageIdx = _forEachIndex;
+                            private _villageDelivered = _delivered # _villageIdx;
+
+                            if (!_villageDelivered && { _crate distance2D _villagePos < 30 }) exitWith
+                            {
+                                // Mark this crate as delivered to this village
+                                _crate setVariable ["DZ_aidCrateDeliveredTo", _villageIdx, true];
+                                _delivered set [_villageIdx, true];
+                                _deliveredCount = _deliveredCount + 1;
+                                missionNamespace setVariable ["DZ_aidVillageDelivered", _delivered];
+                                missionNamespace setVariable ["DZ_aidDeliveredCount", _deliveredCount];
+
+                                // Update village marker
+                                private _vMarker = _villageMarkers param [_villageIdx, ""];
+                                if (_vMarker != "") then
+                                {
+                                    _vMarker setMarkerType "loc_Tourism";
+                                    _vMarker setMarkerColor "ColorGreen";
+                                    _vMarker setMarkerText format ["Деревня %1: ДОСТАВЛЕНО", _villageIdx + 1];
+                                };
+
+                                diag_log format ["[HUMANITARIAN] Delivery %1/%2: crate %3 delivered to village %4 at %5",
+                                    _deliveredCount, count _villages,
+                                    _crate getVariable ["DZ_aidCrateIndex", -1],
+                                    _villageIdx + 1,
+                                    getPosATL _crate];
+
+                                [
+                                    format ["Доставка %1/%2 завершена. Деревня %3 получила помощь.",
+                                        _deliveredCount, count _villages, _villageIdx + 1],
+                                    east
+                                ] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                            };
+                        } forEach _villages;
+                    };
+                };
+            };
+        } forEach _crates;
+
+        // Ambush triggers
         {
             private _villagePos = _x;
             private _villageIdx = _forEachIndex;
             private _alreadyDelivered = _delivered # _villageIdx;
 
-            if (!_alreadyDelivered) then
-            {
-                {
-                    private _crate = _x;
-                    if (!isNull _crate && { alive _crate }) then
-                    {
-                        private _onGround = isNull (objectParent _crate);
-                        if (_onGround && { _crate distance2D _villagePos < 30 }) exitWith
-                        {
-                            _delivered set [_villageIdx, true];
-                            _deliveredCount = _deliveredCount + 1;
-                            missionNamespace setVariable ["DZ_aidVillageDelivered", _delivered];
-                            missionNamespace setVariable ["DZ_aidDeliveredCount", _deliveredCount];
-
-                            if !(isNil "ALFA_fnc_repAdjust") then
-                            {
-                                [1, format ["Humanitarian aid delivered to village %1.", _villageIdx + 1]] call ALFA_fnc_repAdjust;
-                                diag_log format ["[HUMANITARIAN] Reputation reward +1 for delivery to village %1.", _villageIdx + 1];
-                            }
-                            else
-                            {
-                                diag_log "[HUMANITARIAN] Reputation reward skipped: ALFA_fnc_repAdjust is not initialized on server.";
-                            };
-
-                            private _vMarker = _villageMarkers param [_villageIdx, ""];
-                            if (_vMarker != "") then
-                            {
-                                _vMarker setMarkerType "loc_Tourism";
-                                _vMarker setMarkerColor "ColorGreen";
-                                _vMarker setMarkerText format ["Деревня %1: ДОСТАВЛЕНО", _villageIdx + 1];
-                            };
-
-                            diag_log format ["[HUMANITARIAN] Delivery %1/%2 at village %3",
-                                _deliveredCount, count _villages, _villageIdx + 1];
-
-                            [
-                                format ["Доставка %1/%2 завершена. Деревня %3 получила помощь.",
-                                    _deliveredCount, count _villages, _villageIdx + 1],
-                                east
-                            ] remoteExecCall ["DZ_fnc_sideMessage", 0];
-                        };
-                    };
-                } forEach _crates;
-            };
-
-            // Ambush trigger
             if (!(_ambushTriggered # _villageIdx) && !_alreadyDelivered) then
             {
                 private _playerNearby = false;
@@ -429,6 +489,7 @@ private _stateHandle = [
             };
         } forEach _villages;
 
+        // Win
         if (_deliveredCount >= count _villages) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
@@ -437,10 +498,17 @@ private _stateHandle = [
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
-        private _liveCrates = _crates select { !isNull _x && { alive _x } && { damage _x < 0.95 } };
+        // Lose: not enough useable crates left to finish remaining villages
+        // (counting only undelivered, alive, undamaged crates)
+        private _useableCrates = _crates select {
+            !isNull _x &&
+            { alive _x } &&
+            { damage _x < 0.95 } &&
+            { (_x getVariable ["DZ_aidCrateDeliveredTo", -1]) < 0 }
+        };
         private _undeliveredVillages = ({!_x} count _delivered);
 
-        if ((count _liveCrates) < _undeliveredVillages) exitWith
+        if ((count _useableCrates) < _undeliveredVillages) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["failure"] call DZ_fnc_endMission;
@@ -452,7 +520,7 @@ private _stateHandle = [
         };
     },
     3,
-    [_crates, _crateMarkers, _chosenVillages, _villageMarkers, time, _spawnAmbush]
+    [_crates, _crateMarkers, _chosenVillages, _villageMarkers, time, _spawnAmbush, _fnc_crateOnGround]
 ] call CBA_fnc_addPerFrameHandler;
 
 [[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
