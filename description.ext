@@ -57,6 +57,10 @@ class CfgFunctions
             class startAmbientSound {};
             class storeOriginalLoadout {};
             class manualSaveProgress {};
+            class initSquadFunds           {};
+            class initQuartermaster        {};
+            class purchaseItem             {};
+            class squadFundsRequestBalance {};
         };
 
         // ── Mission system ─────────────────────────────
@@ -89,6 +93,7 @@ class CfgFunctions
             class startDestroyCacheMission   {};
             class startArtilleryHuntMission  {};
             class startHumanitarianAidMission  {};
+            class startEodMission            {};
 
             // UI helpers
             class missionUi             {};

@@ -6,17 +6,14 @@ if (_laptop getVariable ["hq_actions_added", false]) exitWith { true };
 
 _laptop setVariable ["hq_actions_added", true, false];
 
-// ── ACE actions on the laptop ────────────────────────────
-//
-// No chat spam. Diagnostic logging goes to RPT only via diag_log.
-
 private _missionList = [
     ["interdiction",     "Миссия: Перехват поставок"],
     ["assassination",    "Миссия: Убийство цели"],
     ["destroy_cache",    "Миссия: Уничтожить тайники"],
     ["artillery_hunt",   "Миссия: Уничтожить миномёт"],
     ["downed_pilot",     "Миссия: Сбитый пилот"],
-    ["humanitarian_aid", "Миссия: Гуманитарная помощь"]
+    ["humanitarian_aid", "Миссия: Гуманитарная помощь"],
+    ["eod",              "Миссия: Разминирование маршрута"]
 ];
 
 {

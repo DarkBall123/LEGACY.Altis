@@ -98,4 +98,19 @@ private _register =
     ]
 ] call _register;
 
+[
+    "eod",
+    createHashMapFromArray
+    [
+        ["title", "Разминирование маршрута"],
+        ["description", "Найти и обезвредить СВУ на участке дороги, используемом мирными конвоями."],
+        ["startFunction", "DZ_fnc_startEodMission"],
+        ["implemented", true],
+        ["manualEnabled", true],
+        ["randomEnabled", true],
+        ["weight", 1],
+        ["cooldown", 1800]
+    ]
+] call _register;
+
 _definitions
