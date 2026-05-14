@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_startMission
+ * Validates and dispatches a manual or automatic mission start request.
+ */
+
 params [
     ["_missionId", "", [""]],
     ["_caller", objNull, [objNull]],
@@ -6,7 +11,7 @@ params [
 
 if (!isServer) exitWith {};
 
-private _replyTarget = if (isNull _caller) then {0} else {owner _caller};
+private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
 diag_log format ["[DZ_START] %1 by %2 (source=%3)", _missionId, _caller, _source];
 

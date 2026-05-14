@@ -1,28 +1,6 @@
 /*
  * DZ_fnc_startDestroyCacheMission
- *
- * Mission: locate and destroy 3-5 weapon caches scattered across an
- * enemy-held sector.
- *
- * Bug fixes from previous version (caches reporting destroyed
- * immediately at mission start):
- *
- *   1. BASELINE DAMAGE TRACKING — record each crate's damage value
- *      at spawn time. Destruction = (current damage) - (baseline) >= 0.5.
- *      This handles crates that spawn already at e.g. 0.4 damage from
- *      terrain clipping.
- *
- *   2. GRACE PERIOD — first 15 seconds after spawn, ignore damage
- *      events entirely. Lets the engine settle any collision damage
- *      from initial spawn placement.
- *
- *   3. SUSPICIOUS-KILL LOGGING — if a "kill" happens within 30s of
- *      mission start, log a warning. Real player kills require travel
- *      time to the sector, so early kills indicate environmental
- *      damage we missed.
- *
- *   4. EXPLICIT DAMAGE RESET — setDamage 0 right after spawn to clear
- *      any spawn-time damage before the handler attaches.
+ * Starts the cache destruction mission and tracks cache survival state.
  */
 
 if (!isServer) exitWith { false };
@@ -121,7 +99,7 @@ private _defenderUnits = [];
     _defenderUnits append (units _x);
 } forEach _defenderGroups;
 
-// ── Pick cache positions in OPEN GROUND ──────────────────
+
 private _cacheCount = floor (3 + (random 3));
 
 private _cachePositions = [];
@@ -143,14 +121,14 @@ while { (count _cachePositions) < _cacheCount && _attempts < _maxAttempts } do
 
     if (_tooClose) then { continue };
 
-    // Stricter flatness check — wider clear area, gentler slope tolerance
+
     private _flatCheck = _candidatePos isFlatEmpty [
-        5,        // min flat distance (m) — wider clear area
-        -1,       // max gradient (-1 = ignore)
-        0.15,     // max gradient on flat area — stricter than before
-        4,        // distance for object check
-        0,        // 0 = ignore water
-        false,    // not shoreline
+        5,
+        -1,
+        0.15,
+        4,
+        0,
+        false,
         objNull
     ];
 
@@ -200,17 +178,6 @@ private _propClasses = [
     "Land_Sleeping_bag_F"
 ];
 
-// ── Spawn caches with baseline damage tracking ───────────
-//
-// Critical sequence:
-//   1. createVehicle
-//   2. setPosATL
-//   3. setDamage 0  (clear any spawn-time terrain damage)
-//   4. record baseline = damage _crate (should be 0)
-//   5. attach HandleDamage handler with grace-period check
-//
-// The mission start time is also recorded; the handler ignores all
-// damage events for the first 15 seconds.
 
 private _missionStartTime = time;
 missionNamespace setVariable ["DZ_destroyCacheStartTime", _missionStartTime, true];
@@ -231,8 +198,8 @@ private _propsToTrack = [];
         diag_log format ["[DESTROY_CACHE] Crate creation failed at %1, skipping", _pos];
     } else
     {
-        // CRITICAL: clear any spawn-time damage. setDamage 0 resets the
-        // crate to full health regardless of what the engine assigned.
+
+
         _crate setDamage 0;
 
         private _baselineDamage = damage _crate;
@@ -245,15 +212,14 @@ private _propsToTrack = [];
         _crate addEventHandler ["HandleDamage", {
             params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex", "_instigator", "_hitPoint"];
 
-            // Grace period: ignore all damage in first 15 seconds.
-            // Engine collision settling happens in this window.
+
             private _spawnTime = _unit getVariable ["DZ_cacheSpawnTime", 0];
             if (time - _spawnTime < 15) exitWith
             {
                 damage _unit
             };
 
-            // Phantom damage filter: no source = ignore
+
             private _hasRealSource =
                 !isNull _source ||
                 { _projectile isNotEqualTo "" && { _projectile isNotEqualTo objNull } } ||
@@ -261,7 +227,7 @@ private _propsToTrack = [];
 
             if (!_hasRealSource) exitWith { damage _unit };
 
-            // Real combat damage: multiply by 5 for fragility
+
             private _scaled = _damage * 5;
             if (_scaled > 1) then { _scaled = 1; };
 
@@ -333,13 +299,6 @@ missionNamespace setVariable ["DZ_destroyCacheKilledCount", 0];
     ]
 ] call DZ_fnc_missionUi;
 
-// ── State tracker ───────────────────────────────────────
-//
-// Three changes:
-//   - Compares damage against per-crate baseline (handles spawn drift)
-//   - 30s suspicious-kill window: kills before then are logged but not
-//     counted (real player travel time prevents legitimate early kills)
-//   - 15s startup grace: PFH skips checks entirely for first 15 seconds
 
 private _stateHandle = [
     {
@@ -351,7 +310,7 @@ private _stateHandle = [
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
 
-        // Skip checks during 15s startup grace
+
         if (time - _startTime < 15) exitWith {};
 
         if ((time - _startTime) > 4000) exitWith
@@ -370,7 +329,7 @@ private _stateHandle = [
 
             if (isNull _crate) then
             {
-                // Engine lost reference. Don't count as kill.
+
             } else
             {
                 private _alreadyKilled = _crate getVariable ["DZ_cacheKilled", false];
@@ -382,9 +341,8 @@ private _stateHandle = [
 
                     if (_delta >= 0.5) then
                     {
-                        // Suspicious-kill detection: real player travel
-                        // takes at least 30s minimum. Anything before that
-                        // is environmental damage we missed.
+
+
                         private _missionTime = time - _startTime;
                         private _suspicious = _missionTime < 30;
 
@@ -393,8 +351,7 @@ private _stateHandle = [
                             diag_log format ["[DESTROY_CACHE] SUSPICIOUS KILL on cache %1 at t=%2s (delta=%3, baseline=%4, current=%5). NOT counting. Resetting damage.",
                                 _idx + 1, _missionTime, _delta, _baseline, _current];
 
-                            // Reset the crate's damage to baseline so it
-                            // doesn't keep triggering. Don't count as kill.
+
                             _crate setDamage _baseline;
                         }
                         else
@@ -416,7 +373,7 @@ private _stateHandle = [
             };
         } forEach _caches;
 
-        // Win condition: all live caches killed AND at least 1 was killed
+
         private _stillAlive = ({
             !isNull _x && { !(_x getVariable ["DZ_cacheKilled", false]) }
         } count _caches);

@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_startRandomMission
+ * Selects and starts one eligible random mission.
+ */
+
 if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;

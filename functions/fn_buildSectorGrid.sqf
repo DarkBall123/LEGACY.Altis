@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_buildSectorGrid
+ * Builds the mission sector grid and stores sector metadata in missionNamespace.
+ */
+
 params
 [
     ["_gridSize", missionNamespace getVariable ["DZ_gridSize", 350]],

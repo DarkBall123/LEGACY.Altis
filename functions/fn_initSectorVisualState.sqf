@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initSectorVisualState
+ * Initializes marker style tracking for sector visual state rendering.
+ */
+
 params
 [
     ["_sectorGrid", missionNamespace getVariable ["DZ_sectorGrid", []]]

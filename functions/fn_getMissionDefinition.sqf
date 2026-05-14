@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_getMissionDefinition
+ * Returns one mission definition by id from the registered mission table.
+ */
+
 params [
     ["_missionId", "", [""]]
 ];

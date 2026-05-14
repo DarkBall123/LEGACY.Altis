@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_storeOriginalLoadout
+ * Captures a unit's initial loadout for later restoration.
+ */
+
 params
 [
     ["_unit", objNull],

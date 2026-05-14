@@ -1,6 +1,6 @@
 /*
- * Spawns a rural or semi-built-up checkpoint package using custom squad arrays, mech packages, and vehicle pools.
- * Returns: [groupsArr, vehiclesArr, totalUnits]
+ * DZ_fnc_spawnCheckpoint
+ * Spawns a checkpoint composition with infantry, statics, and optional vehicles.
  */
 
 params ["_center"];
@@ -18,7 +18,7 @@ private _buildingPool = nearestObjects [_center, ["House"], 120, true]
                           (count (_x buildingPos -1)) > 0 &&
                           { ({ !([_x] call DZ_fnc_isForbiddenSpawnPos) } count (_x buildingPos -1)) > 0 }
                       };
-private _taskKey = if ((count _buildingPool) >= 4) then { "checkpoint_builtup" } else { "checkpoint_open" };
+private _taskKey = ["checkpoint_open", "checkpoint_builtup"] select ((count _buildingPool) >= 4);
 private _spawnProfile = [_taskKey] call DZ_fnc_selectSpawnProfile;
 private _groupDefs = _spawnProfile # 0;
 private _packageDefs = _spawnProfile # 1;

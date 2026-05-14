@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_renderSectorState
+ * Updates one sector marker to match ownership, activity, and contested state.
+ */
+
 params
 [
     ["_sectorId", -1],

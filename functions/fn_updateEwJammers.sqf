@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_updateEwJammers
+ * Updates deployed EW jammer effects against nearby hostile radios and vehicles.
+ */
+
 if (!hasInterface) exitWith {};
 if (isNull player) exitWith {};
 

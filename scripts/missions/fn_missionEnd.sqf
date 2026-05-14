@@ -1,12 +1,6 @@
 /*
- * DZ_fnc_missionEnd
- *
- * End the active mission. SERVER ONLY.
- *
- *     ["success" | "failure" | "abort"] call DZ_fnc_missionEnd;
- *
- * Per SECTOR_CONTROL.md: dead bodies and destroyed vehicles are NOT removed
- * by normal cleanup. We only delete units/vehicles that are still alive.
+ * scripts/missions/fn_missionEnd.sqf
+ * Legacy mission cleanup helper for spawned units, vehicles, and markers.
  */
 
 if (!isServer) exitWith {};
@@ -17,8 +11,7 @@ private _units    = missionNamespace getVariable ["DZ_missionUnits",    []];
 private _vehicles = missionNamespace getVariable ["DZ_missionVehicles", []];
 private _markers  = missionNamespace getVariable ["DZ_missionMarkers",  []];
 
-// Only despawn living assets; leave bodies and wrecks for the server's
-// existing battlefield-persistence behaviour to handle.
+
 {
     if (!isNull _x && { alive _x }) then { deleteVehicle _x; };
 } forEach _units;

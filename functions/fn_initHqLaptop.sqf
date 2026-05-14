@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initHqLaptop
+ * Adds ACE mission start and status actions to the HQ laptop.
+ */
+
 params [["_laptop", objNull, [objNull]]];
 
 if (isNull _laptop) exitWith { false };

@@ -1,8 +1,6 @@
 /*
- * DZ_fnc_missionShowHint
- *
- * Renders a styled hint for the local player. Called via remoteExec from
- * DZ_fnc_missionUI's "hint" branch.
+ * scripts/missions/fn_missionShowHint.sqf
+ * Legacy hint wrapper for mission notifications.
  */
 
 if (!hasInterface) exitWith {};

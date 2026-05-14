@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_setSectorVisualState
+ * Stores and applies a visual style id for one sector marker.
+ */
+
 params
 [
     ["_sectorId", -1],

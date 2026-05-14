@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_missionSchedulerTick
+ * Runs one scheduler tick for automatic random mission starts.
+ */
+
 if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;

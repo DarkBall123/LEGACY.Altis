@@ -1,14 +1,6 @@
 /*
- * DZ_fnc_missionUI
- *
- * Mission UI dispatcher.
- *
- *     ["create", id, pos, type, label, color]  call DZ_fnc_missionUI;
- *     ["delete", id]                            call DZ_fnc_missionUI;
- *     ["hint",   title, body]                   call DZ_fnc_missionUI;
- *
- * "create" / "delete" are server-side: createMarker is global, so all clients
- * see them. "hint" remoteExec's DZ_fnc_missionShowHint to every client (0).
+ * scripts/missions/fn_missionUI.sqf
+ * Legacy mission UI marker and hint helper.
  */
 
 params ["_action"];
@@ -18,7 +10,7 @@ switch (_action) do {
     case "create": {
         if (!isServer) exitWith {};
         params ["_action", "_id", "_pos", "_type", ["_label", ""], ["_color", "ColorRed"]];
-        deleteMarker _id;                       // safe even if marker doesn't exist
+        deleteMarker _id;
         private _marker = createMarker [_id, _pos];
         _marker setMarkerType  _type;
         _marker setMarkerText  _label;

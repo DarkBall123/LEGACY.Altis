@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initKshmVehicle
+ * Adds ACE actions for deploying a KShM vehicle as a mobile respawn point.
+ */
+
 params [["_vehicle", objNull, [objNull]]];
 
 if (isNull _vehicle) exitWith { false };

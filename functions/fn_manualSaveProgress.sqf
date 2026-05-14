@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_manualSaveProgress
+ * Persists captured sector progress and notifies the caller.
+ */
+
 if (!isServer) exitWith { false };
 
 private _savedCaptures = [];

@@ -1,15 +1,16 @@
 /*
- *  Делит карту на клетки, исключая воду (surfaceIsWater)
- *  Возвращает массив центров _cells[]
+ * DZ_fnc_generateGrid
+ * Generates a simple land-position grid across the current world.
  */
+
 private _g    = missionNamespace getVariable ["DZ_gridSize",350];
-private _size = worldSize;                                         // :contentReference[oaicite:2]{index=2}
+private _size = worldSize;
 private _cells = [];
 
 for "_ix" from 0 to floor(_size / _g) do {
     for "_iy" from 0 to floor(_size / _g) do {
         private _pos = [(_ix * _g) + _g/2, (_iy * _g) + _g/2, 0];
-        if !(surfaceIsWater _pos) then {                           // :contentReference[oaicite:3]{index=3}
+        if !(surfaceIsWater _pos) then {
             _cells pushBack _pos;
         };
     };

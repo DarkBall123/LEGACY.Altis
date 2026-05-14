@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_prepareSpawnedUnit
+ * Applies common loadout, skill, identity, and tracking setup to spawned AI units.
+ */
+
 params [["_unit", objNull]];
 
 if (isNull _unit) exitWith { false };

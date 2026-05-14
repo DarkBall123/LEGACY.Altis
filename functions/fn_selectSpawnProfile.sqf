@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_selectSpawnProfile
+ * Returns spawn profile groups, packages, and vehicles for a requested task key.
+ */
+
 params [["_taskKey", "urban_dense"]];
 
 private _taskConfigs = missionNamespace getVariable ["DZ_spawnTaskConfigs", createHashMap];

@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_setKshmDeployed
+ * Deploys or undeploys a KShM vehicle as a mobile respawn position.
+ */
+
 params [
     ["_vehicle", objNull, [objNull]],
     ["_caller", objNull, [objNull]],

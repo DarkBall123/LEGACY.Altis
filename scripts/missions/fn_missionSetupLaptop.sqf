@@ -1,26 +1,16 @@
 /*
- * DZ_fnc_missionSetupLaptop
- *
- * Attaches HQ-laptop ACE actions to a given object.
- *
- * USAGE — in the laptop's editor "Init" field, write:
- *     [this] call DZ_fnc_missionSetupLaptop;
- *
- * Editor init fields run locally on every machine (including JIP joiners),
- * so each client adds its own local ACE actions. No remoteExec needed.
- *
- * Mission state checks remain server-authoritative: clicking an action
- * remoteExec's the start request to the server (target 2).
+ * scripts/missions/fn_missionSetupLaptop.sqf
+ * Legacy laptop setup script that adds mission start actions.
  */
 
 params [["_laptop", objNull, [objNull]]];
 
 if (isNull _laptop)  exitWith {};
-if (!hasInterface)   exitWith {};        // skip dedicated server / HC
+if (!hasInterface)   exitWith {};
 if (_laptop getVariable ["DZ_missionLaptopReady", false]) exitWith {};
 _laptop setVariable ["DZ_missionLaptopReady", true];
 
-// Wait for ACE without blocking the rest of init.
+
 [
     { !isNil "ace_interact_menu_fnc_createAction" },
     {
@@ -31,7 +21,7 @@ _laptop setVariable ["DZ_missionLaptopReady", true];
             [_id, _label, "", _code, { true }] call ace_interact_menu_fnc_createAction
         };
 
-        // ── Mission: Convoy Interdiction ─────────────
+
         private _aInterdiction = [
             "mission_interdiction",
             "Миссия: Перехват поставок",
@@ -43,7 +33,7 @@ _laptop setVariable ["DZ_missionLaptopReady", true];
             }
         ] call _fnc_makeAction;
 
-        // ── Status check (reads publicVariable'd state) ──
+
         private _aStatus = [
             "mission_status",
             "Статус миссии",

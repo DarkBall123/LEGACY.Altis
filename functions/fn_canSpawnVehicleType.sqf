@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_canSpawnVehicleType
+ * Checks global and local category caps before spawning a vehicle type.
+ */
+
 params
 [
     ["_vehicleClass", ""],

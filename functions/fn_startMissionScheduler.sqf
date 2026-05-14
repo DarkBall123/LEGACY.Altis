@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_startMissionScheduler
+ * Starts the automatic mission scheduler PFH.
+ */
+
 if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;

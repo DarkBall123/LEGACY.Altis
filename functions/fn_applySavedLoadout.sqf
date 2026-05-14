@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_applySavedLoadout
+ * Applies a saved player loadout when it matches the current player identity.
+ */
+
 params
 [
     ["_unit", objNull],

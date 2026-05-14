@@ -1,13 +1,6 @@
 /*
- * DZ_fnc_missionStart
- *
- * Start a player-pickable mission. SERVER ONLY.
- *
- * Clients invoke it via:
- *     ["interdiction"] remoteExec ["DZ_fnc_missionStart", 2];
- *
- * Mission state lives in missionNamespace on the server. The variables below
- * are publicVariable'd so clients can read them for the status check / UI.
+ * scripts/missions/fn_missionStart.sqf
+ * Legacy mission start dispatcher.
  */
 
 if (!isServer) exitWith {};
@@ -34,8 +27,8 @@ publicVariable "DZ_missionStart";
 
 switch (_missionId) do {
     case "interdiction": { [] spawn DZ_fnc_m01Interdiction; };
-    // case "assassination": { [] spawn DZ_fnc_m02Assassination; };
-    // case "downed_pilot": { [] spawn DZ_fnc_m03DownedPilot; };
+
+
     default {
         diag_log format ["[MISSION] Unknown mission id: %1", _missionId];
         missionNamespace setVariable ["DZ_missionActive", false];

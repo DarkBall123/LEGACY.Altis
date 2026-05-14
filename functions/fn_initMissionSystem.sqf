@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initMissionSystem
+ * Initializes mission lifecycle state, definitions, assets, and cooldown storage.
+ */
+
 if (!isServer) exitWith { false };
 
 if ((count (missionNamespace getVariable ["DZ_missionDefinitions", createHashMap])) == 0) then

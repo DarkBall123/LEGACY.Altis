@@ -1,20 +1,6 @@
 /*
  * DZ_fnc_initRadio
- *
- * Adds ACE interaction actions (Play / Stop / Next) to a radio object.
- *
- * USAGE — radio object's editor "Init" field:
- *     [this] call DZ_fnc_initRadio;
- *
- * Architecture:
- *   - Actions are local (every machine adds its own, like the laptop).
- *   - Clicking a button remoteExec's DZ_fnc_radioControl on the SERVER
- *     so the radio's playing-state stays authoritative.
- *   - The actual playSound3D fires globally so every nearby player
- *     hears it positionally — playSound3D respects 3D distance natively.
- *
- * Track list lives in DZ_RadioTracks (set in initServer.sqf alongside
- * the radio so it's easy to add tracks without editing the function).
+ * Adds ACE play, stop, and next-track controls to a radio object.
  */
 
 params [["_radio", objNull, [objNull]]];
@@ -36,7 +22,7 @@ _radio setVariable ["radio_actions_added", true, false];
             [_id, _label, "", _code, _condition] call ace_interact_menu_fnc_createAction
         };
 
-        // Parent action — players open this and the three controls sit inside.
+
         private _aRoot = [
             "radio_root",
             "Радио",
@@ -74,7 +60,7 @@ _radio setVariable ["radio_actions_added", true, false];
             { (_target getVariable ['radio_playing', false]) }
         ] call _fnc_makeAction;
 
-        // Mount the parent under ACE_MainActions, then nest controls inside it.
+
         [_radio, 0, ["ACE_MainActions"], _aRoot] call ace_interact_menu_fnc_addActionToObject;
         [_radio, 0, ["ACE_MainActions", "radio_root"], _aPlay] call ace_interact_menu_fnc_addActionToObject;
         [_radio, 0, ["ACE_MainActions", "radio_root"], _aStop] call ace_interact_menu_fnc_addActionToObject;

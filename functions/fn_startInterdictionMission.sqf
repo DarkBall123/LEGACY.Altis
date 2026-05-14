@@ -1,15 +1,6 @@
 /*
  * DZ_fnc_startInterdictionMission
- *
- * Mission 01 — Convoy Interdiction (SERVER ONLY).
- *
- * Picks two random enemy-held sectors (start far apart from each other),
- * snaps both to nearest road, spawns a 3-vehicle convoy (M113 escort +
- * 2 supply trucks), attaches optional escort infantry, tracks win/lose
- * conditions in a CBA per-frame handler.
- *
- * Lifecycle: prepareMissionState -> spawn -> CBA per-frame handlers ->
- * endMission.
+ * Starts the interdiction convoy mission and tracks convoy destruction or escape.
  */
 
 if (!isServer) exitWith { false };
@@ -25,7 +16,7 @@ if !(missionNamespace getVariable ["DZ_missionActive", false]) then
     ["interdiction", "manual", _definition] call DZ_fnc_prepareMissionState;
 };
 
-// ── Find enemy-held sectors ──────────────────────────────
+
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
 private _zoneData  = missionNamespace getVariable ["DZ_zoneData",          []];
 private _zoneTpl   = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
@@ -56,9 +47,7 @@ if (count _enemySectors < 2) exitWith
     false
 };
 
-// ── Pick start/end with road-snap and minimum distance ───
-// Try up to 5 random pairs to find one where both endpoints have a road
-// nearby and the route is at least 1km long.
+
 private _startPos = [];
 private _endPos = [];
 private _spawnPos = [];
@@ -76,7 +65,7 @@ for "_attempt" from 1 to 5 do
     private _candStart = _cells select _startIdx;
     private _candEnd   = _cells select _endIdx;
 
-    // Snap to roads
+
     private _startRoad = [_candStart, 250] call BIS_fnc_nearestRoad;
     private _endRoad   = [_candEnd,   250] call BIS_fnc_nearestRoad;
 
@@ -87,7 +76,7 @@ for "_attempt" from 1 to 5 do
         _spawnPos = getPosATL _startRoad;
     };
 
-    // Last attempt — fall back to using sector centers even without road snap
+
     if (_attempt == 5) then
     {
         _startPos = _candStart;
@@ -108,9 +97,7 @@ private _convoyDir = _spawnPos getDir _endPos;
 diag_log format ["[INTERDICTION] Convoy route: %1m, spawn at %2 -> dest at %3",
     round (_spawnPos distance2D _endPos), _spawnPos, _endPos];
 
-// ── Convoy composition ───────────────────────────────────
-// Position 1 (lead/escort): M113 — provides AT threat
-// Position 2-3 (cargo):     supply trucks
+
 private _vehicleDefs =
 [
     ["LOP_AFR_M113_W",  0],
@@ -118,7 +105,7 @@ private _vehicleDefs =
     ["LOP_AFR_T34",  36]
 ];
 
-// Single shared group for column movement
+
 private _convoyGroup    = createGroup [_sideEnemy, true];
 private _convoyVehicles = [];
 private _missionUnits   = [];

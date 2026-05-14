@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_publishSectorState
+ * Publishes sector state arrays to clients for UI and respawn updates.
+ */
+
 private _sectorState = missionNamespace getVariable ["DZ_sectorVisualState", []];
 private _lastSectorState = missionNamespace getVariable ["DZ_lastSectorVisualState", []];
 

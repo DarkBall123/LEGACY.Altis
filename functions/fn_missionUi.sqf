@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_missionUi
+ * Centralizes mission hints, marker creation, updates, and deletion.
+ */
+
 params [["_action", "", [""]]];
 
 switch (_action) do

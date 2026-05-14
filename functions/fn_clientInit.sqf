@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_clientInit
+ * Initializes client-side systems such as loadout persistence, respawn markers, and ambient audio.
+ */
+
 if (!hasInterface) exitWith {};
 
 if (missionNamespace getVariable ["DZ_clientInitDone", false]) exitWith {};

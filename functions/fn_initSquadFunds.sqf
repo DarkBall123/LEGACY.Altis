@@ -1,29 +1,16 @@
 /*
  * DZ_fnc_initSquadFunds
- *
- * Initializes the shared squad funds (money) system. Mirrors the
- * pattern of the reputation system:
- *   - Server-authoritative state in missionNamespace, broadcast
- *   - Persisted to profileNamespace across restarts
- *   - Map marker shows current balance
- *   - Hooked into DZ_missionEnded event for automatic rewards
- *
- * Called once from initServer.sqf:
- *   call DZ_fnc_initSquadFunds;
+ * Initializes persistent squad funds, reward hooks, and balance markers.
  */
 
 if (!isServer) exitWith {};
 if (missionNamespace getVariable ["DZ_squadFundsInitialized", false]) exitWith {};
 missionNamespace setVariable ["DZ_squadFundsInitialized", true];
 
-// ── Initial balance ──────────────────────────────────────
+
 private _savedBalance = profileNamespace getVariable ["DZ_squadFundsBalance", 500];
 missionNamespace setVariable ["DZ_squadFundsBalance", _savedBalance, true];
 
-// ── Mission reward table ─────────────────────────────────
-//
-// Edit values here to rebalance. _missionId -> reward in rubles.
-// Missions not in this table give 0 on success.
 
 missionNamespace setVariable ["DZ_squadFundsMissionRewards", createHashMapFromArray [
     ["interdiction",     200],
@@ -35,15 +22,11 @@ missionNamespace setVariable ["DZ_squadFundsMissionRewards", createHashMapFromAr
     ["eod",              450]
 ]];
 
-// ── Marker position ──────────────────────────────────────
-//
-// Defaults to a spot near the reputation marker. Override by setting
-// missionNamespace's "DZ_squadFundsMarkerPos" before this init runs.
 
 DZ_fnc_squadFundsMarkerPos = {
     private _pos = missionNamespace getVariable ["DZ_squadFundsMarkerPos", []];
     if (_pos isEqualType [] && { count _pos >= 2 }) exitWith { _pos };
-    [10400, -160, 0]   // sits below the reputation marker
+    [10400, -160, 0]
 };
 
 DZ_fnc_squadFundsMarkerColor = {
@@ -89,7 +72,7 @@ DZ_fnc_squadFundsUpdateMarker = {
     } forEach _markers;
 };
 
-// ── Adjust balance (positive = add, negative = subtract) ──
+
 DZ_fnc_squadFundsAdjust = {
     params [
         ["_amount", 0, [0]],
@@ -110,13 +93,13 @@ DZ_fnc_squadFundsAdjust = {
     _newValue
 };
 
-// ── Has-funds check ──────────────────────────────────────
+
 DZ_fnc_squadFundsHasEnough = {
     params [["_amount", 0, [0]]];
     (missionNamespace getVariable ["DZ_squadFundsBalance", 0]) >= _amount
 };
 
-// ── Mission completion reward hook ───────────────────────
+
 ["DZ_missionEnded", {
     params [
         ["_missionId", "", [""]],
@@ -143,7 +126,7 @@ DZ_fnc_squadFundsHasEnough = {
     ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 }] call CBA_fnc_addEventHandler;
 
-// Initialize the marker now
+
 call DZ_fnc_squadFundsUpdateMarker;
 
 diag_log format ["[DZ_FUNDS] Squad funds system initialized. Balance=%1₽", _savedBalance];
