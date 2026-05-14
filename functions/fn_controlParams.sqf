@@ -263,6 +263,7 @@ missionNamespace setVariable ["DZ_counterGlobalCooldown", 180];
 missionNamespace setVariable ["DZ_counterFirstChance", 0.01];
 missionNamespace setVariable ["DZ_counterRepeatChance", 0.02];
 missionNamespace setVariable ["DZ_counterMaxActive", 1];
+missionNamespace setVariable ["DZ_counterAttacksEnabled", false];
 missionNamespace setVariable ["DZ_frontMinEnemyNeighbors", 2];
 missionNamespace setVariable ["DZ_counterSpawnRadius", _gridSize * 0.35];
 
