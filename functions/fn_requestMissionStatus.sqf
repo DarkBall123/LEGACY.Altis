@@ -9,7 +9,7 @@ params [
 
 if (!isServer) exitWith {};
 if (isNull _caller) exitWith {};
-if (!isNil "remoteExecutedOwner" && {owner _caller != remoteExecutedOwner}) exitWith {};
+if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 
 private _replyTarget = owner _caller;
 
