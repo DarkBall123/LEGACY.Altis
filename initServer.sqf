@@ -7,6 +7,7 @@ call DZ_fnc_controlParams;
 call DZ_fnc_initServer;
 call DZ_fnc_initAbandonedVehicleCleanup;
 call DZ_fnc_initZeusCleanupHook;
+call DZ_fnc_initPylonRestrictions;
 east setFriend [resistance, 0];
 resistance setFriend [east, 0];
 west setFriend [resistance, 1];

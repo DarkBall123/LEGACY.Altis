@@ -28,12 +28,15 @@ class CfgFunctions
 
             class applyOriginalLoadout {};
             class buildSectorGrid {};
+            class createMarkers {};
             class applySavedLoadout {};
             class canSpawnVehicleType {};
             class clientInit { postInit = 1; };
             class controlParams { preInit = 1; };
             class flushSavedLoadouts {};
+            class generateGrid {};
             class getUrbanCells {};
+            class getUrbanLocations {};
             class handleStateUpdate {};
             class handleZonesPFH {};
             class initRespawnMarkers {};
@@ -128,6 +131,8 @@ class CfgFunctions
 
             class initAbandonedVehicleCleanup {};
             class initZeusCleanupHook         {};
+            class initPylonRestrictions       {};
+            class enforcePylonRestrictions    {};
         };
     };
 };
