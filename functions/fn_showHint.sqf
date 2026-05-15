@@ -9,6 +9,7 @@ params [
 ];
 
 if (!hasInterface) exitWith {};
+if (!isNil "remoteExecutedOwner" && { remoteExecutedOwner != 2 }) exitWith {};
 
 if (_body isEqualTo "") then {
     hintSilent _title;

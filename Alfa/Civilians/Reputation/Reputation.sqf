@@ -160,6 +160,7 @@ ALFA_fnc_repGiveRation = {
 
     if (isNull _civilian || { isNull _player }) exitWith {};
     if (!alive _civilian || { !alive _player }) exitWith {};
+    if (!isNil "remoteExecutedOwner" && { owner _player != remoteExecutedOwner }) exitWith {};
     if !(_civilian getVariable ["ALFA_repTrackedCivilian", false]) exitWith {};
     if (_civilian getVariable ["ALFA_repWaterGiven", false]) exitWith {};
     if (_player distance2D _civilian > 4) exitWith {};
@@ -177,6 +178,7 @@ ALFA_fnc_repGiveWater = {
 
     if (isNull _civilian || { isNull _player }) exitWith {};
     if (!alive _civilian || { !alive _player }) exitWith {};
+    if (!isNil "remoteExecutedOwner" && { owner _player != remoteExecutedOwner }) exitWith {};
     if !(_civilian getVariable ["ALFA_repTrackedCivilian", false]) exitWith {};
     if (_civilian getVariable ["ALFA_repWaterGiven", false]) exitWith {};
     if (_player distance2D _civilian > 4) exitWith {};

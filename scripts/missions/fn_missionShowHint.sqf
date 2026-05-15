@@ -4,6 +4,7 @@
  */
 
 if (!hasInterface) exitWith {};
+if (!isNil "remoteExecutedOwner" && { remoteExecutedOwner != 2 }) exitWith {};
 
 params ["_title", "_body"];
 

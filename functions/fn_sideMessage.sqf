@@ -9,6 +9,7 @@ params [
 ];
 
 if (!hasInterface) exitWith {};
+if (!isNil "remoteExecutedOwner" && { remoteExecutedOwner != 2 }) exitWith {};
 if (_message isEqualTo "") exitWith {};
 if (_side != sideUnknown && {side player != _side}) exitWith {};
 

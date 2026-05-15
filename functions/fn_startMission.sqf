@@ -15,6 +15,16 @@ private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
 diag_log format ["[DZ_START] %1 by %2 (source=%3)", _missionId, _caller, _source];
 
+if (_source == "manual" && { isNull _caller || { !isPlayer _caller } }) exitWith { false };
+if (_source == "manual" && { !isNil "remoteExecutedOwner" } && { owner _caller != remoteExecutedOwner }) exitWith { false };
+
+private _hqLaptop = missionNamespace getVariable ["hq_laptop", objNull];
+if (_source == "manual" && { !isNull _hqLaptop } && { (_caller distance _hqLaptop) > 10 }) exitWith
+{
+    ["Штаб", "Запуск миссий доступен только у штабного терминала."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    false
+};
+
 call DZ_fnc_initMissionSystem;
 
 private _definition = [_missionId] call DZ_fnc_getMissionDefinition;

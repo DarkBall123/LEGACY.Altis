@@ -10,6 +10,7 @@ params
 ];
 
 if (!hasInterface) exitWith { false };
+if (!isNil "remoteExecutedOwner" && { remoteExecutedOwner != 2 }) exitWith { false };
 if (isNull _unit || { !(_loadout isEqualType []) } || { _loadout isEqualTo [] }) exitWith { false };
 
 [
