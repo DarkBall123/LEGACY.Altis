@@ -35,7 +35,7 @@ _radio setVariable ["radio_actions_added", true, false];
             "Включить",
             {
                 params ["_target", "_player"];
-                [_target, "play", _player] remoteExecCall ["DZ_fnc_radioControl", 2];
+                [_target, "play"] remoteExecCall ["DZ_fnc_radioControl", 2];
             },
             { !((_target getVariable ['radio_playing', false])) }
         ] call _fnc_makeAction;
@@ -45,7 +45,7 @@ _radio setVariable ["radio_actions_added", true, false];
             "Выключить",
             {
                 params ["_target", "_player"];
-                [_target, "stop", _player] remoteExecCall ["DZ_fnc_radioControl", 2];
+                [_target, "stop"] remoteExecCall ["DZ_fnc_radioControl", 2];
             },
             { (_target getVariable ['radio_playing', false]) }
         ] call _fnc_makeAction;
@@ -55,7 +55,7 @@ _radio setVariable ["radio_actions_added", true, false];
             "Следующий трек",
             {
                 params ["_target", "_player"];
-                [_target, "next", _player] remoteExecCall ["DZ_fnc_radioControl", 2];
+                [_target, "next"] remoteExecCall ["DZ_fnc_radioControl", 2];
             },
             { (_target getVariable ['radio_playing', false]) }
         ] call _fnc_makeAction;

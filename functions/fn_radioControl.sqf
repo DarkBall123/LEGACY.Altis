@@ -7,14 +7,10 @@ if (!isServer) exitWith {};
 
 params [
     ["_radio",  objNull, [objNull]],
-    ["_action", "",      [""]],
-    ["_caller", objNull, [objNull]]
+    ["_action", "",      [""]]
 ];
 
 if (isNull _radio) exitWith {};
-if (!isNil "remoteExecutedOwner" && { isNull _caller || { !isPlayer _caller } }) exitWith {};
-if (!isNil "remoteExecutedOwner" && { owner _caller != remoteExecutedOwner }) exitWith {};
-if (!isNil "remoteExecutedOwner" && { (_caller distance _radio) > 8 }) exitWith {};
 
 private _tracks = missionNamespace getVariable ["DZ_RadioTracks", []];
 if (_tracks isEqualTo []) exitWith

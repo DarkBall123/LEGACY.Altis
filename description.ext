@@ -61,7 +61,6 @@ class CfgFunctions
             class manualSaveProgress {};
             class initSquadFunds           {};
             class initQuartermaster        {};
-            class getQuartermasterCatalog  {};
             class purchaseItem             {};
             class squadFundsRequestBalance {};
             class saveAssets               {};
@@ -155,38 +154,13 @@ class CfgRemoteExec
 {
     class Functions
     {
-        mode = 1;
+        mode = 2;
         jip = 0;
-
-        class BIS_fnc_effectKilledAirDestruction { allowedTargets = 0; jip = 0; };
-        class BIS_fnc_effectKilledSecondaries    { allowedTargets = 0; jip = 0; };
-        class BIS_fnc_fire                       { allowedTargets = 0; jip = 0; };
-        class BIS_fnc_objectVar                  { allowedTargets = 0; jip = 0; };
-        class BIS_fnc_setCustomSoundController   { allowedTargets = 0; jip = 0; };
-
-        class DZ_fnc_applySavedLoadout           { allowedTargets = 1; jip = 0; };
-        class DZ_fnc_enforcePylonRestrictions    { allowedTargets = 0; jip = 0; };
-        class DZ_fnc_purchaseItem                { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_radioControl                { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_radioPlayLocal              { allowedTargets = 1; jip = 0; };
-        class DZ_fnc_requestMissionStatus        { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_requestSavedLoadout         { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_requestTransport            { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_setKshmDeployed             { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_showHint                    { allowedTargets = 1; jip = 0; };
-        class DZ_fnc_sideMessage                 { allowedTargets = 1; jip = 0; };
-        class DZ_fnc_squadFundsRequestBalance    { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_startMission                { allowedTargets = 2; jip = 0; };
-
-        class ALFA_fnc_repGiveRation             { allowedTargets = 2; jip = 0; };
-        class ALFA_fnc_repGiveWater              { allowedTargets = 2; jip = 0; };
     };
 
     class Commands
     {
-        mode = 1;
+        mode = 2;
         jip = 0;
-
-        class addAction                          { allowedTargets = 1; jip = 0; };
     };
 };

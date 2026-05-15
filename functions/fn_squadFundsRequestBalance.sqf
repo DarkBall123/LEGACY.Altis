@@ -6,10 +6,7 @@
 if (!isServer) exitWith {};
 
 params [["_caller", objNull, [objNull]]];
-if (isNull _caller || { !isPlayer _caller }) exitWith {};
-if (!isNil "remoteExecutedOwner" && { owner _caller != remoteExecutedOwner }) exitWith {};
-
-private _replyTarget = owner _caller;
+private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
 private _balance = missionNamespace getVariable ["DZ_squadFundsBalance", 0];
 
