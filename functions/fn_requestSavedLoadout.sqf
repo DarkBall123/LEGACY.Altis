@@ -8,7 +8,7 @@ params [["_unit", objNull]];
 if (!isServer) exitWith { false };
 if (isNull _unit || { !isPlayer _unit }) exitWith { false };
 
-if (!isNil "remoteExecutedOwner" && { owner _unit != remoteExecutedOwner }) exitWith
+if (isRemoteExecuted && { owner _unit != remoteExecutedOwner }) exitWith
 {
     false
 };
