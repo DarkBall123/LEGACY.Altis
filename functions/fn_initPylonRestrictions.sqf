@@ -1,21 +1,14 @@
 /*
  * DZ_fnc_initPylonRestrictions
- * Starts forbidden-pylon filtering and exempts Zeus-spawned air assets.
+ * Starts forbidden-pylon filtering and marks local Zeus-spawned assets as exempt.
  */
-
-if (!isServer) exitWith {};
-if (missionNamespace getVariable ["DZ_pylonRestrictionsInitDone", false]) exitWith {};
-missionNamespace setVariable ["DZ_pylonRestrictionsInitDone", true];
-
-missionNamespace setVariable ["DZ_forbiddenPylonClassTokens", ["EMP", "NAPALM", "FSNB_", "ASPHYXIANT", "BLISTER", "NERVE", "NOVA", "RIOTCSGAS"], true];
-missionNamespace setVariable ["DZ_forbiddenPylonDisplayTokens", ["EMP", "GAS", "NUCLEAR", "BLISTER AGENT", "NAPALM"], true];
 
 private _attachCuratorHandler =
 {
     {
         private _curator = _x;
 
-        if (!(_curator getVariable ["DZ_pylonRestrictionsCuratorEh", false])) then
+        if (local _curator && { !(_curator getVariable ["DZ_pylonRestrictionsCuratorEh", false]) }) then
         {
             _curator setVariable ["DZ_pylonRestrictionsCuratorEh", true];
             _curator addEventHandler
@@ -39,6 +32,29 @@ private _attachCuratorHandler =
         };
     } forEach allCurators;
 };
+
+if (hasInterface && { !(missionNamespace getVariable ["DZ_pylonRestrictionsCuratorWatcherDone", false]) }) then
+{
+    missionNamespace setVariable ["DZ_pylonRestrictionsCuratorWatcherDone", true];
+    call _attachCuratorHandler;
+
+    [
+        {
+            params ["_args", "_handle"];
+            _args params ["_attachCuratorHandler"];
+            call _attachCuratorHandler;
+        },
+        missionNamespace getVariable ["DZ_pylonCuratorCheckInterval", 5],
+        [_attachCuratorHandler]
+    ] call CBA_fnc_addPerFrameHandler;
+};
+
+if (!isServer) exitWith {};
+if (missionNamespace getVariable ["DZ_pylonRestrictionsInitDone", false]) exitWith {};
+missionNamespace setVariable ["DZ_pylonRestrictionsInitDone", true];
+
+missionNamespace setVariable ["DZ_forbiddenPylonClassTokens", ["EMP", "NAPALM", "FSNB_", "ASPHYXIANT", "BLISTER", "NERVE", "NOVA", "RIOTCSGAS"], true];
+missionNamespace setVariable ["DZ_forbiddenPylonDisplayTokens", ["EMP", "GAS", "NUCLEAR", "BLISTER AGENT", "NAPALM"], true];
 
 call _attachCuratorHandler;
 
