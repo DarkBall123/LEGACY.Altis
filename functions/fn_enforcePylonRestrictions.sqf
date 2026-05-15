@@ -10,12 +10,6 @@ if (_vehicle getVariable ["DZ_createdByZeus", false]) exitWith { false };
 if (_vehicle getVariable ["DZ_noPylonRestrictions", false]) exitWith { false };
 if !(_vehicle isKindOf "Air") exitWith { false };
 
-if (!local _vehicle) exitWith
-{
-    [_vehicle] remoteExecCall ["DZ_fnc_enforcePylonRestrictions", _vehicle];
-    false
-};
-
 private _pylons = getPylonMagazines _vehicle;
 if (_pylons isEqualTo []) exitWith { false };
 
@@ -29,8 +23,7 @@ private _displayTokens = missionNamespace getVariable
     "DZ_forbiddenPylonDisplayTokens",
     ["EMP", "GAS", "NUCLEAR", "BLISTER AGENT", "NAPALM"]
 ];
-private _pylonsInfo = getAllPylonsInfo _vehicle;
-private _removed = [];
+private _blockedPylons = [];
 
 {
     private _magazine = _x;
@@ -45,19 +38,36 @@ private _removed = [];
         if (_blockedByClass || { _blockedByDisplay }) then
         {
             private _pylonIndex = _forEachIndex + 1;
-            private _pylonInfo = _pylonsInfo param [_forEachIndex, []];
-            private _turret = _pylonInfo param [2, []];
-            if !(_turret isEqualType []) then
-            {
-                _turret = [];
-            };
-
-            _vehicle setPylonLoadout [_pylonIndex, "", true, _turret];
-            _vehicle setAmmoOnPylon [_pylonIndex, 0];
-            _removed pushBack [_pylonIndex, _magazine, _displayText];
+            _blockedPylons pushBack [_pylonIndex, _magazine, _displayText];
         };
     };
 } forEach _pylons;
+
+if (_blockedPylons isEqualTo []) exitWith { false };
+
+if (!local _vehicle) exitWith
+{
+    [_vehicle] remoteExecCall ["DZ_fnc_enforcePylonRestrictions", _vehicle];
+    false
+};
+
+private _pylonsInfo = getAllPylonsInfo _vehicle;
+private _removed = [];
+
+{
+    _x params ["_pylonIndex", "_magazine", "_displayText"];
+
+    private _pylonInfo = _pylonsInfo param [_pylonIndex - 1, []];
+    private _turret = _pylonInfo param [2, []];
+    if !(_turret isEqualType []) then
+    {
+        _turret = [];
+    };
+
+    _vehicle setPylonLoadout [_pylonIndex, "", true, _turret];
+    _vehicle setAmmoOnPylon [_pylonIndex, 0];
+    _removed pushBack [_pylonIndex, _magazine, _displayText];
+} forEach _blockedPylons;
 
 if (_removed isNotEqualTo []) then
 {
