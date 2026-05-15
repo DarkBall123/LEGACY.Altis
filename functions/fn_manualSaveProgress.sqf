@@ -1,6 +1,6 @@
 /*
  * DZ_fnc_manualSaveProgress
- * Persists captured sector progress and notifies the caller.
+ * Persists captured sectors, player loadouts and asset snapshots.
  */
 
 if (!isServer) exitWith { false };
@@ -43,8 +43,11 @@ missionNamespace setVariable ["DZ_savedCapturesCache", _savedCaptures];
 } forEach (allPlayers select { !isNull _x && { isPlayer _x } && { alive _x } });
 
 private _loadoutsSaved = call DZ_fnc_flushSavedLoadouts;
+
+private _assetsSaved = [true] call DZ_fnc_saveAssets;
+
 saveProfileNamespace;
 
-diag_log format ["[DZ] Manual save completed: captures=%1 loadoutsSaved=%2", count _savedCaptures, _loadoutsSaved];
+diag_log format ["[DZ] Manual save completed: captures=%1 loadoutsSaved=%2 assetsSaved=%3", count _savedCaptures, _loadoutsSaved, _assetsSaved];
 
 true

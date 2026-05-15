@@ -60,6 +60,8 @@ class CfgFunctions
             class initQuartermaster        {};
             class purchaseItem             {};
             class squadFundsRequestBalance {};
+            class saveAssets               {};
+            class restoreAssets            {};
         };
 
 

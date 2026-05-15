@@ -59,6 +59,9 @@ _item setVariable ["DZ_noCleanup", true, true];
 _item setVariable ["DZ_purchasedItem", true, true];
 _item setVariable ["DZ_purchasedBy", name _buyer, true];
 
+_item setVariable ["DZ_persist", true, true];
+missionNamespace setVariable ["DZ_assetsDirty", true];
+[true] call DZ_fnc_saveAssets;
 
 diag_log format ["[DZ_PURCHASE] %1 bought by %2 for %3₽. Spawned at %4. New balance: %5₽.",
     _itemId, name _buyer, _cost, _spawnPos, _newBalance];

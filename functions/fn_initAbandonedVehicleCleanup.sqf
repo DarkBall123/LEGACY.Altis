@@ -68,6 +68,10 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
                 {
                     diag_log format ["[ABANDONED_VEHICLE] Cleaning up %1 (idle for %2s) at %3",
                         typeOf _veh, round (_now - _lastUsed), getPosATL _veh];
+                    if (_veh getVariable ["DZ_persist", false]) then
+                    {
+                        missionNamespace setVariable ["DZ_assetsDirty", true];
+                    };
                     deleteVehicle _veh;
                 };
             };

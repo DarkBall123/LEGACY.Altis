@@ -65,6 +65,10 @@ _vehicle setDamage 0;
 _vehicle setVariable ["DZ_trackAbandoned", true, true];
 _vehicle setVariable ["DZ_lastUsed", time, true];
 
+_vehicle setVariable ["DZ_persist", true, true];
+missionNamespace setVariable ["DZ_assetsDirty", true];
+[true] call DZ_fnc_saveAssets;
+
 missionNamespace setVariable ["DZ_transportLastRequest", time, true];
 
 ["Транспорт", "УАЗ готов на точке логистики."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
