@@ -128,6 +128,8 @@ class CfgFunctions
 
             class initAbandonedVehicleCleanup {};
             class initZeusCleanupHook         {};
+            class initPylonRestrictions       {};
+            class enforcePylonRestrictions    {};
         };
     };
 };
