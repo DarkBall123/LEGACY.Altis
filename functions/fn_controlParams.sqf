@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_controlParams
+ * Defines mission-wide constants, unit pools, spawn profiles, timings, and feature toggles.
+ */
+
 params [["_eps", 100]];
 
 private _gridSize = 350;
@@ -14,9 +19,6 @@ private _respawnPoints =
     ["База", [1577.408, 8535.449, 0]]
 ];
 
-// ─────────────────────────────────────────────────────────
-// UNIT POOLS
-// ─────────────────────────────────────────────────────────
 
 private _urbanUnitPool =
 [
@@ -236,9 +238,6 @@ private _spawnTaskConfigs = createHashMapFromArray
     ["counterattack_open", createHashMapFromArray [["groups", [[1, 1], _counterSquads]], ["packages", [[0, 1], _counterPackages]], ["vehicles", [[0, 1], _counterVehiclePool]]]]
 ];
 
-// ─────────────────────────────────────────────────────────
-// MISSION-NAMESPACE PARAMETERS
-// ─────────────────────────────────────────────────────────
 
 missionNamespace setVariable ["DZ_gridSize", _gridSize];
 missionNamespace setVariable ["DZ_alpha", 0.35];
@@ -283,24 +282,10 @@ missionNamespace setVariable ["DZ_vehicleCategoryCaps", _vehicleCategoryCaps];
 missionNamespace setVariable ["DZ_vehicleCategoryLocalCaps", _vehicleCategoryLocalCaps];
 missionNamespace setVariable ["DZ_vehicleCategoryLocalRadius", _gridSize * 2.25];
 
-// ── CLEANUP / DESPAWN TIMINGS ─────────────────────────────
-//
-// Sector despawn (live cleanup of enemy patrols when nobody's around):
-//   DZ_enableLiveDespawn — master switch
-//   DZ_cleanupDelay      — seconds without players nearby before despawn
-//
-// Mission cleanup (mission-specific spawned units after success/failure):
-//   DZ_missionCleanupDelay — seconds after mission ends before living
-//                            assets are deleted (wrecks/bodies stay)
-//
-// Abandoned vehicle cleanup (transport-spawned vehicles like UAZs):
-//   DZ_abandonedVehicleEnabled  — master switch
-//   DZ_abandonedVehicleTimeout  — seconds of "abandoned" before deletion
-//   DZ_abandonedVehicleCheckInterval — how often the PFH polls
 
 missionNamespace setVariable ["DZ_enableLiveDespawn",        true];
-missionNamespace setVariable ["DZ_cleanupDelay",             300];   // 5 min sector despawn
-missionNamespace setVariable ["DZ_missionCleanupDelay",      900];   // 15 min mission cleanup
+missionNamespace setVariable ["DZ_cleanupDelay",             300];
+missionNamespace setVariable ["DZ_missionCleanupDelay",      900];
 missionNamespace setVariable ["DZ_abandonedVehicleEnabled",  true];
-missionNamespace setVariable ["DZ_abandonedVehicleTimeout",  900];   // 15 min unused
-missionNamespace setVariable ["DZ_abandonedVehicleCheckInterval", 60];   // poll every 60s
+missionNamespace setVariable ["DZ_abandonedVehicleTimeout",  900];
+missionNamespace setVariable ["DZ_abandonedVehicleCheckInterval", 60];

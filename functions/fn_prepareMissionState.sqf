@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_prepareMissionState
+ * Sets active mission state before an individual mission spawns its assets.
+ */
+
 params [
     ["_missionId", "", [""]],
     ["_source", "manual", [""]],

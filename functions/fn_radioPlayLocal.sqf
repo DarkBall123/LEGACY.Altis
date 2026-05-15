@@ -1,19 +1,6 @@
 /*
  * DZ_fnc_radioPlayLocal
- *
- * Plays a radio track for the local player at the radio's position.
- * Called via remoteExec from DZ_fnc_radioControl on every client.
- *
- *     [_radio, _path, _title] remoteExec ["DZ_fnc_radioPlayLocal", 0, _radio];
- *
- * Why playSound3D and not say3D:
- *   - say3D requires a CfgSounds entry per track (config-bound).
- *   - playSound3D takes a direct file path, so we can add tracks by
- *     just dropping .ogg files into sound\ and updating DZ_RadioTracks.
- *
- * Range / falloff:
- *   - Args 6/7 of playSound3D are distance and pitch. distance=30 means
- *     the sound is fully audible up to 30m, fading naturally beyond.
+ * Plays a resolved mission radio track locally at the radio object position.
  */
 
 if (!hasInterface) exitWith {};
@@ -27,18 +14,37 @@ params [
 if (isNull _radio) exitWith {};
 if (_path isEqualTo "") exitWith {};
 
+private _isEnginePath = ((_path select [0, 1]) == "\") ||
+    { (_path find ":") >= 0 } ||
+    { (_path select [0, 3]) == "A3\" };
+
+private _soundPath = if (_isEnginePath) then
+{
+    _path
+}
+else
+{
+    getMissionPath _path
+};
+
+if (_soundPath isEqualTo "") exitWith
+{
+    diag_log format ["[RADIO] Could not resolve mission sound path: %1", _path];
+};
+
 playSound3D [
-    _path,
-    _radio,         // attach to radio object so it tracks its position
-    false,          // not playing on the player (= world position)
+    _soundPath,
+    _radio,
+    false,
     getPosASL _radio,
-    1.0,            // volume (1.0 = full)
-    1.0,            // pitch
-    30              // distance — this is the "fully audible" radius
+    1.0,
+    1.0,
+    30,
+    0,
+    true
 ];
 
-// Subtle on-screen marker for the local player so they know what's playing.
-// Falls back gracefully if showHint isn't loaded yet.
+
 if (_title != "" && { player distance _radio < 30 }) then
 {
     private _msg = format ["📻 %1", _title];

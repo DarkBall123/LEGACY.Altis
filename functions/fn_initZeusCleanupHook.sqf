@@ -1,25 +1,6 @@
 /*
  * DZ_fnc_initZeusCleanupHook
- *
- * Run once on server init. Solves the problem of:
- *   - Admin uses Zeus to clean up bad spawns / dead enemies / clutter
- *   - Zeus doesn't know about DZ_fnc_endMission
- *   - Mission markers, state flags, and PFH handlers stay live
- *   - Map fills up with stale markers, can't start new missions
- *
- * Two complementary mechanisms here:
- *
- *   1. Periodic mission integrity check — if a mission is "active" but
- *      its critical objects (target, pilot) are null or all-dead, end it.
- *   2. Admin-only "Force end mission" Zeus radial action — admin can
- *      explicitly cancel and clear without touching individual units.
- *
- * Mission state in missionNamespace:
- *   DZ_missionActive       (bool)
- *   DZ_missionCurrentId    (string)
- *   DZ_assassinationTarget (object)
- *   DZ_pilotMissionTarget  (object)
- *   ... etc
+ * Starts defensive mission cleanup checks for Zeus-deleted assets and stale markers.
  */
 
 if (!isServer) exitWith {};
@@ -33,7 +14,7 @@ diag_log "[ZEUS_CLEANUP] Initializing mission integrity watcher.";
     {
         params ["_args", "_handle"];
 
-        // Bail if no mission active — nothing to check
+
         if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
 
         private _missionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
@@ -64,19 +45,15 @@ diag_log "[ZEUS_CLEANUP] Initializing mission integrity watcher.";
 
             case "interdiction":
             {
-                // Convoy mission tracks its own state via PFH; if the PFH
-                // is gone or the convoy units list is empty, that's
-                // detected by the PFH itself. We just check that the
-                // mission asset list isn't completely empty.
+
+
                 private _vehicles = missionNamespace getVariable ["DZ_missionVehicles", []];
                 private _aliveCount = ({ !isNull _x && { alive _x } } count _vehicles);
 
                 if (_vehicles isNotEqualTo [] && _aliveCount == 0) then
                 {
-                    // PFH normally handles this within 5s, give it some
-                    // slack — only orphan if mission has been "vehicleless"
-                    // for over 30s (PFH should have caught this and called
-                    // endMission already).
+
+
                     private _emptySince = missionNamespace getVariable ["DZ_interdictionEmptySince", 0];
                     if (_emptySince == 0) then
                     {
@@ -109,17 +86,16 @@ diag_log "[ZEUS_CLEANUP] Initializing mission integrity watcher.";
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
-    5,   // poll every 5 seconds
+    5,
     []
 ] call CBA_fnc_addPerFrameHandler;
 
-// ── Cleanup pass on mission start: defensively wipe any stale markers
-// from previous sessions that didn't end cleanly. Runs once at startup.
+
 {
     if ((markerType _x) != "" && { _x find "marker_" == 0 }) then
     {
-        // Only delete markers that look like ours (DZ-style) AND that
-        // are NOT part of an active mission's marker list
+
+
         private _activeMarkers = missionNamespace getVariable ["DZ_missionMarkers", []];
         if !(_x in _activeMarkers) then
         {

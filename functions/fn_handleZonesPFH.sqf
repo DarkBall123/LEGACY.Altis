@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_handleZonesPFH
+ * Runs the main sector control loop for capture, spawning, despawn, and counterattack checks.
+ */
+
 private _eps = missionNamespace getVariable ["DZ_eps", 300];
 private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];
 private _preMul = missionNamespace getVariable ["DZ_preSpawnFactor", 1.5];
@@ -424,9 +429,8 @@ for "_idx" from 0 to (_sectorCount - 1) do
 
     if (!_captured && { !_spawned } && { !_spawnBlocked }) then
     {
-        // BASE SAFE ZONE — skip enemy spawning if sector center is inside
-        // the 'base_safe_zone' marker. Handles both ELLIPSE and RECTANGLE
-        // shapes properly (RECTANGLE uses rotated bounding-box check).
+
+
         private _inSafeZone = false;
         if ((markerType "base_safe_zone") != "") then
         {
@@ -440,10 +444,10 @@ for "_idx" from 0 to (_sectorCount - 1) do
 
             if (_safeShape == "RECTANGLE") then
             {
-                // Rotated rectangle bounding-box check
+
                 private _dx = (_center # 0) - (_safeCenter # 0);
                 private _dy = (_center # 1) - (_safeCenter # 1);
-                // Rotate point into marker's local frame (inverse rotation)
+
                 private _localX = (_dx * cos _safeDir) - (_dy * sin _safeDir);
                 private _localY = (_dx * sin _safeDir) + (_dy * cos _safeDir);
                 if (abs _localX <= _sizeA && { abs _localY <= _sizeB }) then
@@ -453,7 +457,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
             }
             else
             {
-                // ELLIPSE or unknown — fall back to circular check
+
                 private _safeRadius = _sizeA max _sizeB;
                 if (_center distance2D _safeCenter <= _safeRadius) then
                 {
@@ -504,7 +508,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
                 diag_log format ["[DZ:%1] Enemy urban sector activated (%2 units)", _idx, _total];
             };
         };
-        };  // end !_inSafeZone block
+        };
     };
 
     if (_enableLiveDespawn && { _spawned } && { !_inPre } && { !_counterActive }) then
@@ -589,8 +593,7 @@ if (_counterEnabled && { _now >= _nextGlobalCounterAt }) then
             continue;
         };
 
-        // BASE SAFE ZONE — captured sectors inside the safe zone are
-        // never counter-attacked.
+
         if ((markerType "base_safe_zone") != "") then
         {
             private _safeCenter = getMarkerPos "base_safe_zone";
@@ -720,8 +723,7 @@ _counterCandidates sort true;
         continue;
     };
 
-    // BASE SAFE ZONE — defense in depth: even if a candidate slipped
-    // through the earlier filter, double-check at spawn time.
+
     if ((markerType "base_safe_zone") != "") then
     {
         private _safeCenter = getMarkerPos "base_safe_zone";

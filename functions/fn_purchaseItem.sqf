@@ -1,18 +1,6 @@
 /*
  * DZ_fnc_purchaseItem
- *
- * Server-side handler for shop purchases. Called via remoteExecCall
- * from quartermaster ACE actions.
- *
- * Validates:
- *   - Sufficient funds in squad pool
- *   - Class is valid
- *   - Delivery pad exists
- *
- * On success:
- *   - Deducts the price from squad funds
- *   - Spawns the item at the delivery pad
- *   - Notifies the buyer + side message announcement
+ * Validates a quartermaster purchase, deducts funds, and spawns the bought item.
  */
 
 if (!isServer) exitWith {};
@@ -24,7 +12,7 @@ params [
     ["_buyer", objNull, [objNull]]
 ];
 
-private _replyTarget = if (isNull _buyer) then {0} else {owner _buyer};
+private _replyTarget = [owner _buyer, 0] select (isNull _buyer);
 
 if (_class == "") exitWith {
     ["Магазин", "Ошибка: предмет не определён."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
@@ -35,7 +23,7 @@ if (!isClass (configFile >> "CfgVehicles" >> _class)) exitWith {
     ["Магазин", "Ошибка: эта позиция недоступна в текущем списке."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-// Funds check
+
 if !([_cost] call DZ_fnc_squadFundsHasEnough) exitWith {
     private _balance = missionNamespace getVariable ["DZ_squadFundsBalance", 0];
     [
@@ -44,7 +32,7 @@ if !([_cost] call DZ_fnc_squadFundsHasEnough) exitWith {
     ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-// Find delivery pad
+
 private _padPos = missionNamespace getVariable ["vehicle_delivery_pad", objNull];
 if (isNull _padPos) exitWith {
     diag_log "[DZ_PURCHASE] vehicle_delivery_pad object not found in mission.";
@@ -54,10 +42,10 @@ if (isNull _padPos) exitWith {
     ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-// Deduct funds AFTER all validation but BEFORE spawn
+
 private _newBalance = [(0 - _cost), format ["Purchase: %1 by %2", _itemId, name _buyer]] call DZ_fnc_squadFundsAdjust;
 
-// Spawn the item at the delivery pad
+
 private _padPosATL = getPosATL _padPos;
 private _spawnPos = _padPosATL vectorAdd [(random 6) - 3, (random 6) - 3, 0];
 
@@ -66,27 +54,26 @@ _item setPosATL _spawnPos;
 _item setDir (random 360);
 _item setDamage 0;
 
-// Mark as purchased so the abandoned-vehicle cleanup doesn't immediately
-// delete it (player might walk to the pad to claim it)
+
 _item setVariable ["DZ_noCleanup", true, true];
 _item setVariable ["DZ_purchasedItem", true, true];
 _item setVariable ["DZ_purchasedBy", name _buyer, true];
 
-// Lock door for ~10 sec to prevent another player snatching it before
-// the buyer arrives... actually no, "shared funds" means it's everyone's.
-// Skip the lock.
+_item setVariable ["DZ_persist", true, true];
+missionNamespace setVariable ["DZ_assetsDirty", true];
+[true] call DZ_fnc_saveAssets;
 
 diag_log format ["[DZ_PURCHASE] %1 bought by %2 for %3₽. Spawned at %4. New balance: %5₽.",
     _itemId, name _buyer, _cost, _spawnPos, _newBalance];
 
-// Notify buyer
+
 [
     "Магазин",
     format ["Покупка совершена: %1. Цена: %2₽. Баланс: %3₽. Заказ доставлен на пункт выдачи.",
         _class, _cost, _newBalance]
 ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 
-// Side message for everyone
+
 [
     format ["%1 заказал на базу: %2 (-%3₽). Баланс: %4₽.",
         name _buyer, _itemId, _cost, _newBalance],

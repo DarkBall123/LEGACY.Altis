@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initServer
+ * Initializes server-side sector control state and starts the sector PFH.
+ */
+
 diag_log "[DZ] === Dynamic Zones INIT ===";
 
 private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];
@@ -95,6 +100,9 @@ call DZ_fnc_initRespawnMarkers;
 call DZ_fnc_processTriggerZones;
 call DZ_fnc_publishSectorState;
 
+missionNamespace setVariable ["DZ_assetsDirty", false];
+call DZ_fnc_restoreAssets;
+
 if !(missionNamespace getVariable ["DZ_zoneSchedulerStarted", false]) then
 {
     missionNamespace setVariable ["DZ_zoneSchedulerStarted", true];
@@ -116,6 +124,7 @@ addMissionEventHandler
         params ["_unit", "_id", "_uid"];
 
         [_unit, true, _uid] call DZ_fnc_savePlayerLoadout;
+        [true] call DZ_fnc_saveAssets;
         false
     }
 ];
@@ -138,6 +147,21 @@ if !(missionNamespace getVariable ["DZ_loadoutSaveStarted", false]) then
             {
                 call DZ_fnc_flushSavedLoadouts;
             };
+        };
+    };
+};
+
+if !(missionNamespace getVariable ["DZ_assetSaveStarted", false]) then
+{
+    missionNamespace setVariable ["DZ_assetSaveStarted", true];
+
+    [] spawn
+    {
+        while { true } do
+        {
+            sleep (missionNamespace getVariable ["DZ_assetSaveInterval", 300]);
+            missionNamespace setVariable ["DZ_assetsDirty", true];
+            call DZ_fnc_saveAssets;
         };
     };
 };

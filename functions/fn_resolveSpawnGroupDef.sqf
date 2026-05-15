@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_resolveSpawnGroupDef
+ * Resolves a spawn profile group definition into concrete class names and counts.
+ */
+
 params [["_groupDef", nil]];
 
 if !(_groupDef isEqualType createHashMap) exitWith { _groupDef };

@@ -1,3 +1,8 @@
+/*
+ * initServer.sqf
+ * Bootstraps server-side mission systems, relations, radio tracks, Alfa ambience, and squad funds.
+ */
+
 call DZ_fnc_controlParams;
 call DZ_fnc_initServer;
 call DZ_fnc_initAbandonedVehicleCleanup;
@@ -13,7 +18,7 @@ DZ_RadioTracks =
     ["sound\ZOV_3.ogg", "V", 89]
 ];
 call DZ_fnc_initMissionSystem;
-// Start bundled civilian ambience scripts on the server.
+
 call compile preprocessFileLineNumbers "Alfa\Civilians\Init.sqf";
 call compile preprocessFileLineNumbers "Alfa\Traffic\Init.sqf";
 call compile preprocessFileLineNumbers "Alfa\Civilians\Reputation\Reputation.sqf";

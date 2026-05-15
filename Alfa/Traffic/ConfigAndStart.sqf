@@ -1,11 +1,8 @@
-/* 
- * This file contains parameters to config and function call to start an instance of
- * traffic in the mission. The file is edited by the mission developer.
- *
- * See file Engima\Traffic\Documentation.txt for documentation and a full reference of 
- * how to customize and use Engima's Traffic.
+/*
+ * Alfa/Traffic/ConfigAndStart.sqf
+ * Configures vehicle classes, spawn distances, traffic limits, and starts Alfa traffic.
  */
- 
+
 private ["_parameters"];
 
 private _civilianCarClasses =
@@ -21,7 +18,7 @@ private _civilianCarClasses =
 
 diag_log format ["[TRAFFIC] Civilian car pool size: %1", count _civilianCarClasses];
 
-// Set traffic parameters.
+
 _parameters = [
     ["SIDE", civilian],
     ["VEHICLES", _civilianCarClasses],
@@ -33,5 +30,5 @@ _parameters = [
     ["DEBUG", false]
 ];
 
-// Start an instance of the traffic
+
 _parameters spawn ENGIMA_TRAFFIC_StartTraffic;

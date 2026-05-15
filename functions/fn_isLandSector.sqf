@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_isLandSector
+ * Checks whether a sector position has enough nearby land to be usable.
+ */
+
 params
 [
     ["_center", [0, 0, 0]],

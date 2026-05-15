@@ -1,20 +1,6 @@
 /*
  * DZ_fnc_initAbandonedVehicleCleanup
- *
- * Run once on server init. Sets up a periodic check that:
- *   1. Looks at every vehicle tagged with DZ_trackAbandoned = true
- *   2. Tracks how long since any player was inside or within 30m
- *   3. Deletes vehicles that have been "abandoned" for too long
- *
- * To register a vehicle for this system, set in its init or after spawn:
- *     _vehicle setVariable ["DZ_trackAbandoned", true, true];
- *
- * To EXEMPT a specific vehicle from cleanup (e.g. base ambient vehicles
- * placed in Eden), set in its init field:
- *     this setVariable ["DZ_noCleanup", true, true];
- *
- * Or ignore the system entirely for a vehicle by simply not tagging it
- * (only tagged vehicles are tracked).
+ * Starts cleanup for abandoned mission-spawned transport vehicles.
  */
 
 if (!isServer) exitWith {};
@@ -41,7 +27,7 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
         private _now = time;
         private _proximityRadius = 30;
 
-        // Find all candidate vehicles
+
         private _allVehicles = vehicles select {
             !isNull _x &&
             { _x getVariable ["DZ_trackAbandoned", false] } &&
@@ -58,7 +44,7 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
                 } forEach (crew _veh)
             };
 
-            // Player nearby check (any player within proximityRadius)
+
             private _playerNearby = false;
             if (!_hasOccupant) then
             {
@@ -72,7 +58,7 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
 
             if (_hasOccupant || _playerNearby) then
             {
-                // Mark as "in use" — reset abandon timer
+
                 _veh setVariable ["DZ_lastUsed", _now];
             }
             else
@@ -82,6 +68,10 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
                 {
                     diag_log format ["[ABANDONED_VEHICLE] Cleaning up %1 (idle for %2s) at %3",
                         typeOf _veh, round (_now - _lastUsed), getPosATL _veh];
+                    if (_veh getVariable ["DZ_persist", false]) then
+                    {
+                        missionNamespace setVariable ["DZ_assetsDirty", true];
+                    };
                     deleteVehicle _veh;
                 };
             };

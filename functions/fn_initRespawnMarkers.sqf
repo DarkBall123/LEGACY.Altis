@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_initRespawnMarkers
+ * Creates or refreshes respawn markers for captured sectors.
+ */
+
 if (!isServer) exitWith { false };
 
 private _playerSide = missionNamespace getVariable ["CH_sidePlayers", east];

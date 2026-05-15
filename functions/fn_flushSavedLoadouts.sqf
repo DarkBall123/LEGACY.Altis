@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_flushSavedLoadouts
+ * Clears stored player loadouts for the current session.
+ */
+
 if (!isServer) exitWith { false };
 
 private _cache = missionNamespace getVariable ["DZ_savedLoadoutsCache", createHashMap];

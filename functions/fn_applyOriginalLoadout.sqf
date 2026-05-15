@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_applyOriginalLoadout
+ * Restores a unit loadout previously captured at mission start.
+ */
+
 params [["_unit", objNull]];
 
 if (!hasInterface) exitWith { false };
@@ -28,5 +33,3 @@ if (_originalLoadout isEqualTo []) exitWith { false };
 ] call CBA_fnc_addPerFrameHandler;
 
 true
-
-// 123

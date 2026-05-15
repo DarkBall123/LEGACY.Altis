@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_handleStateUpdate
+ * Applies sector state changes and updates marker rendering for changed cells.
+ */
+
 params [["_payload", [0, []]]];
 
 _payload params

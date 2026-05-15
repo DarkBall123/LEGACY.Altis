@@ -1,7 +1,7 @@
 /*
-    Civilian reputation system.
-    Server-side, persistent, with a normal map marker.
-*/
+ * Alfa/Civilians/Reputation/Reputation.sqf
+ * Maintains persistent civilian reputation state and map markers.
+ */
 
 if (!isServer) exitWith {};
 if (missionNamespace getVariable ["ALFA_repInitialized", false]) exitWith {};

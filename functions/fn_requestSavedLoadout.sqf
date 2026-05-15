@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_requestSavedLoadout
+ * Returns the requester's saved loadout from server-side storage.
+ */
+
 params [["_unit", objNull]];
 
 if (!isServer) exitWith { false };

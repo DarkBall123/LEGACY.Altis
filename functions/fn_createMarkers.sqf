@@ -1,7 +1,8 @@
 /*
- *  Строит маркеры‑соты, выводит их цвет в журнал
- *  params: [_cells, _urbanHash]
+ * DZ_fnc_createMarkers
+ * Creates visual grid markers for generated sector positions.
  */
+
 params ["_cells","_urbanHash"];
 private _g=missionNamespace getVariable["DZ_gridSize",350];
 private _alpha=missionNamespace getVariable["DZ_alpha",0.35];

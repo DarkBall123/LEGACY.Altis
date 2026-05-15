@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_requestTransport
+ * Handles transport support requests, cooldowns, and vehicle spawning.
+ */
+
 params [
     ["_caller", objNull, [objNull]]
 ];
@@ -56,11 +61,13 @@ _vehicle setPosATL _freePos;
 _vehicle setFuel 1;
 _vehicle setDamage 0;
 
-// ── Register for abandoned-vehicle cleanup ──────────────
-// 15-min idle timeout (configured globally via DZ_abandonedVehicleTimeout).
-// Gets deleted if nobody enters/approaches it for that long.
+
 _vehicle setVariable ["DZ_trackAbandoned", true, true];
 _vehicle setVariable ["DZ_lastUsed", time, true];
+
+_vehicle setVariable ["DZ_persist", true, true];
+missionNamespace setVariable ["DZ_assetsDirty", true];
+[true] call DZ_fnc_saveAssets;
 
 missionNamespace setVariable ["DZ_transportLastRequest", time, true];
 

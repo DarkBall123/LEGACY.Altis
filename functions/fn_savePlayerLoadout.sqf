@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_savePlayerLoadout
+ * Stores a player's current loadout for later respawn restoration.
+ */
+
 params
 [
     ["_unit", objNull],

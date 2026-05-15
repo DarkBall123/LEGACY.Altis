@@ -1,24 +1,6 @@
 /*
  * DZ_fnc_startDownedPilotMission
- *
- * Mission: rescue a downed Russian pilot (rhs_pilot_tan) from an enemy
- * sector and extract him to the designated extraction point.
- *
- * Phases:
- *   1. Find       — pilot is at the crash site under guard
- *   2. Rescue     — guards eliminated AND any OPFOR player within 30m
- *                   of pilot triggers transition: pilot becomes mobile,
- *                   joins the player's group, switches to OPFOR side.
- *   3. Extract    — any group member reaches extraction point alive
- *
- * Key fixes from previous version:
- *   - Guard-alive check now respects ACE Medical (incapacitated guards
- *     don't count as "alive" blocking rescue).
- *   - Pilot proximity radius bumped from 30m to 50m to prevent edge
- *     cases where players hovering at the doorway didn't trigger.
- *   - Pilot side switch and group join are explicit and verified.
- *   - Detailed RPT logging at every state transition for debugging.
- *   - Mission spawns 1500-2500m from nearest player territory.
+ * Starts the downed pilot rescue mission and tracks pilot extraction.
  */
 
 if (!isServer) exitWith { false };
@@ -34,7 +16,7 @@ if !(missionNamespace getVariable ["DZ_missionActive", false]) then
     ["downed_pilot", "manual", _definition] call DZ_fnc_prepareMissionState;
 };
 
-// ── Resolve extraction point ─────────────────────────────
+
 private _extractMarker = missionNamespace getVariable ["DZ_pilotExtractionMarker", ""];
 private _extractPos   = missionNamespace getVariable ["DZ_pilotExtractionPos",    []];
 
@@ -57,7 +39,7 @@ if (_extractPos isEqualTo [] || { _extractPos isEqualTo [0,0,0] }) exitWith
     false
 };
 
-// ── Find enemy sector NEAR player territory ──────────────
+
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
 private _zoneData  = missionNamespace getVariable ["DZ_zoneData",          []];
 private _zoneTpl   = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
@@ -71,7 +53,7 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-// Build list of player-held positions
+
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -82,8 +64,7 @@ private _playerHeldPositions = [];
     };
 } forEach _cells;
 
-// Filter enemy sectors: 1500-2500m from nearest player territory AND
-// >800m from extraction point (so it's not adjacent to base)
+
 private _candidates = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -108,7 +89,7 @@ private _candidates = [];
     };
 } forEach _cells;
 
-// Fallback: if proximity band is empty, accept any enemy sector >800m from extract
+
 if (_candidates isEqualTo []) then
 {
     diag_log "[DOWNED_PILOT] No sectors in 1500-2500m band, falling back";
@@ -139,7 +120,7 @@ private _sectorCenter = _cells select _sectorIdx;
 diag_log format ["[DOWNED_PILOT] Crash sector: %1 at %2 (%3m from player territory, %4m from extract)",
     _sectorIdx, _sectorCenter, round (_selected # 1), round (_sectorCenter distance2D _extractPos)];
 
-// ── Pilot location: try a building, fall back to open ──
+
 private _crashPos = _sectorCenter;
 private _nearbyBuildings = nearestObjects [_sectorCenter, ["House"], 80] select
 {
@@ -156,7 +137,7 @@ if (_nearbyBuildings isNotEqualTo []) then
     };
 };
 
-// ── Spawn ambient sector defenders ───────────────────────
+
 private _spawnResult = [_sectorCenter, 6] call DZ_fnc_spawnForZone;
 _spawnResult params [["_defenderGroups", []], ["_defenderVehicles", []], ["_defenderUnitCount", 0]];
 
@@ -165,7 +146,7 @@ private _defenderUnits = [];
     _defenderUnits append (units _x);
 } forEach _defenderGroups;
 
-// ── Spawn pilot guard squad at crash site ───────────────
+
 private _guardGroup = createGroup [_sideEnemy, true];
 private _guardClasses = [
     "LOP_AFR_Infantry_TL",
@@ -189,9 +170,7 @@ _guardGroup setBehaviour "AWARE";
 
 diag_log format ["[DOWNED_PILOT] Spawned %1 guards at crash site %2", count _guards, _crashPos];
 
-// ── Spawn the pilot ─────────────────────────────────────
-// Pilot starts on civilian side so guards don't waste ammo on him.
-// On rescue: switch side to player's, join their group.
+
 private _pilotGroup = createGroup [civilian, true];
 private _pilot = _pilotGroup createUnit ["rhs_pilot_tan", _crashPos, [], 0, "NONE"];
 _pilot setName "Капитан Орлов";
@@ -209,7 +188,7 @@ if (!isNil "DZ_fnc_prepareSpawnedUnit") then
 
 diag_log format ["[DOWNED_PILOT] Pilot spawned: %1 at %2", _pilot, getPosATL _pilot];
 
-// ── Markers ─────────────────────────────────────────────
+
 ["create", "marker_pilot",   _sectorCenter, "mil_pickup", "Сбитый пилот"] call DZ_fnc_missionUi;
 ["create", "marker_extract", _extractPos,   "mil_end",    "Эвакуация"]    call DZ_fnc_missionUi;
 
@@ -233,16 +212,6 @@ missionNamespace setVariable ["DZ_pilotMissionGuards",  _guards];
     ]
 ] call DZ_fnc_missionUi;
 
-// ── State tracker ───────────────────────────────────────
-//
-// The rescue trigger has two conditions that BOTH must be true:
-//   1. All guards are dead OR incapacitated (ACE Medical compat)
-//   2. Any OPFOR player is within 50m of the pilot
-//
-// "Dead OR incapacitated" — ACE marks unconscious units with the
-// variable "ACE_isUnconscious" (true). Engine-level alive may still
-// be true for unconscious units. We treat unconscious as effectively
-// dead for rescue purposes.
 
 private _stateHandle = [
     {
@@ -274,7 +243,7 @@ private _stateHandle = [
 
         if (!_rescued) then
         {
-            // Count combat-capable guards (alive AND not unconscious)
+
             private _activeGuards = _guards select {
                 !isNull _x &&
                 { alive _x } &&
@@ -283,7 +252,7 @@ private _stateHandle = [
 
             if (_activeGuards isEqualTo []) then
             {
-                // Find any OPFOR player within 50m
+
                 private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers", east];
                 private _rescuer = objNull;
                 {
@@ -302,19 +271,18 @@ private _stateHandle = [
 
                     missionNamespace setVariable ["DZ_pilotMissionRescued", true];
 
-                    // Clear captive flag, restore AI, switch sides, join group
+
                     _pilot enableAI "MOVE";
                     _pilot enableAI "AUTOTARGET";
                     _pilot enableAI "TARGET";
                     _pilot setCaptive false;
                     _pilot setUnitPos "AUTO";
 
-                    // Move pilot to rescuer's group AND side
+
                     private _rescuerGroup = group _rescuer;
                     [_pilot] joinSilent _rescuerGroup;
 
-                    // joinSilent should switch the pilot's effective side via group
-                    // membership. Verify by logging:
+
                     diag_log format ["[DOWNED_PILOT] Pilot joined group %1 (side: %2)",
                         _rescuerGroup, side _rescuerGroup];
 
@@ -333,8 +301,8 @@ private _stateHandle = [
                 }
                 else
                 {
-                    // Log proximity diagnostic every ~10s if guards dead but no
-                    // player close enough — helps debug rescue failures
+
+
                     private _lastLog = missionNamespace getVariable ["DZ_pilotProxLogTime", 0];
                     if (time - _lastLog > 10) then
                     {
@@ -359,7 +327,7 @@ private _stateHandle = [
         {
             "marker_pilot" setMarkerPos (getPosATL _pilot);
 
-            // Win condition: pilot OR any group member at extract
+
             private _atExtract = false;
             if (_pilot distance2D _extractPos < 50) then { _atExtract = true; };
             if (!_atExtract) then

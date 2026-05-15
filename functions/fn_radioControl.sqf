@@ -1,27 +1,6 @@
 /*
  * DZ_fnc_radioControl
- *
- * Server-side authoritative radio controller.
- *
- *     [_radio, "play"] remoteExecCall ["DZ_fnc_radioControl", 2];
- *     [_radio, "stop"] remoteExecCall ["DZ_fnc_radioControl", 2];
- *     [_radio, "next"] remoteExecCall ["DZ_fnc_radioControl", 2];
- *
- * State per-radio (variables on the object, public so clients can read
- * them in ACE action conditions):
- *   radio_playing   — bool
- *   radio_track     — int, index into DZ_RadioTracks
- *   radio_session   — int, incremented on every state change. Used by
- *                     the chained "next track" callback to detect that
- *                     it's been superseded (player hit Stop, or skipped)
- *                     and bail without firing.
- *
- * Tracks come from DZ_RadioTracks, set in initServer.sqf:
- *     DZ_RadioTracks = [
- *         ["sound\ZOV_1.ogg", "Z", 180],
- *         ...
- *     ];
- *   [filePath, displayTitle, durationSeconds]
+ * Server-authoritative radio state controller for play, stop, next, and auto-advance.
  */
 
 if (!isServer) exitWith {};
@@ -39,8 +18,7 @@ if (_tracks isEqualTo []) exitWith
     diag_log "[RADIO] DZ_RadioTracks not defined. Set it in initServer.sqf.";
 };
 
-// Helper: play a specific track and chain the next one.
-// Registered before the switch so "play" and "next" can call it immediately.
+
 DZ_fnc_radioControl_playTrack =
 {
     params ["_radio", "_trackIdx", "_session"];
@@ -56,13 +34,10 @@ DZ_fnc_radioControl_playTrack =
     private _trackData = _tracks # _trackIdx;
     _trackData params ["_path", "_title", "_duration"];
 
-    // Stop any in-flight sample on this radio, then start the new one.
-    // playSound3D is global: every client renders it at _radio's
-    // position with proper 3D falloff, so range/audibility is automatic.
-    [_radio, _path, _title] remoteExec ["DZ_fnc_radioPlayLocal", 0, _radio];
 
-    // Schedule the next track. The session check at the top of this
-    // function makes sure we don't auto-advance after Stop or Next.
+    [_radio, _path, _title] remoteExecCall ["DZ_fnc_radioPlayLocal", 0];
+
+
     [
         {
             params ["_radio", "_session"];
@@ -75,8 +50,7 @@ DZ_fnc_radioControl_playTrack =
 
             private _next = ((_radio getVariable ["radio_track", 0]) + 1) mod (count _tracks);
 
-            // Bump session for the auto-advance so it counts as a state
-            // change (so a player Stop landing one frame later still wins).
+
             private _newSession = (_radio getVariable ["radio_session", 0]) + 1;
             _radio setVariable ["radio_session", _newSession, true];
             _radio setVariable ["radio_track",   _next,       true];
@@ -88,9 +62,7 @@ DZ_fnc_radioControl_playTrack =
     ] call CBA_fnc_waitAndExecute;
 };
 
-// Bump the session counter on EVERY state change. Any pending
-// CBA_fnc_waitAndExecute callback from a previous track checks this
-// before firing — if it doesn't match, the action's been superseded.
+
 private _session = (_radio getVariable ["radio_session", 0]) + 1;
 _radio setVariable ["radio_session", _session, true];
 
@@ -112,7 +84,7 @@ switch (_action) do
     case "stop":
     {
         _radio setVariable ["radio_playing", false, true];
-        // Session already bumped above — any pending callback bails.
+
     };
 
     case "next":

@@ -1,19 +1,6 @@
 /*
  * DZ_fnc_startArtilleryHuntMission
- *
- * Mission: AFR has set up a mortar position in an enemy sector and is
- * shelling a civilian village. Players must find and silence it.
- *
- * Improvements from previous version:
- *   - Crew SEATED in the mortar (moveInGunner) so it looks crewed
- *   - Crew set to CARELESS / disabled fleeing so they don't run away
- *     before players arrive
- *   - Civilians spawned in SEPARATE groups so they wander independently
- *     instead of herding together as one blob
- *   - Fast-tick end-detection PFH runs from mission start (not just
- *     after grace period), so killing the mortar early ends the mission
- *     immediately
- *   - Visual muzzle flash at the mortar when scripted shots fire
+ * Starts the mortar hunt mission and tracks mortar, guard, and shelling state.
  */
 
 if (!isServer) exitWith { false };
@@ -42,7 +29,7 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-// ── Find mortar sector ───────────────────────────────────
+
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -104,7 +91,7 @@ private _searchRadius = 400;
 diag_log format ["[ARTILLERY_HUNT] Mortar sector: %1 at %2 (%3m from player territory)",
     _mortarSectorIdx, _mortarSectorCenter, round (_selected # 1)];
 
-// ── Find a village to shell ──────────────────────────────
+
 private _villagePos = [];
 private _villageSearchAttempts = 0;
 private _maxVillageAttempts = 20;
@@ -144,7 +131,7 @@ if (_villagePos isEqualTo []) then
 diag_log format ["[ARTILLERY_HUNT] Village position: %1 (%2m from mortar)",
     _villagePos, round (_villagePos distance2D _mortarSectorCenter)];
 
-// ── Pick mortar position ─────────────────────────────────
+
 private _mortarPos = [];
 private _mortarAttempts = 0;
 while { _mortarPos isEqualTo [] && _mortarAttempts < 30 } do
@@ -172,7 +159,7 @@ if (_mortarPos isEqualTo []) exitWith
 
 diag_log format ["[ARTILLERY_HUNT] Mortar position: %1", _mortarPos];
 
-// ── Spawn mortar object ──────────────────────────────────
+
 private _mortarClass = "";
 private _mortarCandidates = [
     "RHS_Podnos_MSV",
@@ -194,16 +181,6 @@ private _mortarObject = createVehicle [_mortarClass, _mortarPos, [], 0, "NONE"];
 _mortarObject setPosATL _mortarPos;
 _mortarObject setDir (_mortarPos getDir _villagePos);
 
-// ── Spawn mortar crew + sentries — SEATED ────────────────
-//
-// Critical changes:
-//   - Gunner is moveInGunner'd into the mortar (visually crewed)
-//   - Group disabled FSM (won't break and run on hostile contact)
-//   - allowFleeing 0 (panic threshold disabled)
-//   - Behavior locked to CARELESS until contact
-//
-// They'll still fight if attacked, but won't pre-emptively flee just
-// because they hear distant gunfire.
 
 private _crewGroup = createGroup [_sideEnemy, true];
 _crewGroup setBehaviour "SAFE";
@@ -219,7 +196,7 @@ private _loader = _crewGroup createUnit ["LOP_AFR_Infantry_Rifleman", _mortarPos
 if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_loader] call DZ_fnc_prepareSpawnedUnit; };
 _loader allowFleeing 0;
 
-// 1-2 sentries patrolling around the mortar
+
 private _sentryCount = 1 + (round random 1);
 private _sentries = [];
 for "_i" from 1 to _sentryCount do
@@ -237,7 +214,7 @@ for "_i" from 1 to _sentryCount do
     _sentries pushBack _u;
 };
 
-// Set the group to GUARD the mortar position
+
 private _wp = _crewGroup addWaypoint [_mortarPos, 15];
 _wp setWaypointType        "GUARD";
 _wp setWaypointBehaviour   "SAFE";
@@ -247,10 +224,6 @@ private _allCrewUnits = [_gunner, _loader] + _sentries;
 
 diag_log format ["[ARTILLERY_HUNT] Spawned %1 crew/sentries (gunner seated)", count _allCrewUnits];
 
-// ── Spawn civilians — EACH IN OWN GROUP ──────────────────
-//
-// Critical: 12 separate groups, each with 1 civilian. Otherwise they
-// herd as a single AI group following one leader.
 
 private _civilianClasses = [
     "LOP_AFRCiv_Soldier",
@@ -280,7 +253,7 @@ private _victimCount = 12;
 
 for "_i" from 1 to _victimCount do
 {
-    // SEPARATE group per civilian so they don't herd
+
     private _civGroup = createGroup [civilian, true];
 
     private _angle = random 360;
@@ -293,7 +266,7 @@ for "_i" from 1 to _victimCount do
     removeAllWeapons _civ;
     _civ disableAI "AUTOTARGET";
     _civ disableAI "TARGET";
-    _civ disableAI "PATH";   // stops random pathing — they'll stand around
+    _civ disableAI "PATH";
     _civ setBehaviour "SAFE";
     _civ setSkill 0.3;
     _civ setUnitPos "AUTO";
@@ -303,7 +276,7 @@ for "_i" from 1 to _victimCount do
 
 diag_log format ["[ARTILLERY_HUNT] Spawned %1 civilians in %1 separate groups", count _civilians];
 
-// ── Markers ──────────────────────────────────────────────
+
 private _searchCircle = createMarker ["marker_arty_search", _mortarSectorCenter];
 _searchCircle setMarkerShape "ELLIPSE";
 _searchCircle setMarkerSize [_searchRadius, _searchRadius];
@@ -344,7 +317,7 @@ private _gracePeriod = 600;
 ["Разведданные: миномёт устанавливают в обозначенной зоне. До открытия огня ~10 минут.", east]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-// ── Halfway warning ──────────────────────────────────────
+
 [
     {
         if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
@@ -369,10 +342,6 @@ private _gracePeriod = 600;
     540
 ] call CBA_fnc_waitAndExecute;
 
-// ── Fast end-detection PFH (runs from mission start) ─────
-//
-// Runs every 2 seconds, watches for crew dead OR mortar destroyed,
-// ends mission immediately. Works during grace period AND firing.
 
 private _endDetectionHandle = [
     {
@@ -389,7 +358,7 @@ private _endDetectionHandle = [
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
 
-        // Check if silenced
+
         private _liveCrew = _crew select { !isNull _x && { alive _x } };
         private _mortarDead = isNull _mortarObject || { !alive _mortarObject };
 
@@ -397,7 +366,7 @@ private _endDetectionHandle = [
         {
             missionNamespace setVariable ["DZ_artyMissionDone", true];
 
-            // Civilians flee to safety
+
             {
                 if (alive _x) then
                 {
@@ -431,7 +400,7 @@ private _endDetectionHandle = [
     [_mortarObject, _allCrewUnits, _civilians, _villagePos]
 ] call CBA_fnc_addPerFrameHandler;
 
-// ── Firing loop — kicks off after grace period ───────────
+
 [
     {
         params ["_mortarObject", "_crew", "_civilians", "_villagePos"];
@@ -461,11 +430,11 @@ private _endDetectionHandle = [
                     [_handle] call CBA_fnc_removePerFrameHandler;
                 };
 
-                // Don't fire if crew dead / mortar destroyed (end-detect PFH will catch this)
+
                 private _liveCrew = _crew select { !isNull _x && { alive _x } };
                 if (_liveCrew isEqualTo [] || isNull _mortarObject || { !alive _mortarObject }) exitWith {};
 
-                // Pick a living civilian
+
                 private _liveCivs = _civilians select { alive _x };
                 if (_liveCivs isEqualTo []) exitWith {};
 
@@ -475,12 +444,12 @@ private _endDetectionHandle = [
                 private _driftY = (random 10) - 5;
                 _impactPos = [(_impactPos # 0) + _driftX, (_impactPos # 1) + _driftY, 0];
 
-                // VISUAL: muzzle flash + sound at the mortar
+
                 if (!isNull _mortarObject && { alive _mortarObject }) then
                 {
                     private _muzzlePos = _mortarObject modelToWorld [0, 0, 1.5];
 
-                    // Particle muzzle flash
+
                     private _flash = "#particlesource" createVehicle _muzzlePos;
                     _flash setParticleParams [
                         ["\A3\Data_F\ParticleEffects\Universal\Universal", 16, 7, 48, 1],
@@ -495,7 +464,7 @@ private _endDetectionHandle = [
 
                     [{ deleteVehicle (_this # 0) }, [_flash], 0.3] call CBA_fnc_waitAndExecute;
 
-                    // Smoke puff
+
                     private _smoke = "#particlesource" createVehicle _muzzlePos;
                     _smoke setParticleParams [
                         ["\A3\Data_F\ParticleEffects\Universal\Universal", 16, 7, 48, 1],
@@ -510,12 +479,12 @@ private _endDetectionHandle = [
 
                     [{ deleteVehicle (_this # 0) }, [_smoke], 2] call CBA_fnc_waitAndExecute;
 
-                    // Firing sound
+
                     playSound3D ["A3\Sounds_F\arsenal\weapons_static\Mortar\Mortar_01_shot.wss",
                         _mortarObject, false, getPosASL _mortarObject, 5, 1, 800];
                 };
 
-                // Schedule the impact
+
                 [
                     {
                         params ["_impactPos", "_victim"];
@@ -562,7 +531,7 @@ private _endDetectionHandle = [
     _gracePeriod
 ] call CBA_fnc_waitAndExecute;
 
-// ── Mission timeout ──────────────────────────────────────
+
 private _timeoutHandle = [
     {
         params ["_args", "_handle"];

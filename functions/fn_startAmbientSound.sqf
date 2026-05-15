@@ -1,3 +1,8 @@
+/*
+ * DZ_fnc_startAmbientSound
+ * Starts periodic client-side ambient sound playback.
+ */
+
 if (!hasInterface) exitWith { false };
 
 if (missionNamespace getVariable ["DZ_ambientSoundStarted", false]) exitWith { true };
@@ -20,7 +25,7 @@ private _handle = [
         if (time < _nextAt) exitWith {};
 
         private _soundSource = playSound "DZ_SoundAmbience";
-        private _delay = if (_soundSource isEqualType objNull) then { 260 } else { 255 };
+        private _delay = [255, 260] select (_soundSource isEqualType objNull);
 
         missionNamespace setVariable ["DZ_ambientSoundNextAt", time + _delay];
     },
