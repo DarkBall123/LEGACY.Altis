@@ -35,7 +35,7 @@ DZ_fnc_radioControl_playTrack =
     _trackData params ["_path", "_title", "_duration"];
 
 
-    [_radio, _path, _title] remoteExecCall ["DZ_fnc_radioPlayLocal", 0];
+    [_radio, _path, _title, false] remoteExecCall ["DZ_fnc_radioPlayLocal", 0];
 
 
     [
@@ -63,18 +63,17 @@ DZ_fnc_radioControl_playTrack =
 };
 
 
-private _session = (_radio getVariable ["radio_session", 0]) + 1;
-_radio setVariable ["radio_session", _session, true];
-
 switch (_action) do
 {
     case "play":
     {
         if (_radio getVariable ["radio_playing", false]) exitWith {};
 
+        private _session = (_radio getVariable ["radio_session", 0]) + 1;
         private _trackIdx = _radio getVariable ["radio_track", 0];
         if (_trackIdx >= count _tracks) then { _trackIdx = 0; };
 
+        _radio setVariable ["radio_session", _session, true];
         _radio setVariable ["radio_playing", true, true];
         _radio setVariable ["radio_track", _trackIdx, true];
 
@@ -83,15 +82,19 @@ switch (_action) do
 
     case "stop":
     {
+        private _session = (_radio getVariable ["radio_session", 0]) + 1;
+        _radio setVariable ["radio_session", _session, true];
         _radio setVariable ["radio_playing", false, true];
-
+        [_radio, "", "", true] remoteExecCall ["DZ_fnc_radioPlayLocal", 0];
     };
 
     case "next":
     {
         if !(_radio getVariable ["radio_playing", false]) exitWith {};
 
+        private _session = (_radio getVariable ["radio_session", 0]) + 1;
         private _trackIdx = ((_radio getVariable ["radio_track", 0]) + 1) mod (count _tracks);
+        _radio setVariable ["radio_session", _session, true];
         _radio setVariable ["radio_track", _trackIdx, true];
 
         [_radio, _trackIdx, _session] call DZ_fnc_radioControl_playTrack;

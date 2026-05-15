@@ -1,18 +1,27 @@
 /*
  * DZ_fnc_radioPlayLocal
- * Plays a resolved mission radio track locally at the radio object position.
+ * Plays or stops a managed local 3D radio track.
  */
 
 if (!hasInterface) exitWith {};
 
 params [
     ["_radio", objNull, [objNull]],
-    ["_path",  "",      [""]],
-    ["_title", "",      [""]]
+    ["_path", "", [""]],
+    ["_title", "", [""]],
+    ["_stopOnly", false, [false]]
 ];
 
 if (isNull _radio) exitWith {};
-if (_path isEqualTo "") exitWith {};
+
+private _oldSoundId = _radio getVariable ["radio_sound_id", -1];
+if (_oldSoundId >= 0) then
+{
+    stopSound _oldSoundId;
+    _radio setVariable ["radio_sound_id", -1, false];
+};
+
+if (_stopOnly || { _path isEqualTo "" }) exitWith {};
 
 private _isEnginePath = ((_path select [0, 1]) == "\") ||
     { (_path find ":") >= 0 } ||
@@ -32,7 +41,7 @@ if (_soundPath isEqualTo "") exitWith
     diag_log format ["[RADIO] Could not resolve mission sound path: %1", _path];
 };
 
-playSound3D [
+private _soundId = playSound3D [
     _soundPath,
     _radio,
     false,
@@ -43,7 +52,7 @@ playSound3D [
     0,
     true
 ];
-
+_radio setVariable ["radio_sound_id", _soundId, false];
 
 if (_title != "" && { player distance _radio < 30 }) then
 {
