@@ -118,4 +118,19 @@ private _register =
     ]
 ] call _register;
 
+[
+    "idap_repair",
+    createHashMapFromArray
+    [
+        ["title", "Ремонт транспорта IDAP"],
+        ["description", "Достичь сломанного гуманитарного автомобиля IDAP, отбить засаду и провести полевой ремонт (колесо + топливо)."],
+        ["startFunction", "DZ_fnc_startIdapVehicleRepairMission"],
+        ["implemented", true],
+        ["manualEnabled", true],
+        ["randomEnabled", true],
+        ["weight", 1],
+        ["cooldown", 1800]
+    ]
+] call _register;
+
 _definitions
