@@ -129,13 +129,27 @@ _vehicle setDir (random 360);
 _vehicle setFuel 0;
 
 private _hitPoints = (getAllHitPointsDamage _vehicle) param [0, []];
+diag_log format ["[IDAP_REPAIR] Vehicle hitpoints (%1): %2", count _hitPoints, _hitPoints];
+
 private _wheelHitPoints = _hitPoints select { ((toLower _x) find "wheel") >= 0 };
 private _brokenWheel = "";
 if (_wheelHitPoints isNotEqualTo []) then
 {
     _brokenWheel = selectRandom _wheelHitPoints;
-    _vehicle setHitPointDamage [_brokenWheel, 1];
-    diag_log format ["[IDAP_REPAIR] Destroyed wheel: %1", _brokenWheel];
+    diag_log format ["[IDAP_REPAIR] Selected wheel to destroy: %1 (from %2)", _brokenWheel, _wheelHitPoints];
+
+    // setHitPointDamage right after createVehicle often gets clobbered by
+    // the vehicle's own init pass. Apply it after a short delay AND on the
+    // server with the broadcast flag so clients see it too.
+    [_vehicle, _brokenWheel] spawn {
+        params ["_veh", "_hp"];
+        sleep 0.5;
+        if (!isNull _veh) then {
+            _veh setHitPointDamage [_hp, 1, true];
+            private _confirmed = _veh getHitPointDamage _hp;
+            diag_log format ["[IDAP_REPAIR] Wheel %1 set to damage 1 (read-back: %2)", _hp, _confirmed];
+        };
+    };
 }
 else
 {
@@ -351,17 +365,29 @@ private _stateHandle = [
             };
         };
 
+        private _wheelDmg = -1;
         private _wheelOk = true;
         if (_brokenWheel != "") then
         {
-            private _wheelDmg = _vehicle getHitPointDamage _brokenWheel;
+            _wheelDmg = _vehicle getHitPointDamage _brokenWheel;
             _wheelOk = (_wheelDmg < 0.3);
         };
 
-        private _fuelOk = (fuel _vehicle > 0.5);
+        private _fuelLvl = fuel _vehicle;
+        private _fuelOk  = (_fuelLvl > 0.3);
+
+        // Once every ~15s log current state so server.rpt makes diagnosis easy
+        private _lastLog = missionNamespace getVariable ["DZ_idapRepairLastStateLog", 0];
+        if ((time - _lastLog) > 15) then
+        {
+            missionNamespace setVariable ["DZ_idapRepairLastStateLog", time];
+            diag_log format ["[IDAP_REPAIR] State: wheel=%1 (dmg=%2 ok=%3) fuel=%4 ok=%5 vehDmg=%6",
+                _brokenWheel, _wheelDmg, _wheelOk, _fuelLvl, _fuelOk, damage _vehicle];
+        };
 
         if (_wheelOk && _fuelOk) exitWith
         {
+            diag_log format ["[IDAP_REPAIR] SUCCESS triggered. Final state: wheel=%1 fuel=%2", _wheelDmg, _fuelLvl];
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["success"] call DZ_fnc_endMission;
             ["Автомобиль IDAP отремонтирован. Гуманитарный конвой может продолжить путь.", east]
