@@ -31,7 +31,8 @@ if (isNil { missionNamespace getVariable "ALFA_repRationItems" }) then {
 if (isNil { missionNamespace getVariable "ALFA_repMissionRewards" }) then {
     missionNamespace setVariable ["ALFA_repMissionRewards", createHashMapFromArray [
         ["artillery_hunt", 0.4],
-        ["assassination", 0.3]
+        ["assassination",  0.3],
+        ["idap_repair",    0.5]
     ]];
 };
 
@@ -302,7 +303,8 @@ call ALFA_fnc_repUpdateMarker;
 
     private _reason = switch (_missionId) do {
         case "artillery_hunt": { "Mortar position destroyed." };
-        case "assassination": { "Field commander eliminated." };
+        case "assassination":  { "Field commander eliminated." };
+        case "idap_repair":    { "IDAP vehicle repaired and crew rescued." };
         default { format ["Mission completed: %1", _title] };
     };
 

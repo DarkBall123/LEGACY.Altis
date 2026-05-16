@@ -98,6 +98,7 @@ class CfgFunctions
             class startArtilleryHuntMission  {};
             class startHumanitarianAidMission  {};
             class startEodMission            {};
+            class startIdapVehicleRepairMission {};
 
 
             class missionUi             {};
