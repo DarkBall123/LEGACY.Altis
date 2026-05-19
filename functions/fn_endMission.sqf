@@ -57,6 +57,20 @@ private _message = switch (_result) do
 
 private _cleanupDelay = missionNamespace getVariable ["DZ_missionCleanupDelay", 300];
 
+// Cancelled missions: wipe map markers immediately so a re-pick of the same
+// mission type does not stack duplicate symbols. Units and vehicles still
+// follow a short delay (default 5 s) so any player at the site does not see
+// things pop out of existence.
+if (_result == "cancelled") then
+{
+    {
+        deleteMarker _x;
+    } forEach _markersToClean;
+
+    _markersToClean = [];
+    _cleanupDelay = missionNamespace getVariable ["DZ_missionCancelledCleanupDelay", 5];
+};
+
 [
     {
         params ["_unitsToClean", "_vehiclesToClean", "_markersToClean"];
