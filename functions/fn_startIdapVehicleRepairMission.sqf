@@ -1,9 +1,9 @@
 /*
  * DZ_fnc_startIdapVehicleRepairMission
- * Starts the IDAP humanitarian vehicle repair mission.
- * Players must reach a broken-down IDAP van, defend it from an armoured
- * ambush, replace the missing wheel (ACE wheel) and refill the empty
- * fuel tank (ACE jerrycan / fuel truck).
+ * Starts the IDAP humanitarian vehicle refuel mission.
+ * An IDAP van is stranded with an empty fuel tank in hostile
+ * territory. Players must reach it, defend against an armoured
+ * ambush and refill the tank (ACE jerrycan / fuel truck).
  */
 
 if (!isServer) exitWith { false };
@@ -128,34 +128,6 @@ _vehicle setPosATL _breakdownPos;
 _vehicle setDir (random 360);
 _vehicle setFuel 0;
 
-private _hitPoints = (getAllHitPointsDamage _vehicle) param [0, []];
-diag_log format ["[IDAP_REPAIR] Vehicle hitpoints (%1): %2", count _hitPoints, _hitPoints];
-
-private _wheelHitPoints = _hitPoints select { ((toLower _x) find "wheel") >= 0 };
-private _brokenWheel = "";
-if (_wheelHitPoints isNotEqualTo []) then
-{
-    _brokenWheel = selectRandom _wheelHitPoints;
-    diag_log format ["[IDAP_REPAIR] Selected wheel to destroy: %1 (from %2)", _brokenWheel, _wheelHitPoints];
-
-    // setHitPointDamage right after createVehicle often gets clobbered by
-    // the vehicle's own init pass. Apply it after a short delay AND on the
-    // server with the broadcast flag so clients see it too.
-    [_vehicle, _brokenWheel] spawn {
-        params ["_veh", "_hp"];
-        sleep 0.5;
-        if (!isNull _veh) then {
-            _veh setHitPointDamage [_hp, 1, true];
-            private _confirmed = _veh getHitPointDamage _hp;
-            diag_log format ["[IDAP_REPAIR] Wheel %1 set to damage 1 (read-back: %2)", _hp, _confirmed];
-        };
-    };
-}
-else
-{
-    diag_log "[IDAP_REPAIR] No wheel hit points found on vehicle — wheel-repair objective skipped.";
-};
-
 _vehicle lock 0;
 _vehicle setVariable ["DZ_idapRepairVehicle", true, true];
 
@@ -188,7 +160,7 @@ if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpaw
 
 diag_log format ["[IDAP_REPAIR] Driver spawned: %1 in vehicle %2", _driver, _vehicle];
 
-["create", "marker_idap_repair", _breakdownPos, "loc_Transmitter", "Сломанный транспорт IDAP"] call DZ_fnc_missionUi;
+["create", "marker_idap_repair", _breakdownPos, "loc_Transmitter", "Транспорт IDAP без топлива"] call DZ_fnc_missionUi;
 
 [
     [_driver],
@@ -197,18 +169,17 @@ diag_log format ["[IDAP_REPAIR] Driver spawned: %1 in vehicle %2", _driver, _veh
     []
 ] call DZ_fnc_addMissionAssets;
 
-missionNamespace setVariable ["DZ_idapRepairVehicle",      _vehicle];
-missionNamespace setVariable ["DZ_idapRepairDriver",       _driver];
-missionNamespace setVariable ["DZ_idapRepairBrokenWheel",  _brokenWheel];
+missionNamespace setVariable ["DZ_idapRepairVehicle",         _vehicle];
+missionNamespace setVariable ["DZ_idapRepairDriver",          _driver];
 missionNamespace setVariable ["DZ_idapRepairAmbushTriggered", false];
 
 [
     "hint",
-    "MISSION: РЕМОНТ ТРАНСПОРТА IDAP",
-    "Гуманитарный автомобиль IDAP сломался во вражеской территории. Водитель внутри, перепуган и не вооружён.\n\nВаши задачи:\n1) Достичь автомобиля.\n2) Заменить повреждённое колесо (ACE: запасное колесо).\n3) Заправить пустой бак (ACE: канистра или топливозаправщик).\n\nВНИМАНИЕ: при приближении к автомобилю боевики могут устроить засаду с применением бронетехники. Будьте готовы к бою."
+    "MISSION: ДОЗАПРАВКА ТРАНСПОРТА IDAP",
+    "У гуманитарного автомобиля IDAP закончилось топливо во вражеской территории. Водитель внутри, перепуган и не вооружён.\n\nВаши задачи:\n1) Достичь автомобиля.\n2) Заправить пустой бак (ACE: канистра или топливозаправщик).\n\nВНИМАНИЕ: при приближении к автомобилю боевики могут устроить засаду с применением бронетехники. Будьте готовы к бою."
 ] call DZ_fnc_missionUi;
 
-["Гуманитарный конвой IDAP запрашивает помощь. Достигните автомобиля и проведите ремонт.", east]
+["Гуманитарный конвой IDAP запрашивает топливо. Достигните автомобиля и заправьте бак.", east]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _spawnAmbush = {
@@ -303,7 +274,7 @@ private _spawnAmbush = {
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_vehicle", "_driver", "_brokenWheel", "_breakdownPos", "_startTime", "_spawnAmbushFn", "_enemySide"];
+        _args params ["_vehicle", "_driver", "_breakdownPos", "_startTime", "_spawnAmbushFn", "_enemySide"];
 
         if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
         {
@@ -330,7 +301,7 @@ private _stateHandle = [
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["failure"] call DZ_fnc_endMission;
-            ["Время на ремонт истекло.", east]
+            ["Время на дозаправку истекло.", east]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
@@ -365,14 +336,6 @@ private _stateHandle = [
             };
         };
 
-        private _wheelDmg = -1;
-        private _wheelOk = true;
-        if (_brokenWheel != "") then
-        {
-            _wheelDmg = _vehicle getHitPointDamage _brokenWheel;
-            _wheelOk = (_wheelDmg < 0.3);
-        };
-
         private _fuelLvl = fuel _vehicle;
         private _fuelOk  = (_fuelLvl > 0.3);
 
@@ -381,21 +344,21 @@ private _stateHandle = [
         if ((time - _lastLog) > 15) then
         {
             missionNamespace setVariable ["DZ_idapRepairLastStateLog", time];
-            diag_log format ["[IDAP_REPAIR] State: wheel=%1 (dmg=%2 ok=%3) fuel=%4 ok=%5 vehDmg=%6",
-                _brokenWheel, _wheelDmg, _wheelOk, _fuelLvl, _fuelOk, damage _vehicle];
+            diag_log format ["[IDAP_REPAIR] State: fuel=%1 ok=%2 vehDmg=%3",
+                _fuelLvl, _fuelOk, damage _vehicle];
         };
 
-        if (_wheelOk && _fuelOk) exitWith
+        if (_fuelOk) exitWith
         {
-            diag_log format ["[IDAP_REPAIR] SUCCESS triggered. Final state: wheel=%1 fuel=%2", _wheelDmg, _fuelLvl];
+            diag_log format ["[IDAP_REPAIR] SUCCESS triggered. Final fuel: %1", _fuelLvl];
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["success"] call DZ_fnc_endMission;
-            ["Автомобиль IDAP отремонтирован. Гуманитарный конвой может продолжить путь.", east]
+            ["Автомобиль IDAP заправлен. Гуманитарный конвой может продолжить путь.", east]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     3,
-    [_vehicle, _driver, _brokenWheel, _breakdownPos, time, _spawnAmbush, _sideEnemy]
+    [_vehicle, _driver, _breakdownPos, time, _spawnAmbush, _sideEnemy]
 ] call CBA_fnc_addPerFrameHandler;
 
 [[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;

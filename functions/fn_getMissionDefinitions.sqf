@@ -122,8 +122,8 @@ private _register =
     "idap_repair",
     createHashMapFromArray
     [
-        ["title", "Ремонт транспорта IDAP"],
-        ["description", "Достичь сломанного гуманитарного автомобиля IDAP, отбить засаду и провести полевой ремонт (колесо + топливо)."],
+        ["title", "Дозаправка транспорта IDAP"],
+        ["description", "Достичь гуманитарного автомобиля IDAP, отбить засаду и заправить пустой бак (ACE: канистра или топливозаправщик)."],
         ["startFunction", "DZ_fnc_startIdapVehicleRepairMission"],
         ["implemented", true],
         ["manualEnabled", true],
