@@ -67,7 +67,45 @@ private _statusAction = [
 
 [_laptop, 0, ["ACE_MainActions"], _statusAction] call ace_interact_menu_fnc_addActionToObject;
 
-diag_log format ["[DZ_LAPTOP] Added %1 mission actions + status to laptop %2",
+// Abort menu: parent + confirmation child. Parent is only shown when a
+// mission is active; the second click on "Подтвердить отмену" actually
+// fires the abort. The two-step form keeps a misclick from killing the
+// squad's mission.
+private _abortParent = [
+    "dz_mission_abort",
+    "Прервать миссию",
+    "",
+    {},
+    { missionNamespace getVariable ["DZ_missionActive", false] },
+    {},
+    [],
+    {[0, 0, 0.5]},
+    5,
+    [false, false, true, false, true]
+] call ace_interact_menu_fnc_createAction;
+
+[_laptop, 0, ["ACE_MainActions"], _abortParent] call ace_interact_menu_fnc_addActionToObject;
+
+private _abortConfirm = [
+    "dz_mission_abort_confirm",
+    "Подтвердить отмену",
+    "",
+    {
+        params ["_target", "_player"];
+        diag_log format ["[DZ_LAPTOP] Abort confirmed by %1", name _player];
+        [_player] remoteExecCall ["DZ_fnc_abortMission", 2];
+    },
+    { missionNamespace getVariable ["DZ_missionActive", false] },
+    {},
+    [],
+    {[0, 0, 0.5]},
+    5,
+    [false, false, true, false, true]
+] call ace_interact_menu_fnc_createAction;
+
+[_laptop, 0, ["ACE_MainActions", "dz_mission_abort"], _abortConfirm] call ace_interact_menu_fnc_addActionToObject;
+
+diag_log format ["[DZ_LAPTOP] Added %1 mission actions + status + abort to laptop %2",
     count _missionList, _laptop];
 
 true

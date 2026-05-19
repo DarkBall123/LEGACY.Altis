@@ -118,6 +118,7 @@ class CfgFunctions
             class setKshmDeployed       {};
             class radioControl          {};
             class radioPlayLocal        {};
+            class abortMission          {};
 
 
             class updateEwJammers       {};
