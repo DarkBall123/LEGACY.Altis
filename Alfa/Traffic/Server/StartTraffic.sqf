@@ -345,13 +345,19 @@ ENGIMA_TRAFFIC_StartTraffic = {
 	                };
 
 					if (_goOnWithSpawn && { _vehicleClassName != "" } && { !_userMessedUp }) then {
-			            _result = [_pos, _direction, _vehicleClassName, _side] call BIS_fnc_spawnVehicle;
-			            _vehicle = _result select 0;
-			            _vehiclesCrew = _result select 1;
-			            _vehiclesGroup = _result select 2;
+				            _result = [_pos, _direction, _vehicleClassName, _side] call BIS_fnc_spawnVehicle;
+				            _vehicle = _result select 0;
+				            _vehiclesCrew = _result select 1;
+				            _vehiclesGroup = _result select 2;
+				            _vehicle lock 0;
+				            _vehicle lockDriver false;
+				            _vehicle lockCargo false;
+				            {
+				                _vehicle lockTurret [_x, false];
+				            } forEach (allTurrets [_vehicle, true]);
 
 
-			            private _i = 0;
+				            private _i = 0;
 			            {
 				_vehicle setObjectTextureGlobal [_i, _x];
 				_i = _i + 1;
