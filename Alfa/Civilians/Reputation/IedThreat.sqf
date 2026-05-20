@@ -1,11 +1,33 @@
 /*
  * Alfa/Civilians/Reputation/IedThreat.sqf
- * Spawns and cleans up roadside IEDs when civilian reputation is poor.
+ * Adds a low-reputation roadside IED threat without mission markers.
  */
 
 if (!isServer) exitWith {};
 if (missionNamespace getVariable ["ALFA_repIedThreatInitialized", false]) exitWith {};
 missionNamespace setVariable ["ALFA_repIedThreatInitialized", true];
+
+private _defaults =
+[
+    ["ALFA_repIedThreshold", 30],
+    ["ALFA_repIedInitialDelay", 30],
+    ["ALFA_repIedCheckInterval", 180],
+    ["ALFA_repIedMaxActive", 6],
+    ["ALFA_repIedLifetime", 1800],
+    ["ALFA_repIedMinPlayerDistance", 120],
+    ["ALFA_repIedMaxPlayerDistance", 1200],
+    ["ALFA_repIedMinRoadDistance", 500],
+    ["ALFA_repIedMaxRoadDistance", 900],
+    ["ALFA_repIedMinIedDistance", 180],
+    ["ALFA_repIedBaseDistance", 250],
+    ["ALFA_repIedSpawnChanceMin", 0.15],
+    ["ALFA_repIedSpawnChanceMax", 0.50]
+];
+
+{
+    _x params ["_name", "_value"];
+    missionNamespace setVariable [_name, missionNamespace getVariable [_name, _value]];
+} forEach _defaults;
 
 private _iedClasses =
 [
@@ -15,20 +37,12 @@ private _iedClasses =
     "IEDUrbanBig_F"
 ];
 
-private _availableIeds = _iedClasses select { isClass (configFile >> "CfgVehicles" >> _x) };
-missionNamespace setVariable ["ALFA_repIedClasses", _availableIeds];
+missionNamespace setVariable
+[
+    "ALFA_repIedClasses",
+    _iedClasses select { isClass (configFile >> "CfgVehicles" >> _x) }
+];
 missionNamespace setVariable ["ALFA_repActiveIeds", missionNamespace getVariable ["ALFA_repActiveIeds", []]];
-
-missionNamespace setVariable ["ALFA_repIedThreshold", missionNamespace getVariable ["ALFA_repIedThreshold", 30]];
-missionNamespace setVariable ["ALFA_repIedCheckInterval", missionNamespace getVariable ["ALFA_repIedCheckInterval", 180]];
-missionNamespace setVariable ["ALFA_repIedMaxActive", missionNamespace getVariable ["ALFA_repIedMaxActive", 6]];
-missionNamespace setVariable ["ALFA_repIedLifetime", missionNamespace getVariable ["ALFA_repIedLifetime", 1800]];
-missionNamespace setVariable ["ALFA_repIedMinPlayerDistance", missionNamespace getVariable ["ALFA_repIedMinPlayerDistance", 120]];
-missionNamespace setVariable ["ALFA_repIedMaxPlayerDistance", missionNamespace getVariable ["ALFA_repIedMaxPlayerDistance", 1200]];
-missionNamespace setVariable ["ALFA_repIedMinRoadDistance", missionNamespace getVariable ["ALFA_repIedMinRoadDistance", 500]];
-missionNamespace setVariable ["ALFA_repIedMaxRoadDistance", missionNamespace getVariable ["ALFA_repIedMaxRoadDistance", 900]];
-missionNamespace setVariable ["ALFA_repIedMinIedDistance", missionNamespace getVariable ["ALFA_repIedMinIedDistance", 180]];
-missionNamespace setVariable ["ALFA_repIedBaseDistance", missionNamespace getVariable ["ALFA_repIedBaseDistance", 250]];
 
 ALFA_fnc_repIedPlayers =
 {
@@ -40,129 +54,111 @@ ALFA_fnc_repIedPlayers =
     }
 };
 
-ALFA_fnc_repIedNearBase =
+ALFA_fnc_repIedInSafeZone =
 {
     params [["_pos", [], [[]]]];
 
     if (_pos isEqualTo []) exitWith { true };
 
-    private _baseDistance = missionNamespace getVariable ["ALFA_repIedBaseDistance", 250];
-    private _nearBase = false;
+    private _buffer = missionNamespace getVariable ["ALFA_repIedBaseDistance", 250];
+    private _inside = false;
 
     if ((markerType "base_safe_zone") != "") then
     {
-        private _safeCenter = getMarkerPos "base_safe_zone";
-        private _safeSize = getMarkerSize "base_safe_zone";
-        private _safeShape = markerShape "base_safe_zone";
-        private _safeDir = markerDir "base_safe_zone";
-        private _sizeA = (_safeSize # 0) + _baseDistance;
-        private _sizeB = (_safeSize # 1) + _baseDistance;
+        private _center = getMarkerPos "base_safe_zone";
+        private _size = getMarkerSize "base_safe_zone";
 
-        if (_safeShape == "RECTANGLE") then
+        if ((markerShape "base_safe_zone") == "RECTANGLE") then
         {
-            private _dx = (_pos # 0) - (_safeCenter # 0);
-            private _dy = (_pos # 1) - (_safeCenter # 1);
-            private _localX = (_dx * cos _safeDir) - (_dy * sin _safeDir);
-            private _localY = (_dx * sin _safeDir) + (_dy * cos _safeDir);
+            private _dir = markerDir "base_safe_zone";
+            private _dx = (_pos # 0) - (_center # 0);
+            private _dy = (_pos # 1) - (_center # 1);
+            private _localX = (_dx * cos _dir) - (_dy * sin _dir);
+            private _localY = (_dx * sin _dir) + (_dy * cos _dir);
 
-            _nearBase = (abs _localX <= _sizeA) && { abs _localY <= _sizeB };
+            _inside = (abs _localX <= ((_size # 0) + _buffer)) &&
+                { abs _localY <= ((_size # 1) + _buffer) };
         }
         else
         {
-            _nearBase = (_pos distance2D _safeCenter) <= (_sizeA max _sizeB);
+            _inside = (_pos distance2D _center) <= (((_size # 0) max (_size # 1)) + _buffer);
         };
     };
 
-    if (_nearBase) exitWith { true };
+    if (_inside) exitWith { true };
 
-    if ((markerType "respawn_east") != "") exitWith
+    ((markerType "respawn_east") != "") && { _pos distance2D (getMarkerPos "respawn_east") < _buffer }
+};
+
+ALFA_fnc_repIedDeleteReason =
+{
+    params [
+        ["_ied", objNull, [objNull]],
+        ["_players", [], [[]]]
+    ];
+
+    if (isNull _ied) exitWith { "null" };
+    if (!alive _ied || { !(mineActive _ied) }) exitWith { "inactive" };
+
+    private _createdAt = _ied getVariable ["ALFA_repIedCreatedAt", time];
+    private _lifetime = missionNamespace getVariable ["ALFA_repIedLifetime", 1800];
+    if (time - _createdAt > _lifetime) exitWith { "expired" };
+
+    if (_players isEqualTo []) exitWith { "" };
+
+    private _nearestPlayerDistance = 1e10;
     {
-        _pos distance2D (getMarkerPos "respawn_east") < _baseDistance
+        _nearestPlayerDistance = _nearestPlayerDistance min ((vehicle _x) distance2D _ied);
+    } forEach _players;
+
+    private _maxPlayerDistance = missionNamespace getVariable ["ALFA_repIedMaxPlayerDistance", 1200];
+    if (_nearestPlayerDistance <= _maxPlayerDistance) exitWith
+    {
+        _ied setVariable ["ALFA_repIedFarSince", -1];
+        ""
     };
 
-    false
+    private _farSince = _ied getVariable ["ALFA_repIedFarSince", -1];
+    if (_farSince < 0) exitWith
+    {
+        _ied setVariable ["ALFA_repIedFarSince", time];
+        ""
+    };
+
+    private _interval = missionNamespace getVariable ["ALFA_repIedCheckInterval", 180];
+    if (time - _farSince >= _interval) exitWith { "distant" };
+
+    ""
 };
 
 ALFA_fnc_repIedCleanup =
 {
     params [["_players", [], [[]]]];
 
-    private _now = time;
-    private _interval = missionNamespace getVariable ["ALFA_repIedCheckInterval", 180];
-    private _lifetime = missionNamespace getVariable ["ALFA_repIedLifetime", 1800];
-    private _maxPlayerDistance = missionNamespace getVariable ["ALFA_repIedMaxPlayerDistance", 1200];
-    private _activeIeds = missionNamespace getVariable ["ALFA_repActiveIeds", []];
-    private _keptIeds = [];
+    private _kept = [];
 
     {
-        private _ied = _x;
-        private _deleteReason = "";
+        private _reason = [_x, _players] call ALFA_fnc_repIedDeleteReason;
 
-        if (isNull _ied) then
+        if (_reason isEqualTo "") then
         {
-            _deleteReason = "null";
+            _kept pushBack _x;
         }
         else
         {
-            private _createdAt = _ied getVariable ["ALFA_repIedCreatedAt", _now];
-            if (!alive _ied || { !(mineActive _ied) }) then
+            if (!isNull _x) then
             {
-                _deleteReason = "inactive";
-            };
-
-            if (_deleteReason isEqualTo "" && { _now - _createdAt > _lifetime }) then
-            {
-                _deleteReason = "expired";
-            };
-
-            if (_deleteReason isEqualTo "" && { _players isNotEqualTo [] }) then
-            {
-                private _nearestPlayerDistance = 1e10;
-                {
-                    _nearestPlayerDistance = _nearestPlayerDistance min ((vehicle _x) distance2D _ied);
-                } forEach _players;
-
-                if (_nearestPlayerDistance > _maxPlayerDistance) then
-                {
-                    private _farSince = _ied getVariable ["ALFA_repIedFarSince", -1];
-                    if (_farSince < 0) then
-                    {
-                        _ied setVariable ["ALFA_repIedFarSince", _now];
-                    }
-                    else
-                    {
-                        if (_now - _farSince >= _interval) then
-                        {
-                            _deleteReason = "distant";
-                        };
-                    };
-                }
-                else
-                {
-                    _ied setVariable ["ALFA_repIedFarSince", -1];
-                };
+                diag_log format ["[ALFA_REP_IED] Removing IED at %1 (%2)", getPosATL _x, _reason];
+                deleteVehicle _x;
             };
         };
+    } forEach (missionNamespace getVariable ["ALFA_repActiveIeds", []]);
 
-        if (_deleteReason isEqualTo "") then
-        {
-            _keptIeds pushBack _ied;
-        }
-        else
-        {
-            if (!isNull _ied) then
-            {
-                diag_log format ["[ALFA_REP_IED] Removing IED at %1 (%2)", getPosATL _ied, _deleteReason];
-                deleteVehicle _ied;
-            };
-        };
-    } forEach _activeIeds;
-
-    missionNamespace setVariable ["ALFA_repActiveIeds", _keptIeds];
-    _keptIeds
+    missionNamespace setVariable ["ALFA_repActiveIeds", _kept];
+    _kept
 };
 
-ALFA_fnc_repIedCanUsePos =
+ALFA_fnc_repIedPositionAllowed =
 {
     params [
         ["_pos", [], [[]]],
@@ -172,32 +168,19 @@ ALFA_fnc_repIedCanUsePos =
 
     if (_pos isEqualTo []) exitWith { false };
     if (surfaceIsWater _pos) exitWith { false };
-    if ([_pos] call ALFA_fnc_repIedNearBase) exitWith { false };
+    if ([_pos] call ALFA_fnc_repIedInSafeZone) exitWith { false };
 
     private _minPlayerDistance = missionNamespace getVariable ["ALFA_repIedMinPlayerDistance", 120];
+    private _tooCloseToPlayer = _players findIf { (vehicle _x) distance2D _pos < _minPlayerDistance };
+    if (_tooCloseToPlayer >= 0) exitWith { false };
+
     private _minIedDistance = missionNamespace getVariable ["ALFA_repIedMinIedDistance", 180];
-    private _valid = true;
+    private _tooCloseToIed = _activeIeds findIf { !isNull _x && { _x distance2D _pos < _minIedDistance } };
 
-    {
-        if ((vehicle _x) distance2D _pos < _minPlayerDistance) exitWith
-        {
-            _valid = false;
-        };
-    } forEach _players;
-
-    if (!_valid) exitWith { false };
-
-    {
-        if (!isNull _x && { _x distance2D _pos < _minIedDistance }) exitWith
-        {
-            _valid = false;
-        };
-    } forEach _activeIeds;
-
-    _valid
+    _tooCloseToIed < 0
 };
 
-ALFA_fnc_repIedFindPos =
+ALFA_fnc_repIedFindRoadPos =
 {
     params [
         ["_players", [], [[]]],
@@ -208,39 +191,34 @@ ALFA_fnc_repIedFindPos =
 
     private _minRoadDistance = missionNamespace getVariable ["ALFA_repIedMinRoadDistance", 500];
     private _maxRoadDistance = missionNamespace getVariable ["ALFA_repIedMaxRoadDistance", 900];
-    private _result = [];
+    private _pos = [];
     private _attempt = 0;
 
-    while { _attempt < 20 && { _result isEqualTo [] } } do
+    while { _attempt < 20 && { _pos isEqualTo [] } } do
     {
-        private _player = selectRandom _players;
-        private _anchor = getPosATL (vehicle _player);
-        private _roads = (_anchor nearRoads _maxRoadDistance) select
+        private _playerPos = getPosATL (vehicle (selectRandom _players));
+        private _roads = (_playerPos nearRoads _maxRoadDistance) select
         {
-            private _roadPos = getPosATL _x;
-            private _distance = _anchor distance2D _roadPos;
+            private _distance = _playerPos distance2D (getPosATL _x);
             _distance >= _minRoadDistance && { _distance <= _maxRoadDistance }
         };
 
         if (_roads isNotEqualTo []) then
         {
-            private _road = selectRandom _roads;
-            private _roadPos = getPosATL _road;
-            private _offsetDistance = random 5;
-            private _offsetDirection = random 360;
-            private _candidate = _roadPos getPos [_offsetDistance, _offsetDirection];
+            private _roadPos = getPosATL (selectRandom _roads);
+            private _candidate = _roadPos getPos [random 5, random 360];
             _candidate set [2, 0];
 
-            if ([_candidate, _players, _activeIeds] call ALFA_fnc_repIedCanUsePos) then
+            if ([_candidate, _players, _activeIeds] call ALFA_fnc_repIedPositionAllowed) then
             {
-                _result = _candidate;
+                _pos = _candidate;
             };
         };
 
         _attempt = _attempt + 1;
     };
 
-    _result
+    _pos
 };
 
 ALFA_fnc_repIedSpawn =
@@ -251,14 +229,14 @@ ALFA_fnc_repIedSpawn =
         ["_rep", 50, [0]]
     ];
 
-    private _availableIeds = missionNamespace getVariable ["ALFA_repIedClasses", []];
-    if (_availableIeds isEqualTo []) exitWith { objNull };
+    private _iedClasses = missionNamespace getVariable ["ALFA_repIedClasses", []];
+    if (_iedClasses isEqualTo []) exitWith { objNull };
 
-    private _pos = [_players, _activeIeds] call ALFA_fnc_repIedFindPos;
+    private _pos = [_players, _activeIeds] call ALFA_fnc_repIedFindRoadPos;
     if (_pos isEqualTo []) exitWith { objNull };
 
-    private _iedClass = selectRandom _availableIeds;
-    private _ied = createMine [_iedClass, _pos, [], 0];
+    private _class = selectRandom _iedClasses;
+    private _ied = createMine [_class, _pos, [], 0];
     if (isNull _ied) exitWith { objNull };
 
     _ied setVariable ["ALFA_repIed", true, true];
@@ -266,46 +244,58 @@ ALFA_fnc_repIedSpawn =
     _ied setVariable ["ALFA_repIedSource", "civilian_reputation", true];
     _ied setVariable ["ALFA_repIedFarSince", -1];
 
-    diag_log format ["[ALFA_REP_IED] Spawned %1 at %2 (rep=%3)", _iedClass, _pos, _rep];
+    diag_log format ["[ALFA_REP_IED] Spawned %1 at %2 (rep=%3)", _class, _pos, _rep];
     _ied
 };
 
-if (_availableIeds isEqualTo []) exitWith
+ALFA_fnc_repIedSpawnChance =
+{
+    params [["_rep", 50, [0]]];
+
+    private _threshold = missionNamespace getVariable ["ALFA_repIedThreshold", 30];
+    private _minChance = missionNamespace getVariable ["ALFA_repIedSpawnChanceMin", 0.15];
+    private _maxChance = missionNamespace getVariable ["ALFA_repIedSpawnChanceMax", 0.50];
+    private _threat = (((_threshold - _rep) / _threshold) max 0) min 1;
+
+    _minChance + ((_maxChance - _minChance) * _threat)
+};
+
+ALFA_fnc_repIedTick =
+{
+    private _interval = missionNamespace getVariable ["ALFA_repIedCheckInterval", 180];
+    [ALFA_fnc_repIedTick, [], _interval] call CBA_fnc_waitAndExecute;
+
+    private _players = call ALFA_fnc_repIedPlayers;
+    private _activeIeds = [_players] call ALFA_fnc_repIedCleanup;
+    private _rep = missionNamespace getVariable ["ALFA_civilianReputation", 50];
+    private _threshold = missionNamespace getVariable ["ALFA_repIedThreshold", 30];
+
+    if (_rep >= _threshold) exitWith {};
+    if (_players isEqualTo []) exitWith {};
+
+    private _maxActive = missionNamespace getVariable ["ALFA_repIedMaxActive", 6];
+    if (count _activeIeds >= _maxActive) exitWith {};
+    if ((random 1) >= ([_rep] call ALFA_fnc_repIedSpawnChance)) exitWith {};
+
+    private _ied = [_players, _activeIeds, _rep] call ALFA_fnc_repIedSpawn;
+    if (!isNull _ied) then
+    {
+        _activeIeds pushBack _ied;
+        missionNamespace setVariable ["ALFA_repActiveIeds", _activeIeds];
+    };
+};
+
+if ((missionNamespace getVariable ["ALFA_repIedClasses", []]) isEqualTo []) exitWith
 {
     diag_log "[ALFA_REP_IED] No IED classes available. Civilian IED threat disabled.";
 };
 
-diag_log format ["[ALFA_REP_IED] Civilian IED threat initialized. Classes=%1", _availableIeds];
+private _initialDelay = missionNamespace getVariable ["ALFA_repIedInitialDelay", 30];
+[ALFA_fnc_repIedTick, [], _initialDelay] call CBA_fnc_waitAndExecute;
 
-[] spawn
-{
-    sleep 30;
-
-    while { true } do
-    {
-        private _interval = missionNamespace getVariable ["ALFA_repIedCheckInterval", 180];
-        private _threshold = missionNamespace getVariable ["ALFA_repIedThreshold", 30];
-        private _maxActive = missionNamespace getVariable ["ALFA_repIedMaxActive", 6];
-        private _rep = missionNamespace getVariable ["ALFA_civilianReputation", 50];
-        private _players = call ALFA_fnc_repIedPlayers;
-        private _activeIeds = [_players] call ALFA_fnc_repIedCleanup;
-
-        if (_rep < _threshold && { _players isNotEqualTo [] } && { count _activeIeds < _maxActive }) then
-        {
-            private _threat = (((_threshold - _rep) / _threshold) max 0) min 1;
-            private _spawnChance = 0.15 + (_threat * 0.35);
-
-            if ((random 1) < _spawnChance) then
-            {
-                private _ied = [_players, _activeIeds, _rep] call ALFA_fnc_repIedSpawn;
-                if (!isNull _ied) then
-                {
-                    _activeIeds pushBack _ied;
-                    missionNamespace setVariable ["ALFA_repActiveIeds", _activeIeds];
-                };
-            };
-        };
-
-        sleep _interval;
-    };
-};
+diag_log format
+[
+    "[ALFA_REP_IED] Civilian IED threat initialized. First check in %1 seconds. Classes=%2",
+    _initialDelay,
+    missionNamespace getVariable ["ALFA_repIedClasses", []]
+];
