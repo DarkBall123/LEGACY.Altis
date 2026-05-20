@@ -20,7 +20,8 @@ missionNamespace setVariable ["DZ_squadFundsMissionRewards", createHashMapFromAr
     ["artillery_hunt",   400],
     ["humanitarian_aid", 500],
     ["eod",              450],
-    ["idap_repair",      250]
+    ["idap_repair",      250],
+    ["air_defense",      700]
 ]];
 
 
