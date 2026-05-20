@@ -197,13 +197,16 @@ private _assignVehicleCrew =
         _free append ((units _x) select { alive _x && { isNull objectParent _x } });
     } forEach _sourceGroups;
 
-    private _vacancies = fullCrew [_veh, "", true] select { (_x # 0) isEqualTo objNull };
+    private _vacancies = fullCrew [_veh, "", true] select
+    {
+        (_x # 0) isEqualTo objNull && { !((toLower (_x # 1)) isEqualTo "cargo") }
+    };
 
     {
         if (_forEachIndex < count _free) then
         {
             private _man = _free select _forEachIndex;
-            private _role = _x # 1;
+            private _role = toLower (_x # 1);
 
             switch _role do
             {
@@ -289,6 +292,12 @@ private _spawnVehicleForGroups =
 
     private _veh = createVehicle [_vehType, _vehPos, [], 0, "NONE"];
     _veh setDir (random 360);
+    _veh lock 0;
+    _veh lockDriver false;
+    _veh lockCargo false;
+    {
+        _veh lockTurret [_x, false];
+    } forEach (allTurrets [_veh, true]);
     _takenPos pushBack _vehPos;
 
     private _assignedCrew = [_veh, _sourceGroups, _allowCargo] call _assignVehicleCrew;
