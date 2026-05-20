@@ -133,4 +133,19 @@ private _register =
     ]
 ] call _register;
 
+[
+    "air_defense",
+    createHashMapFromArray
+    [
+        ["title", "Подавление ПВО"],
+        ["description", "Найти по названию населённого пункта и уничтожить радиолокационную станцию и зенитный комплекс противника. Авиация под угрозой."],
+        ["startFunction", "DZ_fnc_startAirDefenseMission"],
+        ["implemented", true],
+        ["manualEnabled", true],
+        ["randomEnabled", true],
+        ["weight", 1],
+        ["cooldown", 1800]
+    ]
+] call _register;
+
 _definitions
