@@ -18,13 +18,13 @@ private _replyTarget = owner _caller;
 call DZ_fnc_initMissionSystem;
 
 if (missionNamespace getVariable ["DZ_missionActive", false]) exitWith {
-    ["ОО Штаб", "Миссия уже активна. Дождитесь её завершения."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    ["Передовая база", "Миссия уже активна. Дождитесь её завершения."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 private _started = ["fob"] call DZ_fnc_startRandomMission;
 
 if !(_started) exitWith {
-    ["ОО Штаб", "Нет доступных контрактов. Попробуйте позже."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    ["Передовая база", "Нет доступных контрактов. Попробуйте позже."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 private _mult = missionNamespace getVariable ["DZ_fobRewardMultiplier", 2];
