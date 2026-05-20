@@ -108,6 +108,7 @@ class CfgFunctions
 
 
             class initHqLaptop          {};
+            class initFobLaptop         {};
             class initTransportMenu     {};
             class initEwJammer          {};
             class initKshmVehicle       {};
@@ -115,6 +116,7 @@ class CfgFunctions
 
 
             class requestTransport      {};
+            class requestFobMission     {};
             class setKshmDeployed       {};
             class radioControl          {};
             class radioPlayLocal        {};

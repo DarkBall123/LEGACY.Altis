@@ -118,7 +118,13 @@ DZ_fnc_squadFundsHasEnough = {
         diag_log format ["[DZ_FUNDS] No reward for mission %1", _missionId];
     };
 
-    [_reward, format ["Mission reward: %1", _title]] call DZ_fnc_squadFundsAdjust;
+    // FOB contracts pay a multiplied reward.
+    if (_source == "fob") then {
+        private _mult = missionNamespace getVariable ["DZ_fobRewardMultiplier", 2];
+        _reward = round (_reward * _mult);
+    };
+
+    [_reward, format ["Mission reward: %1 (%2)", _title, _source]] call DZ_fnc_squadFundsAdjust;
 
     [
         format ["Награда за миссию: +%1₽. Баланс: %2₽.",
