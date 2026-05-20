@@ -301,6 +301,12 @@ call ALFA_fnc_repUpdateMarker;
     private _amount = _rewards getOrDefault [_missionId, 0];
     if (_amount == 0) exitWith {};
 
+    // FOB contracts pay a multiplied reputation reward.
+    if (_source == "fob") then {
+        private _mult = missionNamespace getVariable ["DZ_fobRewardMultiplier", 2];
+        _amount = _amount * _mult;
+    };
+
     private _reason = switch (_missionId) do {
         case "artillery_hunt": { "Mortar position destroyed." };
         case "assassination":  { "Field commander eliminated." };
