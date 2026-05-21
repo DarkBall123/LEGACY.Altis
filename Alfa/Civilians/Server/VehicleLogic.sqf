@@ -10,6 +10,13 @@ ENGIMA_CIVILIANS_SpawnCivilianVehicle = {
 
     if (!isNull _road) then {
         private _vehicle = createVehicle [_vehicleClass, getPos _road, [], 0, "NONE"];
+        _vehicle lock 0;
+        _vehicle lockDriver false;
+        _vehicle lockCargo false;
+        {
+            _vehicle lockTurret [_x, false];
+        } forEach (allTurrets [_vehicle, true]);
+
         private _driver = createAgent [selectRandom ENGIMA_CIVILIANS_UNIT_CLASSES, getPos _vehicle, [], 0, "NONE"];
         _driver moveInDriver _vehicle;
 

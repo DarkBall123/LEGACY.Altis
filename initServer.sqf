@@ -23,4 +23,5 @@ call DZ_fnc_initMissionSystem;
 call compile preprocessFileLineNumbers "Alfa\Civilians\Init.sqf";
 call compile preprocessFileLineNumbers "Alfa\Traffic\Init.sqf";
 call compile preprocessFileLineNumbers "Alfa\Civilians\Reputation\Reputation.sqf";
+call compile preprocessFileLineNumbers "Alfa\Civilians\Reputation\IedThreat.sqf";
 call DZ_fnc_initSquadFunds;
