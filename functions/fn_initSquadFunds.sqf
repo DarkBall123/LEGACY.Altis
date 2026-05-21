@@ -28,7 +28,7 @@ missionNamespace setVariable ["DZ_squadFundsMissionRewards", createHashMapFromAr
 DZ_fnc_squadFundsMarkerPos = {
     private _pos = missionNamespace getVariable ["DZ_squadFundsMarkerPos", []];
     if (_pos isEqualType [] && { count _pos >= 2 }) exitWith { _pos };
-    [10400, -160, 0]
+    [10400, -280, 0]
 };
 
 DZ_fnc_squadFundsMarkerColor = {
