@@ -547,7 +547,7 @@ private _timeoutHandle = [
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
 
-        if ((time - _startTime) > 3600) exitWith
+        if ((time - _startTime) > 4200) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             missionNamespace setVariable ["DZ_artyMissionDone", true];

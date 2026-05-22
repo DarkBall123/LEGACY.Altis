@@ -313,7 +313,7 @@ private _stateHandle = [
 
         if (time - _startTime < 15) exitWith {};
 
-        if ((time - _startTime) > 4000) exitWith
+        if ((time - _startTime) > 4600) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["failure"] call DZ_fnc_endMission;

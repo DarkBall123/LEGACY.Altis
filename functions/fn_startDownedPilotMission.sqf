@@ -231,7 +231,7 @@ private _stateHandle = [
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
-        if ((time - _startTime) > 5400) exitWith
+        if ((time - _startTime) > 6000) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["failure"] call DZ_fnc_endMission;
