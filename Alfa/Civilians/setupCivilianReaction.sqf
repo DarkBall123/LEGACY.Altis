@@ -270,17 +270,19 @@ _unit setVariable ["ALFA_civReactionReady", true, true];
 
 private _roll = random 1;
 private _reaction = "flee";
+private _reputation = missionNamespace getVariable ["ALFA_civilianReputation", 50];
+private _grenadeChance = (((100 - _reputation) max 0) min 100) * 0.003;
 
-if (_roll < 0.05) then {
+if (_roll < _grenadeChance) then {
     _reaction = "stone";
 } else {
-    if (_roll < 0.20) then {
+    if (_roll < (_grenadeChance + 0.15)) then {
         _reaction = "hide";
     } else {
-        if (_roll < 0.35) then {
+        if (_roll < (_grenadeChance + 0.30)) then {
             _reaction = "surrender";
         } else {
-            if (_roll < 0.40) then {
+            if (_roll < (_grenadeChance + 0.35)) then {
                 _reaction = "freeze";
             };
         };
