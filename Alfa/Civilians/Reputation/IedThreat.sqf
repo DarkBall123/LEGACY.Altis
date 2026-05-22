@@ -20,8 +20,8 @@ private _defaults =
     ["ALFA_repIedMaxRoadDistance", 900],
     ["ALFA_repIedMinIedDistance", 180],
     ["ALFA_repIedBaseDistance", 250],
-    ["ALFA_repIedSpawnChanceMin", 0.15],
-    ["ALFA_repIedSpawnChanceMax", 0.50]
+    ["ALFA_repIedSpawnChanceMin", 0.20],
+    ["ALFA_repIedSpawnChanceMax", 0.60]
 ];
 
 {
@@ -253,8 +253,8 @@ ALFA_fnc_repIedSpawnChance =
     params [["_rep", 50, [0]]];
 
     private _threshold = missionNamespace getVariable ["ALFA_repIedThreshold", 30];
-    private _minChance = missionNamespace getVariable ["ALFA_repIedSpawnChanceMin", 0.15];
-    private _maxChance = missionNamespace getVariable ["ALFA_repIedSpawnChanceMax", 0.50];
+    private _minChance = missionNamespace getVariable ["ALFA_repIedSpawnChanceMin", 0.20];
+    private _maxChance = missionNamespace getVariable ["ALFA_repIedSpawnChanceMax", 0.60];
     private _threat = (((_threshold - _rep) / _threshold) max 0) min 1;
 
     _minChance + ((_maxChance - _minChance) * _threat)
