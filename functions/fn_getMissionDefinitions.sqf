@@ -148,4 +148,19 @@ private _register =
     ]
 ] call _register;
 
+[
+    "defend_informant",
+    createHashMapFromArray
+    [
+        ["title", "Защита информатора"],
+        ["description", "Удержать захваченный сектор с информатором против волн контратаки, затем эвакуировать его на базу. Требуется захваченная территория."],
+        ["startFunction", "DZ_fnc_startDefendInformantMission"],
+        ["implemented", true],
+        ["manualEnabled", true],
+        ["randomEnabled", false],
+        ["weight", 1],
+        ["cooldown", 1800]
+    ]
+] call _register;
+
 _definitions
