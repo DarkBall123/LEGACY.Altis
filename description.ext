@@ -1,7 +1,7 @@
 onLoadName = "Операция: Красные Пески";
 briefingName = "Операция: Красные Пески";
-overviewPicture = "preview.jpg";
-loadScreen = "preview.jpg";
+overviewPicture = "\MainMenu\meta\preview.jpg";
+loadScreen = "\MainMenu\meta\preview.jpg";
 respawn = 3;
 respawnDelay = 30;
 respawnOnStart = -1;
@@ -149,7 +149,7 @@ class CfgSounds
     class DZ_SoundAmbience
     {
         name = "DZ_SoundAmbience";
-        sound[] = { "sound\ambience.ogg", 0.8, 1 };
+        sound[] = { "\MainMenu\meta\ambience.ogg", 0.8, 1 };
         titles[] = {};
     };
 };

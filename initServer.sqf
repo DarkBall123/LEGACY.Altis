@@ -14,9 +14,9 @@ west setFriend [resistance, 1];
 resistance setFriend [west, 1];
 DZ_RadioTracks =
 [
-    ["sound\ZOV_1.ogg", "Z", 122],
-    ["sound\ZOV_2.ogg", "O", 133],
-    ["sound\ZOV_3.ogg", "V", 89]
+    ["\MainMenu\meta\ZOV_1.ogg", "Z", 122],
+    ["\MainMenu\meta\ZOV_2.ogg", "O", 133],
+    ["\MainMenu\meta\ZOV_3.ogg", "V", 89]
 ];
 call DZ_fnc_initMissionSystem;
 
