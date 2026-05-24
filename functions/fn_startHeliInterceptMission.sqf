@@ -23,7 +23,7 @@ if !(missionNamespace getVariable ["DZ_missionActive", false]) then
     ["heli_intercept", "manual", _definition] call DZ_fnc_prepareMissionState;
 };
 
-private _heliClass = "b_afougf_Mi8MTV3_UPK23";
+private _heliClass = "Orkun_MTF_LittleBird_Armed";
 
 if (!isClass (configFile >> "CfgVehicles" >> _heliClass)) exitWith
 {
