@@ -140,6 +140,9 @@ class CfgFunctions
             class initZeusCleanupHook         {};
             class initPylonRestrictions       {};
             class enforcePylonRestrictions    {};
+            class initVehicleFlagActions       {};
+            class raiseRussianVehicleFlag      {};
+            class clearVehicleFlag             {};
         };
     };
 };

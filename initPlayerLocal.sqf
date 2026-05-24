@@ -4,4 +4,5 @@
  */
 
 [] call DZ_fnc_clientInit;
+[] call DZ_fnc_initVehicleFlagActions;
 call DZ_fnc_initPylonRestrictions;
