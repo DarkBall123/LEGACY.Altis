@@ -37,7 +37,8 @@ private _catalog = [
     ["crates",   "crate_medical",   "Медицинский ящик",                     250, ["ACE_medicalSupplyCrate_advanced"]],
 
 
-    ["statics",  "static_mg",       "Станковый пулемёт",                    250, ["rhs_KORD_high_MSV"]]
+    ["statics",  "static_mg",       "Станковый пулемёт",                    250, ["rhs_KORD_high_MSV"]],
+    ["statics",  "static_spg9",     "СПГ-9М",                               250, ["rhs_SPG9M_MSV"]]
 ];
 
 
