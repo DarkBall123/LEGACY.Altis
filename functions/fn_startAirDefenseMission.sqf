@@ -28,12 +28,18 @@ if !(missionNamespace getVariable ["DZ_missionActive", false]) then
 
 private _radarClass = "E22_B_JC_D_Radar_system_01_F";
 private _aaaClass   = "E22_B_JC_D_AAA_System_01_F";
+private _samClass   = "E22_B_JC_D_SAM_system_01_F";
 
-if (!isClass (configFile >> "CfgVehicles" >> _radarClass) || { !isClass (configFile >> "CfgVehicles" >> _aaaClass) }) exitWith
+if (
+    !isClass (configFile >> "CfgVehicles" >> _radarClass) ||
+    { !isClass (configFile >> "CfgVehicles" >> _aaaClass) } ||
+    { !isClass (configFile >> "CfgVehicles" >> _samClass) }
+) exitWith
 {
-    diag_log format ["[AIR_DEFENSE] Required classes missing (radar=%1 aaa=%2). Aborting.",
+    diag_log format ["[AIR_DEFENSE] Required classes missing (radar=%1 aaa=%2 sam=%3). Aborting.",
         isClass (configFile >> "CfgVehicles" >> _radarClass),
-        isClass (configFile >> "CfgVehicles" >> _aaaClass)];
+        isClass (configFile >> "CfgVehicles" >> _aaaClass),
+        isClass (configFile >> "CfgVehicles" >> _samClass)];
     ["failure"] call DZ_fnc_endMission;
     false
 };
@@ -136,9 +142,10 @@ for "_i" from 0 to 12 do
 if (_radarPos isEqualTo []) then { _radarPos = _locPos; };
 
 private _aaaPos = _radarPos getPos [40 + (random 30), random 360];
+private _samPos = _radarPos getPos [45 + (random 35), random 360];
 
-diag_log format ["[AIR_DEFENSE] Site near '%1' at %2 (radar %3, aaa %4)",
-    _locName, _locPos, _radarPos, _aaaPos];
+diag_log format ["[AIR_DEFENSE] Site near '%1' at %2 (radar %3, aaa %4, sam %5)",
+    _locName, _locPos, _radarPos, _aaaPos, _samPos];
 
 private _radar = createVehicle [_radarClass, _radarPos, [], 0, "NONE"];
 _radar setDir (random 360);
@@ -147,6 +154,10 @@ private _radarCrewGrp = createVehicleCrew _radar;
 private _aaa = createVehicle [_aaaClass, _aaaPos, [], 0, "NONE"];
 _aaa setDir (random 360);
 private _aaaCrewGrp = createVehicleCrew _aaa;
+
+private _sam = createVehicle [_samClass, _samPos, [], 0, "NONE"];
+_sam setDir (random 360);
+private _samCrewGrp = createVehicleCrew _sam;
 
 // Keep the system crews stationary but free to engage aircraft/players.
 {
@@ -160,7 +171,7 @@ private _aaaCrewGrp = createVehicleCrew _aaa;
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_x] call DZ_fnc_prepareSpawnedUnit; };
         } forEach (units _grp);
     };
-} forEach [_radarCrewGrp, _aaaCrewGrp];
+} forEach [_radarCrewGrp, _aaaCrewGrp, _samCrewGrp];
 
 // AFR (resistance) militia garrison around the site.
 private _garrisonGroup = createGroup [_sideEnemy, true];
@@ -213,36 +224,37 @@ if (isClass (configFile >> "CfgVehicles" >> _technicalClass)) then
 };
 
 private _allUnits = (units _garrisonGroup);
-{ _allUnits append (units _x); } forEach [_radarCrewGrp, _aaaCrewGrp];
+{ _allUnits append (units _x); } forEach [_radarCrewGrp, _aaaCrewGrp, _samCrewGrp];
 
 [
     _allUnits,
-    [_radar, _aaa] + _vehicles,
+    [_radar, _aaa, _sam] + _vehicles,
     [],
     []
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_airDefenseRadar", _radar];
 missionNamespace setVariable ["DZ_airDefenseAAA",   _aaa];
+missionNamespace setVariable ["DZ_airDefenseSAM",   _sam];
 
 [
     "hint",
     "MISSION: ПОДАВЛЕНИЕ ПВО",
     format [
-        "Противник развернул радиолокационную станцию и зенитный комплекс в районе населённого пункта %1. Точные координаты неизвестны — проведите разведку и уничтожьте ОБА объекта.\n\nОтметок на карте нет. Ориентируйтесь по названию населённого пункта.\n\nВНИМАНИЕ: зенитный комплекс активен. Применение авиации крайне опасно. Объект охраняется силами AFR.",
+        "Противник развернул радиолокационную станцию (РЛС), зенитный комплекс (ЗАК) и зенитно-ракетный комплекс (ЗРК) в районе населённого пункта %1. Точные координаты неизвестны — проведите разведку и уничтожьте ВСЕ ТРИ объекта.\n\nОтметок на карте нет. Ориентируйтесь по названию населённого пункта.\n\nВНИМАНИЕ: ПВО активна. Применение авиации крайне опасно. Объект охраняется силами AFR.",
         _locName
     ]
 ] call DZ_fnc_missionUi;
 
 [
-    format ["Разведка докладывает о ПВО противника в районе %1. Найдите и уничтожьте РЛС и ЗРК.", _locName],
+    format ["Разведка докладывает о ПВО противника в районе %1. Найдите и уничтожьте РЛС, ЗАК и ЗРК.", _locName],
     east
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_radar", "_aaa", "_startTime", "_locName"];
+        _args params ["_radar", "_aaa", "_sam", "_startTime", "_locName"];
 
         if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
         {
@@ -259,24 +271,28 @@ private _stateHandle = [
 
         private _radarDead = (isNull _radar) || { !alive _radar };
         private _aaaDead   = (isNull _aaa)   || { !alive _aaa };
+        private _samDead   = (isNull _sam)   || { !alive _sam };
 
         // Announce each kill once.
         if (_radarDead && { !(missionNamespace getVariable ["DZ_airDefenseRadarReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseRadarReported", true];
-            ["РЛС противника уничтожена. Осталось уничтожить зенитный комплекс.", east]
-                remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["РЛС противника уничтожена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
         if (_aaaDead && { !(missionNamespace getVariable ["DZ_airDefenseAAAReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseAAAReported", true];
-            ["Зенитный комплекс уничтожен. Осталось уничтожить РЛС.", east]
-                remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["Зенитный комплекс (ЗАК) уничтожен.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+        };
+        if (_samDead && { !(missionNamespace getVariable ["DZ_airDefenseSAMReported", false]) }) then
+        {
+            missionNamespace setVariable ["DZ_airDefenseSAMReported", true];
+            ["Зенитно-ракетный комплекс (ЗРК) уничтожен.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
-        if (_radarDead && _aaaDead) exitWith
+        if (_radarDead && _aaaDead && _samDead) exitWith
         {
-            diag_log "[AIR_DEFENSE] SUCCESS: both systems destroyed.";
+            diag_log "[AIR_DEFENSE] SUCCESS: all systems destroyed.";
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["success"] call DZ_fnc_endMission;
             ["ПВО противника полностью уничтожена. Воздушное пространство свободно.", east]
@@ -284,12 +300,13 @@ private _stateHandle = [
         };
     },
     5,
-    [_radar, _aaa, time, _locName]
+    [_radar, _aaa, _sam, time, _locName]
 ] call CBA_fnc_addPerFrameHandler;
 
 [[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_airDefenseRadarReported", false];
 missionNamespace setVariable ["DZ_airDefenseAAAReported", false];
+missionNamespace setVariable ["DZ_airDefenseSAMReported", false];
 
 true
