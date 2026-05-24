@@ -34,7 +34,8 @@ if (isNil { missionNamespace getVariable "ALFA_repMissionRewards" }) then {
         ["assassination",  0.3],
         ["idap_repair",    0.5],
         ["air_defense",    0.4],
-        ["defend_informant", 0.5]
+        ["defend_informant", 0.5],
+        ["heli_intercept", 0.3]
     ]];
 };
 
@@ -315,6 +316,7 @@ call ALFA_fnc_repUpdateMarker;
         case "idap_repair":    { "IDAP vehicle repaired and crew rescued." };
         case "air_defense":    { "Enemy air-defense network destroyed." };
         case "defend_informant": { "Informant defended and extracted." };
+        case "heli_intercept": { "Enemy helicopter intercepted." };
         default { format ["Mission completed: %1", _title] };
     };
 

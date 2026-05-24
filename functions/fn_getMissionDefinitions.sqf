@@ -163,4 +163,19 @@ private _register =
     ]
 ] call _register;
 
+[
+    "heli_intercept",
+    createHashMapFromArray
+    [
+        ["title", "Перехват вертолёта"],
+        ["description", "Найти и уничтожить вражеский вертолёт, патрулирующий район. Текущее положение отмечено на карте."],
+        ["startFunction", "DZ_fnc_startHeliInterceptMission"],
+        ["implemented", true],
+        ["manualEnabled", true],
+        ["randomEnabled", true],
+        ["weight", 1],
+        ["cooldown", 1800]
+    ]
+] call _register;
+
 _definitions

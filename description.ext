@@ -101,6 +101,7 @@ class CfgFunctions
             class startIdapVehicleRepairMission {};
             class startAirDefenseMission     {};
             class startDefendInformantMission {};
+            class startHeliInterceptMission  {};
 
 
             class missionUi             {};
