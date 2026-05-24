@@ -302,7 +302,7 @@ missionNamespace setVariable ["DZ_artyKilledCivilians",  0];
 missionNamespace setVariable ["DZ_artyFiringStarted",    false];
 missionNamespace setVariable ["DZ_artyMissionDone",      false];
 
-private _gracePeriod = 600;
+private _gracePeriod = 1200;
 
 [
     "hint",
@@ -314,7 +314,7 @@ private _gracePeriod = 600;
     ]
 ] call DZ_fnc_missionUi;
 
-["Разведданные: миномёт устанавливают в обозначенной зоне. До открытия огня ~10 минут.", east]
+[format ["Разведданные: миномёт устанавливают в обозначенной зоне. До открытия огня ~%1 минут.", round (_gracePeriod / 60)], east]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 
@@ -480,8 +480,11 @@ private _endDetectionHandle = [
                     [{ deleteVehicle (_this # 0) }, [_smoke], 2] call CBA_fnc_waitAndExecute;
 
 
-                    playSound3D ["A3\Sounds_F\arsenal\weapons_static\Mortar\Mortar_01_shot.wss",
-                        _mortarObject, false, getPosASL _mortarObject, 5, 1, 800];
+                    // playSound3D is local-only; the firing PFH runs on the
+                    // server, so broadcast it to every client or nobody hears
+                    // the muzzle blast on a dedicated server.
+                    ["A3\Sounds_F\arsenal\weapons_static\Mortar\Mortar_01_shot.wss",
+                        _mortarObject, false, getPosASL _mortarObject, 5, 1, 1500] remoteExec ["playSound3D", 0];
                 };
 
 
