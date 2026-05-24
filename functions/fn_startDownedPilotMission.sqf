@@ -216,7 +216,9 @@ missionNamespace setVariable ["DZ_pilotMissionGuards",  _guards];
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_pilot", "_guards", "_extractPos", "_startTime"];
+        _args params ["_pilot", "_guards", "_extractPos", "_startTime", "_crashPos"];
+
+        private _extractRadius = missionNamespace getVariable ["DZ_pilotExtractRadius", 120];
 
         if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
         {
@@ -323,24 +325,40 @@ private _stateHandle = [
             };
         };
 
+        // Re-read the secured flag — the block above may have set it this frame.
+        _rescued = missionNamespace getVariable ["DZ_pilotMissionRescued", false];
+
+        // Fallback secure: players physically moved the pilot away from the
+        // crash site (ACE handcuff + drag/carry, or vehicle load) even if the
+        // scripted rescue trigger never fired. Treat him as secured so the
+        // extraction can complete.
+        if (!_rescued && { alive _pilot } && { (_pilot distance2D _crashPos) > 100 }) then
+        {
+            missionNamespace setVariable ["DZ_pilotMissionRescued", true];
+            _rescued = true;
+            "marker_pilot" setMarkerType "mil_join";
+            "marker_pilot" setMarkerText "Пилот эвакуируется";
+            ["Пилот вывезен с места крушения. Доставьте его в зону эвакуации.", east]
+                remoteExecCall ["DZ_fnc_sideMessage", 0];
+            diag_log format ["[DOWNED_PILOT] Pilot secured via extraction (moved %1m from crash).",
+                round (_pilot distance2D _crashPos)];
+        };
+
         if (_rescued) then
         {
             "marker_pilot" setMarkerPos (getPosATL _pilot);
 
-
-            private _atExtract = false;
-            if (_pilot distance2D _extractPos < 50) then { _atExtract = true; };
-            if (!_atExtract) then
+            private _lastLog = missionNamespace getVariable ["DZ_pilotExtractLogTime", 0];
+            if (time - _lastLog > 10) then
             {
-                {
-                    if (alive _x && { _x distance2D _extractPos < 50 }) exitWith
-                    {
-                        _atExtract = true;
-                    };
-                } forEach (units group _pilot);
+                missionNamespace setVariable ["DZ_pilotExtractLogTime", time];
+                diag_log format ["[DOWNED_PILOT] Extract check: pilotDist=%1m radius=%2 alive=%3 captive=%4 extractPos=%5",
+                    round (_pilot distance2D _extractPos), _extractRadius, alive _pilot, captive _pilot, _extractPos];
             };
 
-            if (_atExtract && { alive _pilot } && { _pilot distance2D _extractPos < 200 }) exitWith
+            // Delivery succeeds on the pilot's own position, regardless of
+            // whether he is following on foot, cuffed (captive) or carried.
+            if (alive _pilot && { (_pilot distance2D _extractPos) < _extractRadius }) exitWith
             {
                 [_handle] call CBA_fnc_removePerFrameHandler;
                 ["success"] call DZ_fnc_endMission;
@@ -350,7 +368,7 @@ private _stateHandle = [
         };
     },
     1,
-    [_pilot, _guards, _extractPos, time]
+    [_pilot, _guards, _extractPos, time, _crashPos]
 ] call CBA_fnc_addPerFrameHandler;
 
 [[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
