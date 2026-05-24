@@ -32,6 +32,7 @@ private _catalog = [
     ["vehicles", "bmp",             "БМП-2К",                              2000, ["rhs_bmp2k_msv"]],
     ["vehicles", "heli_transport",  "Ми-8 (транспортный)",                2000, ["RHS_Mi8AMT_vvsc"]],
     ["vehicles", "heli_gunship",    "Ми-24 (ударный)",                     2500, ["SAFP_Mi24VM_RUAF"]],
+    ["vehicles", "jet_su25",        "Су-25СМ3 (штурмовик)",                3500, ["FIR_Su25SM3_Camo_VVSVer"]],
 
 
     ["crates",   "crate_medical",   "Медицинский ящик",                     250, ["ACE_medicalSupplyCrate_advanced"]],
