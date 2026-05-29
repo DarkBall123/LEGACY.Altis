@@ -95,7 +95,7 @@ private _restored = 0;
                     [_bCargo, _veh, { (_this # 0) addBackpackCargoGlobal (_this # 1) }] call _restoreCargo;
                 };
 
-                _flags params [["_purchased", false], ["_tracked", false]];
+                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false]];
 
                 _veh setVariable ["DZ_persist", true, true];
                 if (_purchased) then {
@@ -105,6 +105,9 @@ private _restored = 0;
                 if (_tracked) then {
                     _veh setVariable ["DZ_trackAbandoned", true, true];
                     _veh setVariable ["DZ_lastUsed",       time, true];
+                };
+                if (_trophy) then {
+                    _veh setVariable ["DZ_trophyVehicle", true, true];
                 };
 
                 _restored = _restored + 1;

@@ -38,7 +38,8 @@ private _snapshot = [];
 
         private _flags = [
             _veh getVariable ["DZ_purchasedItem", false],
-            _veh getVariable ["DZ_trackAbandoned", false]
+            _veh getVariable ["DZ_trackAbandoned", false],
+            _veh getVariable ["DZ_trophyVehicle", false]
         ];
 
         _snapshot pushBack [
