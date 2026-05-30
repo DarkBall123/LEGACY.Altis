@@ -66,9 +66,9 @@ class CfgFunctions
             class squadFundsRequestBalance {};
             class saveAssets               {};
             class restoreAssets            {};
-            class initTrophyVehicleSale     {};
-            class isTrophyVehicleSellable   {};
-            class sellTrophyVehicle         {};
+            class initTrophyVehicleStorage  {};
+            class isTrophyVehicleStorable   {};
+            class saveTrophyVehicle         {};
         };
 
 

@@ -95,7 +95,7 @@ private _restored = 0;
                     [_bCargo, _veh, { (_this # 0) addBackpackCargoGlobal (_this # 1) }] call _restoreCargo;
                 };
 
-                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false]];
+                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false], ["_trophyOwnerKey", ""]];
 
                 _veh setVariable ["DZ_persist", true, true];
                 if (_purchased) then {
@@ -108,6 +108,16 @@ private _restored = 0;
                 };
                 if (_trophy) then {
                     _veh setVariable ["DZ_trophyVehicle", true, true];
+                    private _trophyOwnerSide = switch (_trophyOwnerKey) do {
+                        case "west":       { west };
+                        case "resistance": { resistance };
+                        case "east":       { east };
+                        case "civilian":   { civilian };
+                        default { sideUnknown };
+                    };
+                    if !(_trophyOwnerSide isEqualTo sideUnknown) then {
+                        _veh setVariable ["DZ_trophyVehicleOwnerSide", _trophyOwnerSide, true];
+                    };
                 };
 
                 _restored = _restored + 1;

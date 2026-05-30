@@ -194,10 +194,17 @@ private _fnc_deleteAssets =
 
         if (!isNull _veh) then
         {
-            private _deliveryPad = missionNamespace getVariable ["vehicle_delivery_pad", objNull];
-            private _saleRadius = missionNamespace getVariable ["DZ_trophyVehicleSaleRadius", 20];
-            private _nearTrophyDelivery = !isNull _deliveryPad && { (_veh distance2D _deliveryPad) <= _saleRadius };
+            private _storageRadius = missionNamespace getVariable ["DZ_trophyVehicleStorageRadius", 20];
+            private _storagePadNames = missionNamespace getVariable ["DZ_trophyVehicleStoragePadNames", ["vehicle_delivery_pad", "logistics_point"]];
+            private _nearTrophyDelivery = false;
             private _hasPlayerCrew = ({ isPlayer _x } count (crew _veh)) > 0;
+
+            {
+                private _storagePad = missionNamespace getVariable [_x, objNull];
+                if (!isNull _storagePad && { (_veh distance2D _storagePad) <= _storageRadius }) then {
+                    _nearTrophyDelivery = true;
+                };
+            } forEach _storagePadNames;
 
             if (_veh getVariable ["DZ_trophyVehicle", false]) then
             {

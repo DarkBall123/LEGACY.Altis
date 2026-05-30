@@ -1,6 +1,6 @@
 /*
- * DZ_fnc_isTrophyVehicleSellable
- * Validates whether a vehicle can be handed over at the delivery point.
+ * DZ_fnc_isTrophyVehicleStorable
+ * Validates whether a captured vehicle can be saved at the delivery point.
  */
 
 params [
@@ -23,11 +23,8 @@ if ((getNumber (configOf _vehicle >> "isUav")) > 0) exitWith { false };
 if (_vehicle getVariable ["DZ_purchasedItem", false]) exitWith { false };
 if (_vehicle getVariable ["DZ_noCleanup", false]) exitWith { false };
 if (_vehicle getVariable ["DZ_trackAbandoned", false]) exitWith { false };
-if (_vehicle getVariable ["DZ_trophyVehicleSaleInProgress", false]) exitWith { false };
-if (_vehicle getVariable ["DZ_trophyVehicleSold", false]) exitWith { false };
-
-private _isPersistent = _vehicle getVariable ["DZ_persist", false];
-private _isTrophy = _vehicle getVariable ["DZ_trophyVehicle", false];
-if (_isPersistent && {!_isTrophy}) exitWith { false };
+if (_vehicle getVariable ["DZ_trophyVehicleSaveInProgress", false]) exitWith { false };
+if (_vehicle getVariable ["DZ_trophyVehicle", false]) exitWith { false };
+if (_vehicle getVariable ["DZ_persist", false]) exitWith { false };
 
 (crew _vehicle) isEqualTo []
