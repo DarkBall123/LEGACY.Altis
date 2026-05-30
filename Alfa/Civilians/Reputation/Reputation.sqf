@@ -446,7 +446,8 @@ call ALFA_fnc_repUpdateMarker;
         ["_missionId", "", [""]],
         ["_result",    "", [""]],
         ["_source",    "", [""]],
-        ["_title",     "", [""]]
+        ["_title",     "", [""]],
+        ["_endedSide", sideUnknown]
     ];
 
     if (_result != "success") exitWith {};
@@ -461,9 +462,8 @@ call ALFA_fnc_repUpdateMarker;
         _amount = _amount * _mult;
     };
 
-    // Same routing rules as the squad-funds reward handler.
-    private _explicit = missionNamespace getVariable ["DZ_missionStartedBySide", sideUnknown];
-    private _rewardSide = if !(_explicit isEqualTo sideUnknown) then { _explicit } else {
+    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _rewardSide = if (_endedSide in _playerSides) then { _endedSide } else {
         switch (_source) do {
             case "manual": { west };
             case "fob":    { resistance };
@@ -471,7 +471,6 @@ call ALFA_fnc_repUpdateMarker;
         }
     };
 
-    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _recipients  = if (_rewardSide isEqualTo sideUnknown) then { _playerSides } else { [_rewardSide] };
 
     private _reason = switch (_missionId) do {

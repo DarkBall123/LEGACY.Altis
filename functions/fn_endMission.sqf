@@ -62,10 +62,9 @@ if (_missionId != "") then
 };
 
 // ── Fire missionEnded BEFORE wiping state so listeners see truth ──────
-//   Signature kept as (id, result, source, title) for back-compat;
-//   side is broadcast separately via DZ_missionStartedBySide which
-//   the reward handlers already read. We also pass _side as a 5th
-//   arg for listeners that want it.
+//   Signature kept as (id, result, source, title, side): first four
+//   fields are back-compatible, side lets listeners attribute rewards
+//   correctly when both player factions have concurrent missions.
 ["DZ_missionEnded", [_missionId, _result, _missionSource, _missionTitle, _side]] call CBA_fnc_localEvent;
 
 // ── Clear side-bucket state ──────────────────────────────────────────

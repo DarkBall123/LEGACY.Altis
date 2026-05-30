@@ -7,21 +7,19 @@
  *   - Free Altis   (resistance)  → DZ_squadFundsBalance_resistance
  *
  * Persistence: profileNamespace keys with the same names as above.
- * Both wallets render their own map marker near their faction's base.
+ * Map markers are intentionally not rendered for wallet balances.
  *
  * Public API (all side-aware):
  *   [_amount, _reason, _side]                call DZ_fnc_squadFundsAdjust    -> new balance
  *   [_amount, _side]                         call DZ_fnc_squadFundsHasEnough -> bool
  *   [_side]                                  call DZ_fnc_squadFundsGetBalance -> Number
  *   [_side]                                  call DZ_fnc_squadFundsKeyForSide -> namespace key
- *   [_side]                                  call DZ_fnc_squadFundsMarkerPos / MarkerColor
- *   [_side]                                  call DZ_fnc_squadFundsUpdateMarker (or no arg → all sides)
+ *   [_side]                                  call DZ_fnc_squadFundsUpdateMarker (cleanup hook)
  *
  * Reward routing:
- *   - source "manual" → west (APD started it from the HQ laptop)
- *   - source "fob"    → resistance (Free Altis took the FOB contract)
- *   - source "auto"   → both sides each receive the full reward
- *   - (Wave 4 will store DZ_missionStartedBySide for exact routing.)
+ *   - DZ_missionEnded's side argument routes per-faction missions exactly
+ *   - source fallback keeps old/manual callers compatible
+ *   - source "auto" still pays every player side when no side is known
  */
 
 if (!isServer) exitWith {};
@@ -176,7 +174,8 @@ DZ_fnc_squadFundsHasEnough = {
         ["_missionId", "", [""]],
         ["_result",    "", [""]],
         ["_source",    "", [""]],
-        ["_title",     "", [""]]
+        ["_title",     "", [""]],
+        ["_endedSide", sideUnknown]
     ];
 
     if (_result != "success") exitWith {};
@@ -194,9 +193,8 @@ DZ_fnc_squadFundsHasEnough = {
         _reward = round (_reward * _mult);
     };
 
-    // Route reward by source (Wave 4 will override via DZ_missionStartedBySide).
-    private _explicit = missionNamespace getVariable ["DZ_missionStartedBySide", sideUnknown];
-    private _rewardSide = if !(_explicit isEqualTo sideUnknown) then { _explicit } else {
+    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _rewardSide = if (_endedSide in _playerSides) then { _endedSide } else {
         switch (_source) do {
             case "manual": { west };
             case "fob":    { resistance };
@@ -204,7 +202,6 @@ DZ_fnc_squadFundsHasEnough = {
         }
     };
 
-    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _recipients  = if (_rewardSide isEqualTo sideUnknown) then { _playerSides } else { [_rewardSide] };
 
     {
