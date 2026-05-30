@@ -1,16 +1,14 @@
 /*
  * DZ_fnc_initRespawnMarkers
- * Creates per-side respawn markers from DZ_respawnPoints.
+ * Resolves per-side respawn points from DZ_respawnPoints.
  *
- * Each entry in DZ_respawnPoints is [label, position, side]. One
- * marker is placed per entry; the marker name and colour are derived
- * from the entry's side so engine-default respawn ("respawn_west",
- * "respawn_guerrila", etc.) works without extra wiring.
+ * Each entry in DZ_respawnPoints is [label, position, side]. Editor
+ * respawn/module markers are the default source of actual
+ * respawn positions. Script-created respawn markers are opt-in through
+ * DZ_scriptRespawnMarkersEnabled for legacy/debug use.
  *
- * When multiple entries share the same side, the first uses the bare
- * base name and subsequent entries get "_1", "_2", … suffixes (which
- * still require addRespawnPosition to actually be usable, but they
- * already render on the map for visual reference).
+ * When script markers are enabled and multiple entries share the same
+ * side, subsequent markers get "_1", "_2", etc. suffixes.
  */
 
 if (!isServer) exitWith { false };
@@ -90,6 +88,14 @@ if (_resolvedPoints isEqualTo []) then
     } forEach _playerSides;
 };
 
+missionNamespace setVariable ["DZ_respawnPointsResolved", _resolvedPoints];
+
+if !(missionNamespace getVariable ["DZ_scriptRespawnMarkersEnabled", false]) exitWith
+{
+    missionNamespace setVariable ["DZ_respawnMarkerNames", []];
+    true
+};
+
 // Per-side index so duplicate entries get suffixed marker names.
 private _sideIndex     = createHashMap;
 private _createdMarkers = [];
@@ -123,6 +129,5 @@ private _createdMarkers = [];
 } forEach _resolvedPoints;
 
 missionNamespace setVariable ["DZ_respawnMarkerNames",     _createdMarkers];
-missionNamespace setVariable ["DZ_respawnPointsResolved",  _resolvedPoints];
 
 true

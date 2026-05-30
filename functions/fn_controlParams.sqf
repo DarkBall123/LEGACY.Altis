@@ -21,6 +21,12 @@ private _respawnPoints =
     ["FreeAltis", [20791.287, 7269.035,   27.926], resistance]
 ];
 
+private _enemyAirSupportClasses =
+[
+    ["UK3CB_MDF_O_UH1H_M240", 0.75],
+    ["UK3CB_MDF_O_Mystere",   0.25]
+];
+
 
 // ── MEF (UK3CB Malden Defence Force) unit pools ───────────────────────
 // Lean roster by design (no APC, no AT technical, no AR assistant, no
@@ -239,6 +245,7 @@ missionNamespace setVariable ["DZ_corpseCleanupInterval", 1200];
 missionNamespace setVariable ["DZ_enableCorpseCleanup", true];
 missionNamespace setVariable ["DZ_loadoutSaveInterval", 60];
 missionNamespace setVariable ["DZ_respawnPoints", _respawnPoints];
+missionNamespace setVariable ["DZ_scriptRespawnMarkersEnabled", false];
 
 missionNamespace setVariable ["DZ_cpChance", 0.0003];
 
@@ -262,6 +269,19 @@ missionNamespace setVariable ["DZ_counterMaxActive", 1];
 missionNamespace setVariable ["DZ_counterAttacksEnabled", true];
 missionNamespace setVariable ["DZ_frontMinEnemyNeighbors", 2];
 missionNamespace setVariable ["DZ_counterSpawnRadius", _gridSize * 0.35];
+
+missionNamespace setVariable ["DZ_enemyAirSupportEnabled", true];
+missionNamespace setVariable ["DZ_enemyAirSupportCheckInterval", 240];
+missionNamespace setVariable ["DZ_enemyAirSupportChance", 0.08];
+missionNamespace setVariable ["DZ_enemyAirSupportCooldown", 1800];
+missionNamespace setVariable ["DZ_enemyAirSupportMaxActive", 1];
+missionNamespace setVariable ["DZ_enemyAirSupportLifetime", 900];
+missionNamespace setVariable ["DZ_enemyAirSupportClasses", _enemyAirSupportClasses];
+missionNamespace setVariable ["DZ_enemyAirSupportBaseExclusionRadius", 900];
+missionNamespace setVariable ["DZ_enemyAirSupportPatrolRadius", 900];
+missionNamespace setVariable ["DZ_enemyAirSupportHeliSpawnDistance", 2500];
+missionNamespace setVariable ["DZ_enemyAirSupportPlaneSpawnDistance", 4500];
+missionNamespace setVariable ["DZ_enemyAirSupportSafeMarkers", ["base_safe_zone"]];
 
 missionNamespace setVariable ["DZ_styleEnemyDormant", 0];
 missionNamespace setVariable ["DZ_styleEnemyActive", 1];

@@ -19,6 +19,7 @@ call DZ_fnc_initServer;
 call DZ_fnc_initAbandonedVehicleCleanup;
 call DZ_fnc_initZeusCleanupHook;
 call DZ_fnc_initPylonRestrictions;
+call DZ_fnc_initEnemyAirSupport;
 
 // ── Side relations: 3-way hostility triangle ──────────────────────────
 // APD (west) vs MEF (east): hostile.
