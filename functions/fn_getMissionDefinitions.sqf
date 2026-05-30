@@ -17,8 +17,8 @@ private _register =
     "interdiction",
     createHashMapFromArray
     [
-        ["title", "Атака на конвой"],
-        ["description", "Уничтожить вражеский конвой снабжения до прибытия в пункт назначения."],
+        ["title", "Перехват конвоя MEF"],
+        ["description", "Уничтожить конвой снабжения мальденских оккупационных сил до прибытия в пункт назначения."],
         ["startFunction", "DZ_fnc_startInterdictionMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -32,8 +32,8 @@ private _register =
     "assassination",
     createHashMapFromArray
     [
-        ["title", "Убить офицера"],
-        ["description", "Ликвидировать полевого командира боевиков и забрать документы."],
+        ["title", "Ликвидация офицера MEF"],
+        ["description", "Устранить полевого командира MEF и забрать оперативные документы."],
         ["startFunction", "DZ_fnc_startAssassinationMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -47,8 +47,8 @@ private _register =
     "downed_pilot",
     createHashMapFromArray
     [
-        ["title", "Спасти пилота"],
-        ["description", "Освободить и эвакуировать сбитого пилота из плена боевиков."],
+        ["title", "Спасти пилота AAF"],
+        ["description", "Освободить и эвакуировать сбитого пилота AAF из плена MEF."],
         ["startFunction", "DZ_fnc_startDownedPilotMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -62,8 +62,8 @@ private _register =
     "destroy_cache",
     createHashMapFromArray
     [
-        ["title", "Уничтожить тайники"],
-        ["description", "Найти и уничтожить тайники с оружием боевиков."],
+        ["title", "Уничтожить склады MEF"],
+        ["description", "Найти и уничтожить полевые склады оружия захватчиков в обозначенном районе."],
         ["startFunction", "DZ_fnc_startDestroyCacheMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -77,8 +77,8 @@ private _register =
     "artillery_hunt",
     createHashMapFromArray
     [
-        ["title", "Уничтожить миномёт"],
-        ["description", "Найти и уничтожить миномётную группу, обстреливающую мирную деревню."],
+        ["title", "Контрбатарейная борьба"],
+        ["description", "Найти и уничтожить миномётную группу MEF, ведущую огонь по мирному поселению."],
         ["startFunction", "DZ_fnc_startArtilleryHuntMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -92,8 +92,8 @@ private _register =
     "humanitarian_aid",
     createHashMapFromArray
     [
-        ["title", "Гуманитарная помощь"],
-        ["description", "Доставить гуманитарную помощь в три мирные деревни."],
+        ["title", "Доставка гуманитарной помощи"],
+        ["description", "Доставить груз IDAP в три отрезанных от снабжения поселения сквозь блокаду MEF."],
         ["startFunction", "DZ_fnc_startHumanitarianAidMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -108,7 +108,7 @@ private _register =
     createHashMapFromArray
     [
         ["title", "Разминирование маршрута"],
-        ["description", "Найти и обезвредить СВУ на участке дороги, используемом мирными конвоями."],
+        ["description", "Найти и обезвредить СВУ на участке дороги, через который проходят гражданские и гуманитарные конвои."],
         ["startFunction", "DZ_fnc_startEodMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -123,7 +123,7 @@ private _register =
     createHashMapFromArray
     [
         ["title", "Дозаправка транспорта IDAP"],
-        ["description", "Достичь гуманитарного автомобиля IDAP, отбить засаду и заправить пустой бак (ACE: канистра или топливозаправщик)."],
+        ["description", "Достичь застрявшего автомобиля IDAP, отбить засаду MEF и заправить пустой бак (ACE: канистра или топливозаправщик)."],
         ["startFunction", "DZ_fnc_startIdapVehicleRepairMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -137,8 +137,8 @@ private _register =
     "air_defense",
     createHashMapFromArray
     [
-        ["title", "Подавление ПВО"],
-        ["description", "Найти по названию населённого пункта и уничтожить радиолокационную станцию и зенитный комплекс противника. Авиация под угрозой."],
+        ["title", "Подавление ПВО MEF"],
+        ["description", "По названию населённого пункта найти и уничтожить РЛС, ЗАК и ЗРК захватчиков. Воздушное пространство закрыто."],
         ["startFunction", "DZ_fnc_startAirDefenseMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -152,8 +152,8 @@ private _register =
     "defend_informant",
     createHashMapFromArray
     [
-        ["title", "Защита информатора"],
-        ["description", "Удержать захваченный сектор с информатором против волн контратаки, затем эвакуировать его на базу. Требуется захваченная территория."],
+        ["title", "Прикрытие перебежчика"],
+        ["description", "Удержать захваченный сектор с перебежчиком против волн контратаки MEF, затем доставить его на базу. Требуется захваченная территория."],
         ["startFunction", "DZ_fnc_startDefendInformantMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -167,8 +167,8 @@ private _register =
     "heli_intercept",
     createHashMapFromArray
     [
-        ["title", "Перехват вертолёта"],
-        ["description", "Найти и уничтожить вражеский вертолёт, патрулирующий район. Текущее положение отмечено на карте."],
+        ["title", "Перехват разведчика MEF"],
+        ["description", "Найти и уничтожить разведывательный вертолёт MEF, патрулирующий район. Текущее положение отмечено на карте."],
         ["startFunction", "DZ_fnc_startHeliInterceptMission"],
         ["implemented", true],
         ["manualEnabled", true],

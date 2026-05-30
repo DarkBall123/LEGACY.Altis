@@ -33,8 +33,12 @@ private _spawnBlockedUntil = missionNamespace getVariable ["DZ_spawnBlockedUntil
 private _firstCounterDone = missionNamespace getVariable ["DZ_firstCounterDone", []];
 private _nextCounterAt = missionNamespace getVariable ["DZ_nextCounterAt", []];
 private _nextGlobalCounterAt = missionNamespace getVariable ["DZ_nextGlobalCounterAt", 0];
-private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", west];
-private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers", east];
+private _sideEnemy   = missionNamespace getVariable ["CH_sideEnemy", east];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+// Sentinel "the players" side used to mark sector dominance regardless
+// of which player faction's unit happened to be dominant. Capture
+// detection uses `_dominantSide in _playerSides`.
+private _playerSentinel = _playerSides param [0, west];
 private _now = diag_tickTime;
 private _sectorCount = count _cells;
 
@@ -261,7 +265,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
     };
 
     private _unitSide = side group _unit;
-    if (!(_unitSide isEqualTo _sidePlayers) && { !(_unitSide isEqualTo _sideEnemy) }) then
+    if (!(_unitSide in _playerSides) && { !(_unitSide isEqualTo _sideEnemy) }) then
     {
         continue;
     };
@@ -277,7 +281,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
     private _counts = +(_sectorCounts # _sectorId);
     _counts params ["_players", "_enemies"];
 
-    if (_unitSide isEqualTo _sidePlayers) then
+    if (_unitSide in _playerSides) then
     {
         _sectorCounts set [_sectorId, [_players + 1, _enemies]];
     }
@@ -332,7 +336,9 @@ for "_idx" from 0 to (_sectorCount - 1) do
     private _dominantSide = sideUnknown;
     if (_playerCount > _enemyCount && { _playerCount > 0 }) then
     {
-        _dominantSide = _sidePlayers;
+        // Use the player sentinel — capture detection only cares that
+        // the dominant side is "a player faction," not which one.
+        _dominantSide = _playerSentinel;
     }
     else
     {
@@ -362,7 +368,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
 
     if (!(_activeDominantSide isEqualTo sideUnknown) && { _activeHoldStart >= 0 } && { _now - _activeHoldStart >= _captureHold }) then
     {
-        if (_activeDominantSide isEqualTo _sidePlayers && { !_captured }) then
+        if (_activeDominantSide in _playerSides && { !_captured }) then
         {
             _captured = true;
             _spawned = false;

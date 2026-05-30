@@ -7,7 +7,7 @@ private ["_parameters"];
 
 
 _parameters = [
-	["UNIT_CLASSES", ["LOP_AFR_Civ_Man_01", "LOP_AFR_Civ_Man_01_S", "LOP_AFR_Civ_Man_02", "LOP_AFR_Civ_Man_02_S", "LOP_AFR_Civ_Man_03", "LOP_AFR_Civ_Man_03_S", "LOP_AFR_Civ_Man_04", "LOP_AFR_Civ_Man_04_S", "LOP_AFR_Civ_Man_05", "LOP_AFR_Civ_Man_05_S", "LOP_AFR_Civ_Man_06", "LOP_AFR_Civ_Man_06_S"]],
+	["UNIT_CLASSES", ["C_man_p_fugitive_F", "C_man_p_shorts_1_F", "C_man_1", "C_man_polo_1_F", "C_ManJacket_01_white", "C_Man_Fisherman_01_F", "C_Man_UtilityWorker_01_F", "C_man_p_beggar_F", "C_man_hunter_1_F", "C_Man_Messenger_01_F", "C_man_polo_6_F", "C_ManSweater_01_khaki"]],
 	["UNITS_PER_BUILDING", 0.2],
 	["MAX_GROUPS_COUNT", 15],
 	["MIN_SPAWN_DISTANCE", 50],

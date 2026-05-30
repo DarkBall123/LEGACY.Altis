@@ -7,26 +7,32 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "humanitarian_aid" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "humanitarian_aid" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["humanitarian_aid"] call DZ_fnc_getMissionDefinition;
-    ["humanitarian_aid", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["humanitarian_aid", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
 private _zoneData  = missionNamespace getVariable ["DZ_zoneData",          []];
 private _zoneTpl   = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
 private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy",         resistance];
-private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers",     east];
 private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      createHashMap];
 
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[HUMANITARIAN] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -80,8 +86,8 @@ if ((count _villageCandidates) < 3) exitWith
 {
     diag_log format ["[HUMANITARIAN] Only %1 valid village candidates. Aborting.",
         count _villageCandidates];
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих деревень не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих деревень не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -116,8 +122,8 @@ if ((count _chosenVillages) < 3) exitWith
 {
     diag_log format ["[HUMANITARIAN] Could not find 3 villages 1500m+ apart (got %1). Aborting.",
         count _chosenVillages];
-    ["failure"] call DZ_fnc_endMission;
-    ["Деревни слишком близко друг к другу. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Деревни слишком близко друг к другу. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -144,7 +150,7 @@ private _crateCandidates = [
 if (_crateClass == "") exitWith
 {
     diag_log "[HUMANITARIAN] No crate class found. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -209,7 +215,8 @@ private _villageMarkers = [];
     [],
     _crates,
     _crateMarkers + _villageMarkers,
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_aidCrates",            _crates];
@@ -221,10 +228,10 @@ missionNamespace setVariable ["DZ_aidAmbushTriggered",   [false, false, false]];
 [
     "hint",
     "MISSION: ГУМАНИТАРНАЯ ПОМОЩЬ",
-    "Три мирные деревни нуждаются в продовольствии и медикаментах. Возьмите 3 ящика с гуманитарной помощью на базе. Доставьте по одному в каждую отмеченную деревню. ВЫГРУЗИТЕ ящик из машины в радиусе 30 м от центра деревни. ВАЖНО: ящик должен быть на земле (не в машине) и в радиусе 30 м от деревни. ВНИМАНИЕ: разведка сообщает, что боевики готовят засады на пути следования. Будьте готовы к бою."
+    "Три мирные деревни нуждаются в продовольствии и медикаментах. Возьмите 3 ящика с гуманитарной помощью на базе. Доставьте по одному в каждую отмеченную деревню. ВЫГРУЗИТЕ ящик из машины в радиусе 30 м от центра деревни. ВАЖНО: ящик должен быть на земле (не в машине) и в радиусе 30 м от деревни. ВНИМАНИЕ: разведка сообщает, что захватчики готовят засады на пути следования. Будьте готовы к бою."
 ] call DZ_fnc_missionUi;
 
-["Гуманитарная миссия активна. Возьмите ящики на базе и доставьте в деревни.", east]
+["Гуманитарная миссия активна. Возьмите ящики на базе и доставьте в деревни.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 
@@ -251,15 +258,15 @@ private _fnc_crateOnGround = {
 
 
 private _spawnAmbush = {
-    params ["_anchorPos"];
+    params ["_anchorPos", "_missionSide"];
 
     private _ambushGroup = createGroup [_sideEnemy, true];
 
     private _classes = [
-        "LOP_AFR_Infantry_TL",
-        "LOP_AFR_Infantry_AR",
-        "LOP_AFR_Infantry_Rifleman",
-        "LOP_AFR_Infantry_AT"
+        "UK3CB_MDF_O_TL",
+        "UK3CB_MDF_O_AR",
+        "UK3CB_MDF_O_RIF_1",
+        "UK3CB_MDF_O_AT"
     ];
 
     {
@@ -271,21 +278,21 @@ private _spawnAmbush = {
     if (random 1 < 0.7) then
     {
         private _vehPos = _anchorPos getPos [10, random 360];
-        private _vehClass = selectRandom ["LOP_AFR_Offroad_M2", "LOP_AFR_Nissan_PKM"];
+        private _vehClass = selectRandom ["UK3CB_MDF_O_Offroad_HMG", "UK3CB_MDF_O_MB4WD_LMG"];
         if (isClass (configFile >> "CfgVehicles" >> _vehClass)) then
         {
             private _veh = createVehicle [_vehClass, _vehPos, [], 0, "NONE"];
             _veh setDir (random 360);
 
-            private _driver = _ambushGroup createUnit ["LOP_AFR_Infantry_Rifleman", _vehPos, [], 0, "NONE"];
+            private _driver = _ambushGroup createUnit ["UK3CB_MDF_O_RIF_1", _vehPos, [], 0, "NONE"];
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpawnedUnit; };
             _driver moveInDriver _veh;
 
-            private _gunner = _ambushGroup createUnit ["LOP_AFR_Infantry_AR", _vehPos, [], 0, "NONE"];
+            private _gunner = _ambushGroup createUnit ["UK3CB_MDF_O_AR", _vehPos, [], 0, "NONE"];
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
             _gunner moveInGunner _veh;
 
-            [[], [_veh], [], []] call DZ_fnc_addMissionAssets;
+            [[], [_veh], [], [], _missionSide] call DZ_fnc_addMissionAssets;
         };
     };
 
@@ -298,7 +305,7 @@ private _spawnAmbush = {
     _wp setWaypointBehaviour "AWARE";
     _wp setWaypointCombatMode "RED";
 
-    [units _ambushGroup, [], [], []] call DZ_fnc_addMissionAssets;
+    [units _ambushGroup, [], [], [], _missionSide] call DZ_fnc_addMissionAssets;
 
     diag_log format ["[HUMANITARIAN] Ambush spawned at %1", _anchorPos];
 
@@ -309,9 +316,9 @@ private _spawnAmbush = {
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_crates", "_crateMarkers", "_villages", "_villageMarkers", "_startTime", "_spawnAmbushFn", "_fnc_crateOnGround"];
+        _args params ["_missionSide", "_crates", "_crateMarkers", "_villages", "_villageMarkers", "_startTime", "_spawnAmbushFn", "_fnc_crateOnGround"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -319,8 +326,8 @@ private _stateHandle = [
         if ((time - _startTime) > 4800) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Время на доставку истекло.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Время на доставку истекло.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         private _delivered = missionNamespace getVariable ["DZ_aidVillageDelivered", [false, false, false]];
@@ -384,7 +391,7 @@ private _stateHandle = [
                                 [
                                     format ["Доставка %1/%2 завершена. Деревня %3 получила помощь.",
                                         _deliveredCount, count _villages, _villageIdx + 1],
-                                    east
+                                    _missionSide
                                 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
                             };
                         } forEach _villages;
@@ -404,7 +411,7 @@ private _stateHandle = [
                 private _playerNearby = false;
                 {
                     if (alive _x &&
-                        { (side group _x) isEqualTo (missionNamespace getVariable ["CH_sidePlayers", east]) } &&
+                        { (side group _x) in (missionNamespace getVariable ["DZ_playerSides", [west, resistance]]) } &&
                         { _x distance2D _villagePos < 600 }) exitWith
                     {
                         _playerNearby = true;
@@ -420,7 +427,7 @@ private _stateHandle = [
                     private _minDist = 99999;
                     {
                         if (alive _x &&
-                            { (side group _x) isEqualTo (missionNamespace getVariable ["CH_sidePlayers", east]) } &&
+                            { (side group _x) in (missionNamespace getVariable ["DZ_playerSides", [west, resistance]]) } &&
                             { _x distance2D _villagePos < _minDist }) then
                         {
                             _minDist = _x distance2D _villagePos;
@@ -433,9 +440,9 @@ private _stateHandle = [
                         private _approachDir = _villagePos getDir _nearestPlayer;
                         private _ambushPos = _villagePos getPos [350, _approachDir];
 
-                        [_ambushPos] call _spawnAmbushFn;
+                        [_ambushPos, _missionSide] call _spawnAmbushFn;
 
-                        ["Засада! Боевики атакуют конвой!", east]
+                        ["Засада! Боевики атакуют конвой!", _missionSide]
                             remoteExecCall ["DZ_fnc_sideMessage", 0];
                     };
                 };
@@ -446,8 +453,8 @@ private _stateHandle = [
         if (_deliveredCount >= count _villages) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
-            ["Гуманитарная помощь доставлена во все деревни. Отличная работа.", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Гуманитарная помощь доставлена во все деревни. Отличная работа.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 

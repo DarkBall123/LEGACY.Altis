@@ -1,6 +1,10 @@
 /*
  * DZ_fnc_initHqLaptop
- * Adds ACE mission start and status actions to the HQ laptop.
+ * Adds ACE mission start and status actions to the APD HQ laptop.
+ *
+ * Per-side (Wave 4): every action's condition checks the player is
+ * APD (west). The APD laptop is the WEST mission slot — actions
+ * gate on west's own slot, independent of Free Altis's mission.
  */
 
 params [["_laptop", objNull, [objNull]]];
@@ -12,17 +16,17 @@ if (_laptop getVariable ["hq_actions_added", false]) exitWith { true };
 _laptop setVariable ["hq_actions_added", true, false];
 
 private _missionList = [
-    ["interdiction",     "Миссия: Перехват поставок"],
-    ["assassination",    "Миссия: Убийство цели"],
-    ["destroy_cache",    "Миссия: Уничтожить тайники"],
-    ["artillery_hunt",   "Миссия: Уничтожить миномёт"],
-    ["downed_pilot",     "Миссия: Сбитый пилот"],
-    ["humanitarian_aid", "Миссия: Гуманитарная помощь"],
+    ["interdiction",     "Миссия: Перехват конвоя MEF"],
+    ["assassination",    "Миссия: Ликвидация офицера MEF"],
+    ["destroy_cache",    "Миссия: Уничтожить склады MEF"],
+    ["artillery_hunt",   "Миссия: Контрбатарейная борьба"],
+    ["downed_pilot",     "Миссия: Спасти пилота AAF"],
+    ["humanitarian_aid", "Миссия: Доставка гуманитарной помощи"],
     ["eod",              "Миссия: Разминирование маршрута"],
     ["idap_repair",      "Миссия: Дозаправка транспорта IDAP"],
-    ["air_defense",      "Миссия: Подавление ПВО"],
-    ["defend_informant", "Миссия: Защита информатора"],
-    ["heli_intercept",   "Миссия: Перехват вертолёта"]
+    ["air_defense",      "Миссия: Подавление ПВО MEF"],
+    ["defend_informant", "Миссия: Прикрытие перебежчика"],
+    ["heli_intercept",   "Миссия: Перехват разведчика MEF"]
 ];
 
 {
@@ -36,12 +40,13 @@ private _missionList = [
             params ["_target", "_player", "_args"];
             _args params ["_id"];
 
-            diag_log format ["[DZ_LAPTOP] Mission action: id=%1 player=%2",
+            diag_log format ["[DZ_LAPTOP_APD] Mission action: id=%1 player=%2",
                 _id, name _player];
 
-            [_id, _player] remoteExecCall ["DZ_fnc_startMission", 2];
+            // Force the APD (west) slot.
+            [_id, _player, "manual", west] remoteExecCall ["DZ_fnc_startMission", 2];
         },
-        { true },
+        { side _this == west },
         {},
         [_missionId],
         {[0, 0, 0.5]},
@@ -60,7 +65,7 @@ private _statusAction = [
         params ["_target", "_player"];
         [_player] remoteExecCall ["DZ_fnc_requestMissionStatus", 2];
     },
-    { true },
+    { side _this == west },
     {},
     [],
     {[0, 0, 0.5]},
@@ -70,16 +75,19 @@ private _statusAction = [
 
 [_laptop, 0, ["ACE_MainActions"], _statusAction] call ace_interact_menu_fnc_addActionToObject;
 
-// Abort menu: parent + confirmation child. Parent is only shown when a
-// mission is active; the second click on "Подтвердить отмену" actually
-// fires the abort. The two-step form keeps a misclick from killing the
-// squad's mission.
+// Abort menu: parent + confirmation child. Parent only shows when
+// west has an active mission; the second click on "Подтвердить
+// отмену" actually fires the abort. Two-step keeps misclicks from
+// killing the squad's mission.
 private _abortParent = [
     "dz_mission_abort",
     "Прервать миссию",
     "",
     {},
-    { missionNamespace getVariable ["DZ_missionActive", false] },
+    {
+        (side _this == west) &&
+        { missionNamespace getVariable ["DZ_missionActive_WEST", false] }
+    },
     {},
     [],
     {[0, 0, 0.5]},
@@ -95,10 +103,13 @@ private _abortConfirm = [
     "",
     {
         params ["_target", "_player"];
-        diag_log format ["[DZ_LAPTOP] Abort confirmed by %1", name _player];
+        diag_log format ["[DZ_LAPTOP_APD] Abort confirmed by %1", name _player];
         [_player] remoteExecCall ["DZ_fnc_abortMission", 2];
     },
-    { missionNamespace getVariable ["DZ_missionActive", false] },
+    {
+        (side _this == west) &&
+        { missionNamespace getVariable ["DZ_missionActive_WEST", false] }
+    },
     {},
     [],
     {[0, 0, 0.5]},
@@ -108,7 +119,7 @@ private _abortConfirm = [
 
 [_laptop, 0, ["ACE_MainActions", "dz_mission_abort"], _abortConfirm] call ace_interact_menu_fnc_addActionToObject;
 
-diag_log format ["[DZ_LAPTOP] Added %1 mission actions + status + abort to laptop %2",
+diag_log format ["[DZ_LAPTOP_APD] Added %1 mission actions + status + abort to APD laptop %2",
     count _missionList, _laptop];
 
 true

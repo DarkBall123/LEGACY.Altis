@@ -1,10 +1,9 @@
 /*
  * DZ_fnc_abortMission
- * Server-side handler for manual mission abort from the HQ laptop.
- * Tears down the active mission via DZ_fnc_endMission with the
- * "cancelled" result (no funds/reputation reward, all spawned units,
- * vehicles, markers and PFH handlers are cleaned up the same way
- * a failure or success would clean them up).
+ * Server-side handler for manual mission abort from a side's laptop.
+ * Tears down THAT side's active mission via DZ_fnc_endMission with
+ * the "cancelled" result. The other side's concurrent mission is
+ * untouched.
  */
 
 params [
@@ -17,21 +16,35 @@ if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 
 private _replyTarget = owner _caller;
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {
-    ["Штаб", "Нет активной миссии для отмены."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+call DZ_fnc_initMissionSystem;
+
+private _side = [_caller] call DZ_fnc_missionSideOfPlayer;
+if (_side isEqualTo sideUnknown) exitWith {
+    ["Штаб", "Эта сторона не имеет штаба."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-private _missionId    = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-private _missionTitle = missionNamespace getVariable ["DZ_missionCurrentTitle", _missionId];
+private _factionLabel = [_side] call DZ_fnc_missionSideLabel;
 
-diag_log format ["[DZ_ABORT] Mission '%1' aborted by %2 (uid=%3)",
-    _missionId, name _caller, getPlayerUID _caller];
+if !([_side] call DZ_fnc_missionActiveForSide) exitWith {
+    [
+        "Штаб",
+        format ["У %1 нет активной миссии для отмены.", _factionLabel]
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
 
-["cancelled"] call DZ_fnc_endMission;
+private _state         = [_side] call DZ_fnc_missionStateOf;
+private _missionId     = _state get "id";
+private _missionTitle  = _state get "title";
+
+diag_log format ["[DZ_ABORT:%1] Mission '%2' aborted by %3 (uid=%4)",
+    _factionLabel, _missionId, name _caller, getPlayerUID _caller];
+
+["cancelled", _side] call DZ_fnc_endMission;
 
 [
-    format ["Миссия '%1' прервана по запросу %2.", _missionTitle, name _caller],
-    east
+    format ["[%1] Миссия '%2' прервана по запросу %3.",
+        _factionLabel, _missionTitle, name _caller],
+    _side
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 true

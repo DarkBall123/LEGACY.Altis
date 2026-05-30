@@ -7,13 +7,20 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "destroy_cache" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "destroy_cache" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["destroy_cache"] call DZ_fnc_getMissionDefinition;
-    ["destroy_cache", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["destroy_cache", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
@@ -25,7 +32,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[DESTROY_CACHE] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -78,8 +85,8 @@ if (_candidates isEqualTo []) then
 if (_candidates isEqualTo []) exitWith
 {
     diag_log "[DESTROY_CACHE] No enemy sectors available. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих целей не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих целей не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -141,8 +148,8 @@ while { (count _cachePositions) < _cacheCount && _attempts < _maxAttempts } do
 if ((count _cachePositions) < 2) exitWith
 {
     diag_log format ["[DESTROY_CACHE] Could only place %1 cache positions, aborting.", count _cachePositions];
-    ["failure"] call DZ_fnc_endMission;
-    ["Не удалось разместить тайники в открытой местности.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Не удалось разместить тайники в открытой местности.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -164,7 +171,7 @@ private _crateClass = "";
 if (_crateClass == "") exitWith
 {
     diag_log "[DESTROY_CACHE] No valid crate class found. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -263,7 +270,7 @@ private _propsToTrack = [];
 if (_caches isEqualTo []) exitWith
 {
     diag_log "[DESTROY_CACHE] All crate spawns failed validation. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -282,7 +289,8 @@ _circleMarker setMarkerAlpha 0.6;
     _defenderUnits,
     _defenderVehicles + _caches + _propsToTrack,
     ["marker_cache_area", "marker_cache_circle"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_destroyCacheTargets",     _caches];
@@ -293,7 +301,7 @@ missionNamespace setVariable ["DZ_destroyCacheKilledCount", 0];
     "hint",
     "MISSION: УНИЧТОЖИТЬ ТАЙНИКИ",
     format [
-        "В районе обнаружены тайники с оружием боевиков (около %1 шт). Прибудьте в обозначенный район и найдите тайники. Уничтожьте каждый из них любыми средствами. Радиус поиска: ~%2 м",
+        "В районе обнаружены тайники с оружием захватчиков (около %1 шт). Прибудьте в обозначенный район и найдите тайники. Уничтожьте каждый из них любыми средствами. Радиус поиска: ~%2 м",
         count _caches,
         _searchRadius
     ]
@@ -303,9 +311,9 @@ missionNamespace setVariable ["DZ_destroyCacheKilledCount", 0];
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_caches", "_startTime"];
+        _args params ["_missionSide", "_caches", "_startTime"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -316,8 +324,8 @@ private _stateHandle = [
         if ((time - _startTime) > 4600) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Время на уничтожение тайников истекло.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Время на уничтожение тайников истекло.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
@@ -365,7 +373,7 @@ private _stateHandle = [
 
                             [
                                 format ["Тайник уничтожен (%1 / %2).", _killedCount, count _caches],
-                                east
+                                _missionSide
                             ] remoteExecCall ["DZ_fnc_sideMessage", 0];
                         };
                     };
@@ -381,24 +389,24 @@ private _stateHandle = [
         if (_stillAlive == 0 && _killedCount > 0) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
-            ["Все тайники уничтожены. Отличная работа.", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Все тайники уничтожены. Отличная работа.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if (_killedCount == 0 && _stillAlive == 0) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
+            ["failure", _missionSide] call DZ_fnc_endMission;
             diag_log "[DESTROY_CACHE] All caches lost without being killed. Mission failed.";
-            ["Все тайники потеряны. Миссия отменена.", east]
+            ["Все тайники потеряны. Миссия отменена.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     2,
-    [_caches, time]
+    [_missionSide, _caches, time]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

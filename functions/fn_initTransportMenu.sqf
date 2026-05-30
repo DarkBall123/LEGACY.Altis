@@ -13,7 +13,7 @@ _object setVariable ["transport_action_added", true, false];
 
 _object addAction
 [
-    "Запросить транспорт (УАЗ)",
+    "Запросить транспорт (Мотоцикл)",
     {
         params ["_target", "_caller"];
 
@@ -24,7 +24,7 @@ _object addAction
     false,
     false,
     "",
-    "_this distance _target < 5"
+    "(side _this == resistance) && {_this distance _target < 5}"
 ];
 
 true

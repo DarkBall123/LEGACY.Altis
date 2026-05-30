@@ -1,6 +1,10 @@
 /*
  * DZ_fnc_requestMissionStatus
- * Sends the current mission status to the requesting player.
+ * Sends the current mission status to the requesting player. Shows
+ * the caller's faction status only — not the other side's mission.
+ *
+ * Off-side callers (spectators/debug) get a roll-up of every active
+ * player-side mission so something useful still appears.
  */
 
 params [
@@ -15,21 +19,45 @@ private _replyTarget = owner _caller;
 
 call DZ_fnc_initMissionSystem;
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {
-    ["Штаб", "Нет активной миссии."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+private _side = [_caller] call DZ_fnc_missionSideOfPlayer;
+
+if (_side isEqualTo sideUnknown) exitWith {
+    // Off-side fallback: show all active sides.
+    private _active = call DZ_fnc_missionActiveSides;
+    if (_active isEqualTo []) exitWith {
+        ["Штаб", "Нет активных миссий ни у одной фракции."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    };
+    private _lines = [];
+    {
+        private _s     = [_x] call DZ_fnc_missionStateOf;
+        private _label = [_x] call DZ_fnc_missionSideLabel;
+        _lines pushBack (format ["%1: %2 (%3 мин)",
+            _label,
+            _s get "title",
+            floor ((time - (_s get "startTime")) / 60)
+        ]);
+    } forEach _active;
+    ["Штаб", _lines joinString endl] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-private _missionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-private _missionTitle = missionNamespace getVariable ["DZ_missionCurrentTitle", _missionId];
-private _missionSource = missionNamespace getVariable ["DZ_missionSource", "manual"];
-private _startTime = missionNamespace getVariable ["DZ_missionStartTime", time];
+private _factionLabel = [_side] call DZ_fnc_missionSideLabel;
+
+if !([_side] call DZ_fnc_missionActiveForSide) exitWith {
+    [
+        "Штаб",
+        format ["У %1 нет активной миссии.", _factionLabel]
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
+private _state = [_side] call DZ_fnc_missionStateOf;
 
 [
     "Штаб",
     format [
-        "Активная миссия: %1\nИсточник: %2\nПродолжительность: %3 мин",
-        _missionTitle,
-        _missionSource,
-        floor ((time - _startTime) / 60)
+        "Фракция: %1\nАктивная миссия: %2\nИсточник: %3\nПродолжительность: %4 мин",
+        _factionLabel,
+        _state get "title",
+        _state get "source",
+        floor ((time - (_state get "startTime")) / 60)
     ]
 ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];

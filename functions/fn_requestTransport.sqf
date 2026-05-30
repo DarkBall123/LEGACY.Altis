@@ -12,8 +12,14 @@ if (isNull _caller) exitWith {};
 if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 
 private _replyTarget = owner _caller;
+
+// Motorcycle request is Free Altis-exclusive (resistance/INDFOR).
+if !((side _caller) isEqualTo resistance) exitWith {
+    ["Транспорт", "Запрос Мотоцикла доступен только бойцам «Свободный Алтис»."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
 private _cooldownSeconds = 600;
-private _vehicleClass = "RHS_UAZ_MSV_01";
+private _vehicleClass = "UK3CB_WEI_I_YAVA";
 
 if !(isClass (configFile >> "CfgVehicles" >> _vehicleClass)) exitWith {
     ["Транспорт", format ["Класс машины не найден: %1", _vehicleClass]] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
@@ -35,7 +41,7 @@ if (_elapsed < _cooldownSeconds) exitWith {
     private _minutes = floor (_remaining / 60);
     private _seconds = _remaining mod 60;
     private _secondsText = if (_seconds < 10) then {format ["0%1", _seconds]} else {str _seconds};
-    ["Транспорт", format ["УАЗ еще не готов.\nОжидание: %1:%2", _minutes, _secondsText]] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    ["Транспорт", format ["Мотоцикл еще не готов.\nОжидание: %1:%2", _minutes, _secondsText]] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 private _spawnObject = logistics_point;
@@ -53,7 +59,7 @@ if (_blockingVehicles isNotEqualTo []) exitWith {
 
 private _vehicle = createVehicle [_vehicleClass, _freePos, [], 0, "NONE"];
 if (isNull _vehicle) exitWith {
-    ["Транспорт", "Не удалось создать УАЗ."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    ["Транспорт", "Не удалось создать Мотоцикл."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 _vehicle setDir (getDir _spawnObject);
@@ -71,5 +77,5 @@ missionNamespace setVariable ["DZ_assetsDirty", true];
 
 missionNamespace setVariable ["DZ_transportLastRequest", time, true];
 
-["Транспорт", "УАЗ готов на точке логистики."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
-["УАЗ выдан на базе.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+["Транспорт", "Мотоцикл готов на точке логистики."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+["Мотоцикл выдан на базе.", resistance] remoteExecCall ["DZ_fnc_sideMessage", 0];

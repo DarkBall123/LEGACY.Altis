@@ -26,13 +26,18 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "defend_informant" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "defend_informant" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["defend_informant"] call DZ_fnc_getMissionDefinition;
-    ["defend_informant", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["defend_informant", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 private _cells       = missionNamespace getVariable ["DZ_cells",             []];
@@ -44,7 +49,7 @@ private _adjacency   = missionNamespace getVariable ["DZ_sectorAdjacency",   []]
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[DEFEND] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -67,8 +72,8 @@ private _heldSectors = [];
 if (_heldSectors isEqualTo []) exitWith
 {
     diag_log "[DEFEND] No player-held sectors. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Нет захваченных секторов для обороны. Сначала захватите территорию.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Нет захваченных секторов для обороны. Сначала захватите территорию.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -112,7 +117,7 @@ private _informantCandidates = ["C_man_1", "C_Man_casual_1_F", "C_man_polo_1_F",
 if (_informantClass == "") then { _informantClass = "C_man_1"; };
 
 private _informant = _informantGroup createUnit [_informantClass, _defendPos, [], 0, "NONE"];
-_informant setName "Информатор";
+_informant setName "Перебежчик";
 _informant setCaptive true;
 _informant disableAI "MOVE";
 _informant disableAI "AUTOTARGET";
@@ -126,13 +131,14 @@ if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_informant] call DZ_fnc_prepareS
 
 diag_log format ["[DEFEND] Informant spawned: %1 at %2", _informant, getPosATL _informant];
 
-["create", "marker_defend", _defendPos, "loc_Bunker", "Информатор: оборона"] call DZ_fnc_missionUi;
+["create", "marker_defend", _defendPos, "loc_Bunker", "Перебежчик: оборона"] call DZ_fnc_missionUi;
 
 [
     [_informant],
     [],
     ["marker_defend"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_defendInformant", _informant];
@@ -143,23 +149,23 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
 
 [
     "hint",
-    "MISSION: ЗАЩИТА ИНФОРМАТОРА",
+    "MISSION: ПРИКРЫТИЕ ПЕРЕБЕЖЧИКА",
     format [
-        "В захваченном секторе находится ценный информатор. Противник готовит контратаку, чтобы его ликвидировать.\n\nВаши задачи:\n1) Укрепите позицию (есть ~%1 мин до первой атаки).\n2) Отбейте %2 волн противника. Информатор НЕ должен погибнуть.\n3) После отражения всех волн эвакуируйте информатора на главную базу.\n\nВНИМАНИЕ: поздние волны усилены бронетехникой.",
+        "В захваченном секторе укрылся перебежчик из штаба MEF с критически важной информацией. Захватчики уже выдвигают контратаку, чтобы зачистить сектор и ликвидировать его.\n\nВаши задачи:\n1) Укрепите позицию (есть ~%1 мин до первой атаки).\n2) Отбейте %2 волн MEF. Перебежчик НЕ должен погибнуть.\n3) После отражения всех волн доставьте перебежчика на главную базу.\n\nВНИМАНИЕ: поздние волны усилены бронетехникой.",
         round (_prepTime / 60),
         _waveCount
     ]
 ] call DZ_fnc_missionUi;
 
 [
-    format ["Информатор закреплён в секторе. До первой атаки ~%1 мин. Укрепляйте позицию.", round (_prepTime / 60)],
-    east
+    format ["Перебежчик закреплён в секторе. До первой атаки ~%1 мин. Укрепляйте позицию.", round (_prepTime / 60)],
+    _missionSide
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 // ── Wave director ─────────────────────────────────────────
-[_informant, _defendPos, _extractPos, _waveCount, _prepTime] spawn
+[_informant, _defendPos, _extractPos, _waveCount, _prepTime, _missionSide] spawn
 {
-    params ["_inf", "_defendPos", "_extractPos", "_waveCount", "_prepTime"];
+    params ["_inf", "_defendPos", "_extractPos", "_waveCount", "_prepTime", "_missionSide"];
 
     private _lull        = missionNamespace getVariable ["DZ_defendLull",        75];
     private _maxWaveTime = missionNamespace getVariable ["DZ_defendMaxWaveTime", 600];
@@ -173,7 +179,7 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
         while { time < _end } do
         {
             if (isNull _unit || { !alive _unit }) exitWith { _status = "dead" };
-            if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith { _status = "ended" };
+            if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith { _status = "ended" };
             sleep 2;
         };
         _status
@@ -182,8 +188,8 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     private _fnc_fail =
     {
         params ["_msg"];
-        ["failure"] call DZ_fnc_endMission;
-        [_msg, east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+        ["failure", _missionSide] call DZ_fnc_endMission;
+        [_msg, _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     };
 
     // ── Preparation phase ─────────────────────────────────
@@ -194,33 +200,33 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
         {
             private _waitFor = _prepRemaining - _announceAt;
             private _st = [_waitFor, _inf] call _fnc_wait;
-            if (_st == "dead") exitWith { ["Информатор погиб. Миссия провалена."] call _fnc_fail; };
+            if (_st == "dead") exitWith { ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };
             if (_st == "ended") exitWith {};
             _prepRemaining = _announceAt;
             if (_announceAt > 0) then
             {
-                [format ["Противник атакует через %1 мин. Готовьтесь к обороне!", round (_announceAt / 60)], east]
+                [format ["Противник атакует через %1 мин. Готовьтесь к обороне!", round (_announceAt / 60)], _missionSide]
                     remoteExecCall ["DZ_fnc_sideMessage", 0];
             };
         };
     } forEach [600, 300, 60, 0];
 
     if (isNull _inf || { !alive _inf }) exitWith {};
-    if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+    if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
-    ["Контратака началась! Защищайте информатора!", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["Контратака началась! Защищайте перебежчика!", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
     // ── Wave phase ────────────────────────────────────────
     private _waveAborted = false;
 
     for "_wave" from 1 to _waveCount do
     {
-        if (isNull _inf || { !alive _inf }) exitWith { _waveAborted = true; ["Информатор погиб. Миссия провалена."] call _fnc_fail; };
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith { _waveAborted = true; };
+        if (isNull _inf || { !alive _inf }) exitWith { _waveAborted = true; ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith { _waveAborted = true; };
 
         private _forces = 1 + floor (_wave / 2);
 
-        [format ["Волна %1/%2 приближается!", _wave, _waveCount], east]
+        [format ["Волна %1/%2 приближается!", _wave, _waveCount], _missionSide]
             remoteExecCall ["DZ_fnc_sideMessage", 0];
 
         private _waveUnits = [];
@@ -239,7 +245,7 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
             _waveVehs append _vs;
         };
 
-        [_waveUnits, _waveVehs, [], []] call DZ_fnc_addMissionAssets;
+        [_waveUnits, _waveVehs, [], [], _missionSide] call DZ_fnc_addMissionAssets;
 
         private _waveSize = count _waveUnits;
         private _clearThreshold = ceil (_waveSize * 0.15);
@@ -252,7 +258,7 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
         while { true } do
         {
             if (isNull _inf || { !alive _inf }) exitWith { _waveStatus = "dead" };
-            if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith { _waveStatus = "ended" };
+            if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith { _waveStatus = "ended" };
 
             private _aliveCount = { alive _x } count _waveUnits;
             if (_aliveCount <= _clearThreshold) exitWith { _waveStatus = "cleared" };
@@ -261,7 +267,7 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
             sleep 3;
         };
 
-        if (_waveStatus == "dead") exitWith { _waveAborted = true; ["Информатор погиб. Миссия провалена."] call _fnc_fail; };
+        if (_waveStatus == "dead") exitWith { _waveAborted = true; ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };
         if (_waveStatus == "ended") exitWith { _waveAborted = true; };
 
         if (_waveStatus == "timeout") then
@@ -273,40 +279,39 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
 
         if (_wave < _waveCount) then
         {
-            [format ["Волна %1/%2 отбита. Перегруппировка противника...", _wave, _waveCount], east]
+            [format ["Волна %1/%2 отбита. Перегруппировка противника...", _wave, _waveCount], _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
             private _st = [_lull, _inf] call _fnc_wait;
-            if (_st == "dead") exitWith { _waveAborted = true; ["Информатор погиб. Миссия провалена."] call _fnc_fail; };
+            if (_st == "dead") exitWith { _waveAborted = true; ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };
             if (_st == "ended") exitWith { _waveAborted = true; };
         };
     };
 
     if (_waveAborted) exitWith {};
     if (isNull _inf || { !alive _inf }) exitWith {};
-    if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+    if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
     // ── Extraction phase ──────────────────────────────────
-    ["Все волны отбиты! Эвакуируйте информатора на главную базу.", east]
+    ["Все волны отбиты! Эвакуируйте перебежчика на главную базу.", _missionSide]
         remoteExecCall ["DZ_fnc_sideMessage", 0];
 
     "marker_defend" setMarkerType "mil_pickup";
-    "marker_defend" setMarkerText "Эвакуируйте информатора";
+    "marker_defend" setMarkerText "Эвакуируйте перебежчика";
 
     ["create", "marker_defend_evac", _extractPos, "mil_end", "Эвакуация"] call DZ_fnc_missionUi;
-    [[], [], ["marker_defend_evac"], []] call DZ_fnc_addMissionAssets;
+    [[], [], ["marker_defend_evac"], [], _missionSide] call DZ_fnc_addMissionAssets;
 
-    private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers", east];
-
-    // Wait for a player to reach the informant, then have him follow.
+    // Wait for a player from THIS side to reach the informant; the
+    // other faction can't grab the defector.
     private _attached = false;
     while { !_attached } do
     {
-        if (isNull _inf || { !alive _inf }) exitWith { ["Информатор погиб. Миссия провалена."] call _fnc_fail; };
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+        if (isNull _inf || { !alive _inf }) exitWith { ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
         private _rescuer = objNull;
         {
-            if (alive _x && { (side group _x) isEqualTo _sidePlayers } && { _x distance _inf < 50 }) exitWith
+            if (alive _x && { (side group _x) isEqualTo _missionSide } && { _x distance _inf < 50 }) exitWith
             {
                 _rescuer = _x;
             };
@@ -323,7 +328,7 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
             _inf doFollow (leader (group _rescuer));
             _attached = true;
 
-            ["Информатор следует за вами. Доставьте его в зону эвакуации.", east]
+            ["Перебежчик следует за вами. Доставьте его в зону эвакуации.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         }
         else
@@ -333,13 +338,13 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     };
 
     if (isNull _inf || { !alive _inf }) exitWith {};
-    if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+    if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
     // Escort to the evacuation point.
     while { true } do
     {
-        if (isNull _inf || { !alive _inf }) exitWith { ["Информатор погиб. Миссия провалена."] call _fnc_fail; };
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+        if (isNull _inf || { !alive _inf }) exitWith { ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
         "marker_defend" setMarkerPos (getPosATL _inf);
 
@@ -354,8 +359,8 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
         if (_atExtract && { _inf distance2D _extractPos < 200 }) exitWith
         {
             diag_log "[DEFEND] SUCCESS: informant extracted.";
-            ["success"] call DZ_fnc_endMission;
-            ["Информатор доставлен на базу. Отличная работа!", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Перебежчик доставлен на базу. Отличная работа!", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
