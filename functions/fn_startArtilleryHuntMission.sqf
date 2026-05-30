@@ -7,13 +7,20 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "artillery_hunt" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "artillery_hunt" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["artillery_hunt"] call DZ_fnc_getMissionDefinition;
-    ["artillery_hunt", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["artillery_hunt", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
@@ -25,7 +32,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[ARTILLERY_HUNT] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -78,8 +85,8 @@ if (_candidates isEqualTo []) then
 if (_candidates isEqualTo []) exitWith
 {
     diag_log "[ARTILLERY_HUNT] No enemy sectors available. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих целей не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих целей не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -153,7 +160,7 @@ while { _mortarPos isEqualTo [] && _mortarAttempts < 30 } do
 if (_mortarPos isEqualTo []) exitWith
 {
     diag_log "[ARTILLERY_HUNT] Could not find flat ground for mortar. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -173,7 +180,7 @@ private _mortarCandidates = [
 if (_mortarClass == "") exitWith
 {
     diag_log "[ARTILLERY_HUNT] No mortar class found. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -187,12 +194,12 @@ _crewGroup setBehaviour "SAFE";
 _crewGroup setCombatMode "YELLOW";
 _crewGroup allowFleeing 0;
 
-private _gunner = _crewGroup createUnit ["LOP_AFR_Infantry_TL", _mortarPos, [], 0, "NONE"];
+private _gunner = _crewGroup createUnit ["UK3CB_MDF_O_TL", _mortarPos, [], 0, "NONE"];
 if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
 _gunner allowFleeing 0;
 _gunner moveInGunner _mortarObject;
 
-private _loader = _crewGroup createUnit ["LOP_AFR_Infantry_Rifleman", _mortarPos getPos [2, random 360], [], 0, "NONE"];
+private _loader = _crewGroup createUnit ["UK3CB_MDF_O_RIF_1", _mortarPos getPos [2, random 360], [], 0, "NONE"];
 if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_loader] call DZ_fnc_prepareSpawnedUnit; };
 _loader allowFleeing 0;
 
@@ -203,7 +210,7 @@ for "_i" from 1 to _sentryCount do
 {
     private _sentryPos = _mortarPos getPos [10 + (random 10), random 360];
     private _u = _crewGroup createUnit [
-        selectRandom ["LOP_AFR_Infantry_Rifleman", "LOP_AFR_Infantry_AR"],
+        selectRandom ["UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],
         _sentryPos,
         [],
         0,
@@ -226,18 +233,18 @@ diag_log format ["[ARTILLERY_HUNT] Spawned %1 crew/sentries (gunner seated)", co
 
 
 private _civilianClasses = [
-    "LOP_AFRCiv_Soldier",
-    "LOP_AFRCiv_Soldier_Medic"
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_MD"
 ];
 
 private _vanillaCiv = [
-    "LOP_AFR_Civ_Man_01",
-    "LOP_AFR_Civ_Man_01_S",
-    "LOP_AFR_Civ_Man_02",
-    "LOP_AFR_Civ_Man_02_S",
-    "LOP_AFR_Civ_Man_03",
-    "LOP_AFR_Civ_Man_03_S",
-    "LOP_AFR_Civ_Man_04"
+    "C_man_polo_1_F",
+    "C_man_polo_2_F",
+    "C_man_polo_4_F",
+    "C_man_polo_5_F",
+    "C_Man_casual_1_F",
+    "C_Man_casual_2_F",
+    "C_Man_casual_3_F"
 ];
 private _civPool = [];
 {
@@ -291,7 +298,8 @@ _searchCircle setMarkerAlpha 0.7;
     _allCrewUnits + _civilians,
     [_mortarObject],
     ["marker_arty_search", "marker_arty_search_label", "marker_arty_village"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_artyMortar",           _mortarObject];
@@ -314,31 +322,33 @@ private _gracePeriod = 1200;
     ]
 ] call DZ_fnc_missionUi;
 
-[format ["Разведданные: миномёт устанавливают в обозначенной зоне. До открытия огня ~%1 минут.", round (_gracePeriod / 60)], east]
+[format ["Разведданные: миномёт устанавливают в обозначенной зоне. До открытия огня ~%1 минут.", round (_gracePeriod / 60)], _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 
 [
     {
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+        params ["_missionSide"];
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
         if (missionNamespace getVariable ["DZ_artyFiringStarted", false]) exitWith {};
         if (missionNamespace getVariable ["DZ_artyMissionDone", false]) exitWith {};
-        ["До открытия огня по деревне ~5 минут. Поторопитесь.", east]
+        ["До открытия огня по деревне ~5 минут. Поторопитесь.", _missionSide]
             remoteExecCall ["DZ_fnc_sideMessage", 0];
     },
-    [],
+    [_missionSide],
     300
 ] call CBA_fnc_waitAndExecute;
 
 [
     {
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+        params ["_missionSide"];
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
         if (missionNamespace getVariable ["DZ_artyFiringStarted", false]) exitWith {};
         if (missionNamespace getVariable ["DZ_artyMissionDone", false]) exitWith {};
-        ["Внимание: миномёт готов к открытию огня. Осталась 1 минута.", east]
+        ["Внимание: миномёт готов к открытию огня. Осталась 1 минута.", _missionSide]
             remoteExecCall ["DZ_fnc_sideMessage", 0];
     },
-    [],
+    [_missionSide],
     540
 ] call CBA_fnc_waitAndExecute;
 
@@ -346,9 +356,9 @@ private _gracePeriod = 1200;
 private _endDetectionHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_mortarObject", "_crew", "_civilians", "_villagePos"];
+        _args params ["_missionSide", "_mortarObject", "_crew", "_civilians", "_villagePos"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -378,18 +388,18 @@ private _endDetectionHandle = [
             } forEach _civilians;
 
             private _killedCount = missionNamespace getVariable ["DZ_artyKilledCivilians", 0];
-            ["success"] call DZ_fnc_endMission;
+            ["success", _missionSide] call DZ_fnc_endMission;
 
             if (_killedCount == 0) then
             {
-                ["Миномёт уничтожен до открытия огня. Деревня в безопасности.", east]
+                ["Миномёт уничтожен до открытия огня. Деревня в безопасности.", _missionSide]
                     remoteExecCall ["DZ_fnc_sideMessage", 0];
             }
             else
             {
                 [
                     format ["Миномёт замолчал. Жертв среди мирного населения: %1.", _killedCount],
-                    east
+                    _missionSide
                 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
             };
 
@@ -397,20 +407,20 @@ private _endDetectionHandle = [
         };
     },
     2,
-    [_mortarObject, _allCrewUnits, _civilians, _villagePos]
+    [_missionSide, _mortarObject, _allCrewUnits, _civilians, _villagePos]
 ] call CBA_fnc_addPerFrameHandler;
 
 
 [
     {
-        params ["_mortarObject", "_crew", "_civilians", "_villagePos"];
+        params ["_missionSide", "_mortarObject", "_crew", "_civilians", "_villagePos"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
         if (missionNamespace getVariable ["DZ_artyMissionDone", false]) exitWith {};
 
         missionNamespace setVariable ["DZ_artyFiringStarted", true];
 
-        ["Миномёт открыл огонь по деревне!", east]
+        ["Миномёт открыл огонь по деревне!", _missionSide]
             remoteExecCall ["DZ_fnc_sideMessage", 0];
 
         diag_log "[ARTILLERY_HUNT] Grace period ended, firing PFH starting.";
@@ -418,9 +428,9 @@ private _endDetectionHandle = [
         private _firingHandle = [
             {
                 params ["_args", "_handle"];
-                _args params ["_mortarObject", "_crew", "_civilians", "_villagePos"];
+                _args params ["_missionSide", "_mortarObject", "_crew", "_civilians", "_villagePos"];
 
-                if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+                if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
                 {
                     [_handle] call CBA_fnc_removePerFrameHandler;
                 };
@@ -520,17 +530,17 @@ private _endDetectionHandle = [
                     format ["Связь с деревней: ещё одна потеря. Всего: %1.", _killedCount],
                     format ["Удар по мирной деревне. Жертв: %1.", _killedCount]
                 ];
-                [selectRandom _msgVariants, east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                [selectRandom _msgVariants, _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
                 diag_log format ["[ARTILLERY_HUNT] Round fired. Body count: %1", _killedCount];
             },
             30,
-            [_mortarObject, _crew, _civilians, _villagePos]
+            [_missionSide, _mortarObject, _crew, _civilians, _villagePos]
         ] call CBA_fnc_addPerFrameHandler;
 
-        [[], [], [], [_firingHandle]] call DZ_fnc_addMissionAssets;
+        [[], [], [], [_firingHandle], _missionSide] call DZ_fnc_addMissionAssets;
     },
-    [_mortarObject, _allCrewUnits, _civilians, _villagePos],
+    [_missionSide, _mortarObject, _allCrewUnits, _civilians, _villagePos],
     _gracePeriod
 ] call CBA_fnc_waitAndExecute;
 
@@ -538,9 +548,9 @@ private _endDetectionHandle = [
 private _timeoutHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_startTime"];
+        _args params ["_missionSide", "_startTime"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -554,15 +564,15 @@ private _timeoutHandle = [
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             missionNamespace setVariable ["DZ_artyMissionDone", true];
-            ["failure"] call DZ_fnc_endMission;
-            ["Миномёт не уничтожен в срок. Деревня разрушена.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Миномёт не уничтожен в срок. Деревня разрушена.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     10,
-    [time]
+    [_missionSide, time]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_endDetectionHandle, _timeoutHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_endDetectionHandle, _timeoutHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

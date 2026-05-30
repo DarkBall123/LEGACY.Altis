@@ -10,13 +10,18 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "idap_repair" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "idap_repair" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["idap_repair"] call DZ_fnc_getMissionDefinition;
-    ["idap_repair", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["idap_repair", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
@@ -28,7 +33,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[IDAP_REPAIR] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -67,8 +72,8 @@ private _candidates = [];
 if (_candidates isEqualTo []) exitWith
 {
     diag_log "[IDAP_REPAIR] No suitable sectors. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих зон не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих зон не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -95,8 +100,8 @@ private _breakdownPos = [];
 if (_breakdownPos isEqualTo []) exitWith
 {
     diag_log "[IDAP_REPAIR] No road found near any candidate sector. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящего участка дороги не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящего участка дороги не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -117,7 +122,7 @@ private _vehicleCandidates = [
 if (_vehicleClass == "") exitWith
 {
     diag_log "[IDAP_REPAIR] No IDAP/civilian vehicle class found in modset. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -166,7 +171,8 @@ diag_log format ["[IDAP_REPAIR] Driver spawned: %1 in vehicle %2", _driver, _veh
     [_driver],
     [_vehicle],
     ["marker_idap_repair"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_idapRepairVehicle",         _vehicle];
@@ -176,14 +182,14 @@ missionNamespace setVariable ["DZ_idapRepairAmbushTriggered", false];
 [
     "hint",
     "MISSION: ДОЗАПРАВКА ТРАНСПОРТА IDAP",
-    "У гуманитарного автомобиля IDAP закончилось топливо во вражеской территории. Водитель внутри, перепуган и не вооружён.\n\nВаши задачи:\n1) Достичь автомобиля.\n2) Заправить пустой бак (ACE: канистра или топливозаправщик).\n\nВНИМАНИЕ: при приближении к автомобилю боевики могут устроить засаду с применением бронетехники. Будьте готовы к бою."
+    "У гуманитарного автомобиля IDAP закончилось топливо во вражеской территории. Водитель внутри, перепуган и не вооружён.\n\nВаши задачи:\n1) Достичь автомобиля.\n2) Заправить пустой бак (ACE: канистра или топливозаправщик).\n\nВНИМАНИЕ: при приближении к автомобилю захватчики могут устроить засаду с применением бронетехники. Будьте готовы к бою."
 ] call DZ_fnc_missionUi;
 
-["Гуманитарный конвой IDAP запрашивает топливо. Достигните автомобиля и заправьте бак.", east]
+["Гуманитарный конвой IDAP запрашивает топливо. Достигните автомобиля и заправьте бак.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _spawnAmbush = {
-    params ["_anchorPos", "_approachDir", "_enemySide"];
+    params ["_anchorPos", "_approachDir", "_enemySide", "_missionSide"];
 
     private _ambushGroup = createGroup [_enemySide, true];
 
@@ -209,15 +215,15 @@ private _spawnAmbush = {
         _armour setDir (_anchorPos getDir _vehPos + 180);
 
         private _crewClasses = [
-            "LOP_AFR_Infantry_Rifleman",
-            "LOP_AFR_Infantry_AR",
-            "LOP_AFR_Infantry_TL"
+            "UK3CB_MDF_O_RIF_1",
+            "UK3CB_MDF_O_AR",
+            "UK3CB_MDF_O_TL"
         ];
         private _crewSlots = ["Driver", "Gunner", "Commander"];
 
         {
             private _slot = _x;
-            private _crewClass = _crewClasses param [_forEachIndex, "LOP_AFR_Infantry_Rifleman"];
+            private _crewClass = _crewClasses param [_forEachIndex, "UK3CB_MDF_O_RIF_1"];
             private _u = _ambushGroup createUnit [_crewClass, _vehPos, [], 0, "NONE"];
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_u] call DZ_fnc_prepareSpawnedUnit; };
             _u allowFleeing 0;
@@ -238,10 +244,10 @@ private _spawnAmbush = {
     };
 
     private _infantryClasses = [
-        "LOP_AFR_Infantry_TL",
-        "LOP_AFR_Infantry_AR",
-        "LOP_AFR_Infantry_Rifleman",
-        "LOP_AFR_Infantry_AT"
+        "UK3CB_MDF_O_TL",
+        "UK3CB_MDF_O_AR",
+        "UK3CB_MDF_O_RIF_1",
+        "UK3CB_MDF_O_AT"
     ];
 
     {
@@ -263,7 +269,7 @@ private _spawnAmbush = {
     _wp setWaypointBehaviour "AWARE";
     _wp setWaypointCombatMode "RED";
 
-    [units _ambushGroup, _spawnedAssets, [], []] call DZ_fnc_addMissionAssets;
+    [units _ambushGroup, _spawnedAssets, [], [], _missionSide] call DZ_fnc_addMissionAssets;
 
     diag_log format ["[IDAP_REPAIR] Ambush deployed at %1 with %2 infantry + %3 armour vehicle(s)",
         _anchorPos, count _infantryClasses, count _spawnedAssets];
@@ -274,9 +280,9 @@ private _spawnAmbush = {
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_vehicle", "_driver", "_breakdownPos", "_startTime", "_spawnAmbushFn", "_enemySide"];
+        _args params ["_missionSide", "_vehicle", "_driver", "_breakdownPos", "_startTime", "_spawnAmbushFn", "_enemySide"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -284,24 +290,24 @@ private _stateHandle = [
         if (isNull _vehicle || { !alive _vehicle }) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Автомобиль уничтожен. Миссия провалена.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Автомобиль уничтожен. Миссия провалена.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if (isNull _driver || { !alive _driver }) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Водитель погиб. Миссия провалена.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Водитель погиб. Миссия провалена.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if ((time - _startTime) > 4200) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Время на дозаправку истекло.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Время на дозаправку истекло.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
@@ -311,12 +317,14 @@ private _stateHandle = [
 
         if (!_ambushTriggered) then
         {
-            private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers", east];
+            // Only spawn ambush against players from the side that took
+            // this contract — the OTHER faction wandering by doesn't
+            // count as the trigger.
             private _nearestPlayer = objNull;
             private _minDist = 99999;
             {
                 if (alive _x &&
-                    { (side group _x) isEqualTo _sidePlayers } &&
+                    { (side group _x) isEqualTo _missionSide } &&
                     { _x distance2D _vehicle < _minDist }) then
                 {
                     _minDist = _x distance2D _vehicle;
@@ -329,9 +337,9 @@ private _stateHandle = [
                 missionNamespace setVariable ["DZ_idapRepairAmbushTriggered", true];
 
                 private _approachDir = (getPosATL _vehicle) getDir (getPosATL _nearestPlayer);
-                [getPosATL _vehicle, _approachDir, _enemySide] call _spawnAmbushFn;
+                [getPosATL _vehicle, _approachDir, _enemySide, _missionSide] call _spawnAmbushFn;
 
-                ["Засада! Боевики атакуют гуманитарный конвой!", east]
+                ["Засада! Боевики атакуют гуманитарный конвой!", _missionSide]
                     remoteExecCall ["DZ_fnc_sideMessage", 0];
             };
         };
@@ -352,15 +360,15 @@ private _stateHandle = [
         {
             diag_log format ["[IDAP_REPAIR] SUCCESS triggered. Final fuel: %1", _fuelLvl];
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
-            ["Автомобиль IDAP заправлен. Гуманитарный конвой может продолжить путь.", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Автомобиль IDAP заправлен. Гуманитарный конвой может продолжить путь.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     3,
-    [_vehicle, _driver, _breakdownPos, time, _spawnAmbush, _sideEnemy]
+    [_missionSide, _vehicle, _driver, _breakdownPos, time, _spawnAmbush, _sideEnemy]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

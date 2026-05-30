@@ -7,13 +7,20 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "eod" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "eod" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["eod"] call DZ_fnc_getMissionDefinition;
-    ["eod", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["eod", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
@@ -25,7 +32,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[EOD] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -66,8 +73,8 @@ if ((count _enemyCandidates) < 2) exitWith
 {
     diag_log format ["[EOD] Need 2 enemy sectors in proximity band, only found %1.",
         count _enemyCandidates];
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих участков не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих участков не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -150,8 +157,8 @@ private _maxPairAttempts = 15;
 if (!_foundPair) exitWith
 {
     diag_log format ["[EOD] No road-rich sector pair found after %1 attempts. Aborting.", _pairAttempts];
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящего маршрута не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящего маршрута не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -175,7 +182,7 @@ private _availableIeds = _iedClasses select { isClass (configFile >> "CfgVehicle
 if (_availableIeds isEqualTo []) exitWith
 {
     diag_log "[EOD] No IED classes found in modset. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -185,8 +192,8 @@ if ((count _validRoutePoints) < 3) exitWith
 {
     diag_log format ["[EOD] Only %1 valid route points after midpoint filter. Aborting.",
         count _validRoutePoints];
-    ["failure"] call DZ_fnc_endMission;
-    ["Маршрут слишком короткий. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Маршрут слишком короткий. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -270,7 +277,7 @@ _watcherGroup setCombatMode "YELLOW";
         };
 
         private _u = _watcherGroup createUnit [
-            selectRandom ["LOP_AFR_Infantry_Rifleman", "LOP_AFR_Infantry_Marksman"],
+            selectRandom ["UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_SNI"],
             _watcherPos,
             [],
             0,
@@ -294,13 +301,13 @@ _ambushGroup setBehaviour "AWARE";
 _ambushGroup setCombatMode "RED";
 
 private _ambushClasses = [
-    "LOP_AFR_Infantry_TL",
-    "LOP_AFR_Infantry_AR",
-    "LOP_AFR_Infantry_AR",
-    "LOP_AFR_Infantry_Rifleman",
-    "LOP_AFR_Infantry_Rifleman",
-    "LOP_AFR_Infantry_AT",
-    "LOP_AFR_Infantry_Marksman"
+    "UK3CB_MDF_O_TL",
+    "UK3CB_MDF_O_AR",
+    "UK3CB_MDF_O_AR",
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_AT",
+    "UK3CB_MDF_O_SNI"
 ];
 
 {
@@ -314,22 +321,22 @@ private _ambushClasses = [
     _u setUnitPos "MIDDLE";
 } forEach _ambushClasses;
 
-private _technicalClass = selectRandom ["LOP_AFR_Offroad_M2", "LOP_AFR_Nissan_PKM"];
+private _technicalClass = selectRandom ["UK3CB_MDF_O_Offroad_HMG", "UK3CB_MDF_O_MB4WD_LMG"];
 if (isClass (configFile >> "CfgVehicles" >> _technicalClass)) then
 {
     private _vehPos = _routeMidpoint getPos [80, random 360];
     private _veh = createVehicle [_technicalClass, _vehPos, [], 0, "NONE"];
     _veh setDir (random 360);
 
-    private _driver = _ambushGroup createUnit ["LOP_AFR_Infantry_Rifleman", _vehPos, [], 0, "NONE"];
+    private _driver = _ambushGroup createUnit ["UK3CB_MDF_O_RIF_1", _vehPos, [], 0, "NONE"];
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpawnedUnit; };
     _driver moveInDriver _veh;
 
-    private _gunner = _ambushGroup createUnit ["LOP_AFR_Infantry_AR", _vehPos, [], 0, "NONE"];
+    private _gunner = _ambushGroup createUnit ["UK3CB_MDF_O_AR", _vehPos, [], 0, "NONE"];
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
     _gunner moveInGunner _veh;
 
-    [[], [_veh], [], []] call DZ_fnc_addMissionAssets;
+    [[], [_veh], [], [], _missionSide] call DZ_fnc_addMissionAssets;
 };
 
 private _wp = _ambushGroup addWaypoint [_routeMidpoint, 30];
@@ -350,7 +357,8 @@ private _allUnits = (units _watcherGroup) + (units _ambushGroup);
     _allUnits,
     _ieds,
     ["marker_eod_start", "marker_eod_end"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_eodIeds",          _ieds];
@@ -361,21 +369,21 @@ missionNamespace setVariable ["DZ_eodIedMarkersRevealed", []];
     "hint",
     "MISSION: РАЗМИНИРОВАНИЕ",
     format [
-        "Боевики заминировали участок дороги. На маршруте установлено %1 СВУ. Двигайтесь по маршруту от начала до конца. Найдите и обезвредьте все СВУ (нужен набор сапёра ACE). Будьте осторожны: часть СВУ замаскирована, и боевики могут наблюдать за дорогой. ВНИМАНИЕ: разведка сообщает о крупной засаде в середине маршрута. Будьте готовы к бою.",
+        "Боевики заминировали участок дороги. На маршруте установлено %1 СВУ. Двигайтесь по маршруту от начала до конца. Найдите и обезвредьте все СВУ (нужен набор сапёра ACE). Будьте осторожны: часть СВУ замаскирована, и захватчики могут наблюдать за дорогой. ВНИМАНИЕ: разведка сообщает о крупной засаде в середине маршрута. Будьте готовы к бою.",
         _iedCount
     ]
 ] call DZ_fnc_missionUi;
 
-["Разминирование маршрута. Двигайтесь медленно. Подозрительные предметы - возможные СВУ.", east]
+["Разминирование маршрута. Двигайтесь медленно. Подозрительные предметы - возможные СВУ.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_ieds", "_watchers"];
+        _args params ["_missionSide", "_ieds", "_watchers"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -393,7 +401,7 @@ private _stateHandle = [
                 private _playerNear = false;
                 {
                     if (alive _x &&
-                        { (side group _x) isEqualTo (missionNamespace getVariable ["CH_sidePlayers", east]) } &&
+                        { (side group _x) in (missionNamespace getVariable ["DZ_playerSides", [west, resistance]]) } &&
                         { _x distance _ied < 50 }) exitWith
                     {
                         _playerNear = true;
@@ -414,11 +422,11 @@ private _stateHandle = [
                     _revealed pushBack _iedIdx;
                     missionNamespace setVariable ["DZ_eodIedMarkersRevealed", _revealed];
 
-                    [[], [], [_markerName], []] call DZ_fnc_addMissionAssets;
+                    [[], [], [_markerName], [], _missionSide] call DZ_fnc_addMissionAssets;
 
                     [
                         format ["Обнаружено СВУ. Осторожно!"],
-                        east
+                        _missionSide
                     ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
                     diag_log format ["[EOD] IED %1 revealed at %2", _iedIdx + 1, _iedPos];
@@ -437,7 +445,7 @@ private _stateHandle = [
             private _targetPlayer = objNull;
             {
                 if (alive _x &&
-                    { (side group _x) isEqualTo (missionNamespace getVariable ["CH_sidePlayers", east]) } &&
+                    { (side group _x) in (missionNamespace getVariable ["DZ_playerSides", [west, resistance]]) } &&
                     { _x distance _watchedIed < 50 }) exitWith
                 {
                     _targetPlayer = _x;
@@ -463,7 +471,7 @@ private _stateHandle = [
                 _watcher setCombatMode "RED";
                 _watcher setVariable ["DZ_eodWatcherFor", objNull, true];
 
-                ["Дистанционная детонация! Боевики наблюдают за дорогой!", east]
+                ["Дистанционная детонация! Боевики наблюдают за дорогой!", _missionSide]
                     remoteExecCall ["DZ_fnc_sideMessage", 0];
             };
         } forEach _watchers;
@@ -473,15 +481,15 @@ private _stateHandle = [
         if (_liveIeds isEqualTo []) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
-            ["Все СВУ обезврежены. Маршрут безопасен.", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Все СВУ обезврежены. Маршрут безопасен.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     2,
-    [_ieds, _watchers]
+    [_missionSide, _ieds, _watchers]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

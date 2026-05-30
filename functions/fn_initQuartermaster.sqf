@@ -1,6 +1,14 @@
 /*
  * DZ_fnc_initQuartermaster
- * Adds an ACE supply shop menu to a quartermaster NPC.
+ * Initializes the IDAP humanitarian aid hub. The shop offers unarmed
+ * humanitarian transport, medical supplies, and utility equipment.
+ * Both player factions (APD and Free Altis) may purchase here — the
+ * hub is neutral and the NPC is captive/protected.
+ *
+ * Eden setup:
+ *   - Place a civilian NPC (e.g. C_IDAP_Man_AidWorker_*_F) at the hub
+ *   - Init field: [this] call DZ_fnc_initQuartermaster;
+ *   - Place a `vehicle_delivery_pad`-named object on the apron
  */
 
 params [["_npc", objNull, [objNull]]];
@@ -9,7 +17,6 @@ if (isNull _npc) exitWith { false };
 if (!hasInterface) exitWith { true };
 if (_npc getVariable ["dz_quartermaster_added", false]) exitWith { true };
 _npc setVariable ["dz_quartermaster_added", true, false];
-
 
 _npc disableAI "MOVE";
 _npc disableAI "PATH";
@@ -20,28 +27,23 @@ _npc setBehaviour "CARELESS";
 _npc allowDamage false;
 _npc setCaptive true;
 
-
 private _catalog = [
 
-    ["vehicles", "kamaz",           "КАМАЗ (транспортный)",                  500,  ["rhs_kamaz5350_open_msv"]],
-    ["vehicles", "ural_fuel",       "Урал-4320 (бензовоз)",                  500,  ["RHS_Ural_Fuel_MSV_01"]],
-    ["vehicles", "ural_repair",     "Урал-4320 (ремонтный)",                 500,  ["RHS_Ural_Repair_MSV_01"]],
-    ["vehicles", "tigr",            "Тигр (бронированный)",                1000, ["RHS_Tigr_MSV", "RHS_Tigr_3camo_msv"]],
-    ["vehicles", "ural_gantrack",   "Урал-4320 (гантрак)",                  1500, ["RHS_Ural_Zu23_MSV_01"]],
-    ["vehicles", "btr",             "БТР-80",                              1500, ["rhs_btr80_msv"]],
-    ["vehicles", "bmp",             "БМП-2К",                              2000, ["rhs_bmp2k_msv"]],
-    ["vehicles", "heli_transport",  "Ми-8 (транспортный)",                2000, ["RHS_Mi8AMT_vvsc"]],
-    ["vehicles", "heli_gunship",    "Ми-24 (ударный)",                     2500, ["SAFP_Mi24VM_RUAF"]],
-    ["vehicles", "jet_su25",        "Су-25СМ3 (штурмовик)",                3500, ["FIR_Su25SM3_Camo_VVSVer"]],
+    // ── Транспорт (unarmed humanitarian) ──────────────────────────
+    ["vehicles",  "veh_quad",          "Квадроцикл",                    500, ["C_Quadbike_01_F"]],
+    ["vehicles",  "veh_hilux_med",     "Toyota Hilux (медицинский)",    800, ["UK3CB_C_Hilux_Ambulance"]],
+    ["vehicles",  "veh_ural_repair",   "Урал-4320 (ремонтный)",         800, ["UK3CB_C_Ural_Repair"]],
+    ["vehicles",  "veh_ural_fuel",     "Урал-4320 (топливный)",         800, ["UK3CB_C_Ural_Fuel"]],
+    ["vehicles",  "veh_landrover",     "Land Rover (транспортный)",    1000, ["UK3CB_C_LandRover_Softtop_Transport_Open"]],
+    ["vehicles",  "veh_tahoe",         "Chevrolet Tahoe",              1400, ["UK3CB_C_SUV"]],
+    ["vehicles",  "veh_uh1h",          "UH-1H (транспортный)",         3000, ["UK3CB_C_UH1H"]],
 
+    // ── Медицинские грузы ─────────────────────────────────────────
+    ["crates",    "crate_medical",     "Ящик с медикаментами",          500, ["ACE_medicalSupplyCrate_advanced"]],
 
-    ["crates",   "crate_medical",   "Медицинский ящик",                     250, ["ACE_medicalSupplyCrate_advanced"]],
-
-
-    ["statics",  "static_mg",       "Станковый пулемёт",                    250, ["rhs_KORD_high_MSV"]],
-    ["statics",  "static_spg9",     "СПГ-9М",                               250, ["rhs_SPG9M_MSV"]]
+    // ── Оборудование ──────────────────────────────────────────────
+    ["equipment", "equip_searchlight", "Прожектор",                     200, ["UK3CB_UN_B_Searchlight"]]
 ];
-
 
 private _resolveClass = {
     params ["_candidates"];
@@ -52,10 +54,9 @@ private _resolveClass = {
     _result
 };
 
-
 private _shopParent = [
     "DZ_Shop",
-    "Магазин снабжения",
+    "IDAP — Гуманитарная помощь",
     "",
     {},
     { true },
@@ -67,7 +68,6 @@ private _shopParent = [
 ] call ace_interact_menu_fnc_createAction;
 
 [_npc, 0, ["ACE_MainActions"], _shopParent] call ace_interact_menu_fnc_addActionToObject;
-
 
 private _balanceAction = [
     "DZ_Shop_Balance",
@@ -82,17 +82,16 @@ private _balanceAction = [
     {},
     [],
     {[0, 0, 1.5]},
-    5,
+    6,
     [false, false, true, false, true]
 ] call ace_interact_menu_fnc_createAction;
 
 [_npc, 0, ["ACE_MainActions", "DZ_Shop"], _balanceAction] call ace_interact_menu_fnc_addActionToObject;
 
-
 private _categoryActions = createHashMap;
 
 {
-    _x params ["_categoryId", "_categoryLabel"];
+    _x params ["_categoryId", "_categoryLabel", "_categoryPriority"];
     private _catAction = [
         format ["DZ_Shop_Cat_%1", _categoryId],
         _categoryLabel,
@@ -102,28 +101,31 @@ private _categoryActions = createHashMap;
         {},
         [],
         {[0, 0, 1.5]},
-        5,
+        _categoryPriority,
         [false, false, true, false, true]
     ] call ace_interact_menu_fnc_createAction;
 
     [_npc, 0, ["ACE_MainActions", "DZ_Shop"], _catAction] call ace_interact_menu_fnc_addActionToObject;
     _categoryActions set [_categoryId, true];
 } forEach [
-    ["vehicles", "Транспорт"],
-    ["crates",   "Ящики снабжения"],
-    ["statics",  "Стационарное оружие"]
+    ["vehicles",  "Транспорт",         5],
+    ["crates",    "Медицинские грузы", 4],
+    ["equipment", "Оборудование",      3]
 ];
 
-
+private _catalogLen = count _catalog;
 {
     _x params ["_category", "_itemId", "_displayName", "_price", "_classCandidates"];
-
+    private _itemIndex = _forEachIndex;
 
     private _resolvedClass = [_classCandidates] call _resolveClass;
     if (_resolvedClass == "") then {
         diag_log format ["[DZ_QM] Skipping item '%1' — no class found in: %2", _itemId, _classCandidates];
     } else {
         private _label = format ["%1 (%2₽)", _displayName, _price];
+        // Higher priority -> earlier in submenu. Decrement so catalog
+        // order is preserved exactly.
+        private _itemPriority = (_catalogLen - _itemIndex);
 
         private _itemAction = [
             format ["DZ_Shop_Item_%1", _itemId],
@@ -134,14 +136,13 @@ private _categoryActions = createHashMap;
                 _args params ["_id", "_class", "_cost"];
 
                 private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
-
                 [_id, _class, _cost, _actualPlayer] remoteExecCall ["DZ_fnc_purchaseItem", 2];
             },
             { true },
             {},
             [_itemId, _resolvedClass, _price],
             {[0, 0, 1.5]},
-            5,
+            _itemPriority,
             [false, false, true, false, true]
         ] call ace_interact_menu_fnc_createAction;
 
@@ -150,7 +151,7 @@ private _categoryActions = createHashMap;
     };
 } forEach _catalog;
 
-diag_log format ["[DZ_QM] Quartermaster initialized: %1 (%2 catalog entries)",
+diag_log format ["[DZ_QM] IDAP humanitarian aid hub initialized: %1 (%2 catalog entries)",
     _npc, count _catalog];
 
 true

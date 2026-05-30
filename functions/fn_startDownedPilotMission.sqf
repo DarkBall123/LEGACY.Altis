@@ -7,13 +7,20 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "downed_pilot" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "downed_pilot" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["downed_pilot"] call DZ_fnc_getMissionDefinition;
-    ["downed_pilot", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["downed_pilot", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 
@@ -35,7 +42,7 @@ if (_extractPos isEqualTo []) then
 if (_extractPos isEqualTo [] || { _extractPos isEqualTo [0,0,0] }) exitWith
 {
     diag_log "[DOWNED_PILOT] No extraction point configured. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -49,7 +56,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[DOWNED_PILOT] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -108,8 +115,8 @@ if (_candidates isEqualTo []) then
 if (_candidates isEqualTo []) exitWith
 {
     diag_log "[DOWNED_PILOT] No suitable sectors. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих зон не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих зон не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -149,10 +156,10 @@ private _defenderUnits = [];
 
 private _guardGroup = createGroup [_sideEnemy, true];
 private _guardClasses = [
-    "LOP_AFR_Infantry_TL",
-    "LOP_AFR_Infantry_Rifleman",
-    "LOP_AFR_Infantry_AR",
-    "LOP_AFR_Infantry_AT"
+    "UK3CB_MDF_O_TL",
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_AR",
+    "UK3CB_MDF_O_AT"
 ];
 private _guards = [];
 {
@@ -172,8 +179,15 @@ diag_log format ["[DOWNED_PILOT] Spawned %1 guards at crash site %2", count _gua
 
 
 private _pilotGroup = createGroup [civilian, true];
-private _pilot = _pilotGroup createUnit ["rhs_pilot_tan", _crashPos, [], 0, "NONE"];
-_pilot setName "Капитан Орлов";
+// AAF jet pilot — surviving holdout from Stratis still flying sorties
+// against MEF. His jet was shot down over Altis; both APD and Free Altis
+// see him as a symbol of the pre-occupation resistance worth rescuing.
+private _pilotClass = "";
+{
+    if (isClass (configFile >> "CfgVehicles" >> _x)) exitWith { _pilotClass = _x; };
+} forEach ["UK3CB_AAF_B_JET_PILOT", "I_pilot_F", "B_Pilot_F", "C_man_1"];
+private _pilot = _pilotGroup createUnit [_pilotClass, _crashPos, [], 0, "NONE"];
+_pilot setName "Капитан Стефанос Мавридис";
 _pilot setCaptive true;
 _pilot disableAI "MOVE";
 _pilot disableAI "AUTOTARGET";
@@ -196,7 +210,8 @@ diag_log format ["[DOWNED_PILOT] Pilot spawned: %1 at %2", _pilot, getPosATL _pi
     [_pilot] + _guards + _defenderUnits,
     _defenderVehicles,
     ["marker_pilot", "marker_extract"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_pilotMissionTarget",  _pilot];
@@ -207,7 +222,7 @@ missionNamespace setVariable ["DZ_pilotMissionGuards",  _guards];
     "hint",
     "MISSION: ПОИСК И СПАСЕНИЕ",
     format [
-        "Капитан Орлов сбит и удерживается боевиками. Уничтожьте охрану крушения. Любой боец нашей стороны должен подойти к пилоту (50м). Эвакуируйте пилота в безопасную зону. Дистанция до точки эвакуации: ~%1м",
+        "Капитан Орлов сбит и удерживается захватчиками. Уничтожьте охрану крушения. Любой боец нашей стороны должен подойти к пилоту (50м). Эвакуируйте пилота в безопасную зону. Дистанция до точки эвакуации: ~%1м",
         round (_sectorCenter distance2D _extractPos)
     ]
 ] call DZ_fnc_missionUi;
@@ -216,11 +231,11 @@ missionNamespace setVariable ["DZ_pilotMissionGuards",  _guards];
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_pilot", "_guards", "_extractPos", "_startTime", "_crashPos"];
+        _args params ["_missionSide", "_pilot", "_guards", "_extractPos", "_startTime", "_crashPos"];
 
         private _extractRadius = missionNamespace getVariable ["DZ_pilotExtractRadius", 120];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -228,16 +243,16 @@ private _stateHandle = [
         if (isNull _pilot || { !alive _pilot }) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Пилот погиб. Миссия провалена.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Пилот погиб. Миссия провалена.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if ((time - _startTime) > 6000) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Время на спасение истекло.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Время на спасение истекло.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
@@ -255,11 +270,11 @@ private _stateHandle = [
             if (_activeGuards isEqualTo []) then
             {
 
-                private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers", east];
+                private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
                 private _rescuer = objNull;
                 {
                     if (alive _x &&
-                        { (side group _x) isEqualTo _sidePlayers } &&
+                        { (side group _x) in _playerSides } &&
                         { _x distance _pilot < 50 }) exitWith
                     {
                         _rescuer = _x;
@@ -298,7 +313,7 @@ private _stateHandle = [
                         format ["%1 нашёл пилота. Эвакуируйте его в безопасную зону.", name _rescuer]
                     ] remoteExecCall ["DZ_fnc_showHint", 0];
 
-                    ["Пилот освобождён. Эвакуируйте его в безопасную зону.", east]
+                    ["Пилот освобождён. Эвакуируйте его в безопасную зону.", _missionSide]
                         remoteExecCall ["DZ_fnc_sideMessage", 0];
                 }
                 else
@@ -312,7 +327,7 @@ private _stateHandle = [
                         private _closest = 99999;
                         {
                             if (alive _x &&
-                                { (side group _x) isEqualTo _sidePlayers } &&
+                                { (side group _x) in _playerSides } &&
                                 { _x distance _pilot < _closest }) then
                             {
                                 _closest = _x distance _pilot;
@@ -338,7 +353,7 @@ private _stateHandle = [
             _rescued = true;
             "marker_pilot" setMarkerType "mil_join";
             "marker_pilot" setMarkerText "Пилот эвакуируется";
-            ["Пилот вывезен с места крушения. Доставьте его в зону эвакуации.", east]
+            ["Пилот вывезен с места крушения. Доставьте его в зону эвакуации.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
             diag_log format ["[DOWNED_PILOT] Pilot secured via extraction (moved %1m from crash).",
                 round (_pilot distance2D _crashPos)];
@@ -361,16 +376,16 @@ private _stateHandle = [
             if (alive _pilot && { (_pilot distance2D _extractPos) < _extractRadius }) exitWith
             {
                 [_handle] call CBA_fnc_removePerFrameHandler;
-                ["success"] call DZ_fnc_endMission;
-                ["Пилот доставлен в безопасную зону. Отличная работа!", east]
+                ["success", _missionSide] call DZ_fnc_endMission;
+                ["Пилот доставлен в безопасную зону. Отличная работа!", _missionSide]
                     remoteExecCall ["DZ_fnc_sideMessage", 0];
             };
         };
     },
     1,
-    [_pilot, _guards, _extractPos, time, _crashPos]
+    [_missionSide, _pilot, _guards, _extractPos, time, _crashPos]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

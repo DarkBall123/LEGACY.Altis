@@ -1,34 +1,42 @@
 /*
  * DZ_fnc_startAirDefenseMission
- * SEAD mission: the enemy has deployed a radar station and an AAA
- * system (BLUFOR / west equipment, allied with the AFR militia) near
- * a named settlement. Players get only the settlement name and must
- * recon the area, then destroy BOTH systems.
+ * SEAD mission: the Malden Expeditionary Force (MEF) has deployed a
+ * radar station, an AAA gun and a SAM launcher near a named settlement.
+ * Both player factions (APD, Free Altis) can receive this contract;
+ * targets and garrison are MEF (east). Players get only the settlement
+ * name and must recon the area, then destroy all three systems.
  *
  * No map markers are placed — the location name in the briefing is the
  * only guidance. 2-hour time limit, high cash reward.
  *
- * Faction note: the systems are west (hostile to the east players,
- * friendly with the resistance AFR garrison). A live, crewed AAA will
- * engage player aircraft, which is the intended challenge.
+ * Faction note: the systems are east (OPFOR / MEF). Both player sides
+ * (west and resistance) are hostile to east, so a live, crewed AAA
+ * engages player aircraft regardless of which faction triggers it.
  */
 
 if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "air_defense" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "air_defense" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["air_defense"] call DZ_fnc_getMissionDefinition;
-    ["air_defense", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["air_defense", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
-private _radarClass = "E22_B_JC_D_Radar_system_01_F";
-private _aaaClass   = "E22_B_JC_D_AAA_System_01_F";
-private _samClass   = "E22_B_JC_D_SAM_system_01_F";
+private _radarClass = "E22_O_JC_W_Radar_system_01_F";
+private _aaaClass   = "E22_O_JC_W_AAA_System_01_F";
+private _samClass   = "E22_O_JC_W_SAM_system_01_F";
 
 if (
     !isClass (configFile >> "CfgVehicles" >> _radarClass) ||
@@ -40,7 +48,7 @@ if (
         isClass (configFile >> "CfgVehicles" >> _radarClass),
         isClass (configFile >> "CfgVehicles" >> _aaaClass),
         isClass (configFile >> "CfgVehicles" >> _samClass)];
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -53,7 +61,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[AIR_DEFENSE] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -92,8 +100,8 @@ private _candidates = [];
 if (_candidates isEqualTo []) exitWith
 {
     diag_log "[AIR_DEFENSE] No suitable sectors. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих зон не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих зон не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -125,8 +133,8 @@ private _locName = "";
 if (_locPos isEqualTo []) exitWith
 {
     diag_log "[AIR_DEFENSE] No named settlement near any candidate sector. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящего населённого пункта не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящего населённого пункта не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -173,19 +181,19 @@ private _samCrewGrp = createVehicleCrew _sam;
     };
 } forEach [_radarCrewGrp, _aaaCrewGrp, _samCrewGrp];
 
-// AFR (resistance) militia garrison around the site.
+// MEF (east) garrison around the AD site.
 private _garrisonGroup = createGroup [_sideEnemy, true];
 private _garrisonClasses = [
-    "LOP_AFR_Infantry_TL",
-    "LOP_AFR_Infantry_AR",
-    "LOP_AFR_Infantry_AR",
-    "LOP_AFR_Infantry_Rifleman",
-    "LOP_AFR_Infantry_Rifleman",
-    "LOP_AFR_Infantry_AT",
-    "LOP_AFR_Infantry_Marksman",
-    "LOP_AFR_Infantry_TL",
-    "LOP_AFR_Infantry_Rifleman",
-    "LOP_AFR_Infantry_AR"
+    "UK3CB_MDF_O_TL",
+    "UK3CB_MDF_O_AR",
+    "UK3CB_MDF_O_AR",
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_AT",
+    "UK3CB_MDF_O_SNI",
+    "UK3CB_MDF_O_TL",
+    "UK3CB_MDF_O_RIF_1",
+    "UK3CB_MDF_O_AR"
 ];
 
 {
@@ -205,18 +213,18 @@ _garrisonGroup setCombatMode "RED";
 
 // One technical for ground defence.
 private _vehicles = [];
-private _technicalClass = selectRandom ["LOP_AFR_Offroad_M2", "LOP_AFR_Nissan_PKM"];
+private _technicalClass = selectRandom ["UK3CB_MDF_O_Offroad_HMG", "UK3CB_MDF_O_MB4WD_LMG"];
 if (isClass (configFile >> "CfgVehicles" >> _technicalClass)) then
 {
     private _vehPos = _radarPos getPos [90 + (random 40), random 360];
     private _veh = createVehicle [_technicalClass, _vehPos, [], 0, "NONE"];
     _veh setDir (random 360);
 
-    private _driver = _garrisonGroup createUnit ["LOP_AFR_Infantry_Rifleman", _vehPos, [], 0, "NONE"];
+    private _driver = _garrisonGroup createUnit ["UK3CB_MDF_O_RIF_1", _vehPos, [], 0, "NONE"];
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpawnedUnit; };
     _driver moveInDriver _veh;
 
-    private _gunner = _garrisonGroup createUnit ["LOP_AFR_Infantry_AR", _vehPos, [], 0, "NONE"];
+    private _gunner = _garrisonGroup createUnit ["UK3CB_MDF_O_AR", _vehPos, [], 0, "NONE"];
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
     _gunner moveInGunner _veh;
 
@@ -230,7 +238,8 @@ private _allUnits = (units _garrisonGroup);
     _allUnits,
     [_radar, _aaa, _sam] + _vehicles,
     [],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_airDefenseRadar", _radar];
@@ -241,22 +250,22 @@ missionNamespace setVariable ["DZ_airDefenseSAM",   _sam];
     "hint",
     "MISSION: ПОДАВЛЕНИЕ ПВО",
     format [
-        "Противник развернул радиолокационную станцию (РЛС), зенитный комплекс (ЗАК) и зенитно-ракетный комплекс (ЗРК) в районе населённого пункта %1. Точные координаты неизвестны — проведите разведку и уничтожьте ВСЕ ТРИ объекта.\n\nОтметок на карте нет. Ориентируйтесь по названию населённого пункта.\n\nВНИМАНИЕ: ПВО активна. Применение авиации крайне опасно. Объект охраняется силами AFR.",
+        "Мальденские оккупационные силы (MEF) развернули радиолокационную станцию (РЛС), зенитный комплекс (ЗАК) и зенитно-ракетный комплекс (ЗРК) в районе населённого пункта %1. Точные координаты неизвестны — проведите разведку и уничтожьте ВСЕ ТРИ объекта.\n\nОтметок на карте нет. Ориентируйтесь по названию населённого пункта.\n\nВНИМАНИЕ: ПВО активна. Применение авиации крайне опасно. Объект охраняется силами MEF.",
         _locName
     ]
 ] call DZ_fnc_missionUi;
 
 [
     format ["Разведка докладывает о ПВО противника в районе %1. Найдите и уничтожьте РЛС, ЗАК и ЗРК.", _locName],
-    east
+    _missionSide
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_radar", "_aaa", "_sam", "_startTime", "_locName"];
+        _args params ["_missionSide", "_radar", "_aaa", "_sam", "_startTime", "_locName"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -264,8 +273,8 @@ private _stateHandle = [
         if ((time - _startTime) > 7800) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Время на уничтожение ПВО истекло.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Время на уничтожение ПВО истекло.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
@@ -277,33 +286,33 @@ private _stateHandle = [
         if (_radarDead && { !(missionNamespace getVariable ["DZ_airDefenseRadarReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseRadarReported", true];
-            ["РЛС противника уничтожена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["РЛС противника уничтожена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
         if (_aaaDead && { !(missionNamespace getVariable ["DZ_airDefenseAAAReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseAAAReported", true];
-            ["Зенитный комплекс (ЗАК) уничтожен.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["Зенитный комплекс (ЗАК) уничтожен.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
         if (_samDead && { !(missionNamespace getVariable ["DZ_airDefenseSAMReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseSAMReported", true];
-            ["Зенитно-ракетный комплекс (ЗРК) уничтожен.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["Зенитно-ракетный комплекс (ЗРК) уничтожен.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if (_radarDead && _aaaDead && _samDead) exitWith
         {
             diag_log "[AIR_DEFENSE] SUCCESS: all systems destroyed.";
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
-            ["ПВО противника полностью уничтожена. Воздушное пространство свободно.", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["ПВО противника полностью уничтожена. Воздушное пространство свободно.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     5,
-    [_radar, _aaa, _sam, time, _locName]
+    [_missionSide, _radar, _aaa, _sam, time, _locName]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_airDefenseRadarReported", false];
 missionNamespace setVariable ["DZ_airDefenseAAAReported", false];

@@ -9,7 +9,8 @@ if (missionNamespace getVariable ["DZ_clientInitDone", false]) exitWith {};
 missionNamespace setVariable ["DZ_clientInitDone", true];
 
 [] call DZ_fnc_startAmbientSound;
-[] call DZ_fnc_initTrophyVehicleSale;
+[] call DZ_fnc_initSideBaseMarkers;
+[] call DZ_fnc_initTrophyVehicleStorage;
 
 [
     {

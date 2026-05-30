@@ -7,13 +7,20 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "interdiction" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "interdiction" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["interdiction"] call DZ_fnc_getMissionDefinition;
-    ["interdiction", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["interdiction", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 
@@ -25,7 +32,7 @@ private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy",         resis
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[INTERDICTION] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -43,7 +50,7 @@ private _enemySectors = [];
 if (count _enemySectors < 2) exitWith
 {
     diag_log "[INTERDICTION] Not enough enemy sectors for convoy. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -88,7 +95,7 @@ for "_attempt" from 1 to 5 do
 if (_spawnPos isEqualTo []) exitWith
 {
     diag_log "[INTERDICTION] Could not find suitable convoy route. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -100,9 +107,9 @@ diag_log format ["[INTERDICTION] Convoy route: %1m, spawn at %2 -> dest at %3",
 
 private _vehicleDefs =
 [
-    ["LOP_AFR_M113_W",  0],
-    ["LOP_AFR_Landrover",  18],
-    ["LOP_AFR_T34",  36]
+    ["UK3CB_MDF_O_M1151_OGPK_M2", 0],
+    ["UK3CB_MDF_O_MTVR_Open",     18],
+    ["UK3CB_MDF_O_M60A3",         36]
 ];
 
 
@@ -151,21 +158,22 @@ _convoyGroup setCurrentWaypoint _waypoint;
     _missionUnits,
     _convoyVehicles,
     ["marker_convoy", "marker_convoy_dest"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 [
     "hint",
     "MISSION: SUPPLY INTERDICTION",
-    "Замечен конвой снабжения боевиков. Уничтожьте все машины конвоя до прибытия в пункт назначения. Позиция конвоя отмечена на карте."
+    "Замечен конвой снабжения захватчиков. Уничтожьте все машины конвоя до прибытия в пункт назначения. Позиция конвоя отмечена на карте."
 ] call DZ_fnc_missionUi;
 
 private _markerHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_convoyVehicles"];
+        _args params ["_missionSide", "_convoyVehicles"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -177,15 +185,15 @@ private _markerHandle = [
         };
     },
     10,
-    [_convoyVehicles]
+    [_missionSide, _convoyVehicles]
 ] call CBA_fnc_addPerFrameHandler;
 
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_convoyVehicles", "_endPos"];
+        _args params ["_missionSide", "_convoyVehicles", "_endPos"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -195,21 +203,21 @@ private _stateHandle = [
         if (_aliveVehicles isEqualTo []) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
-            ["Конвой уничтожен. Миссия завершена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Конвой уничтожен. Миссия завершена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         private _arrived = _aliveVehicles select { (_x distance2D _endPos) < 80 };
         if (_arrived isNotEqualTo []) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
+            ["failure", _missionSide] call DZ_fnc_endMission;
         };
     },
     5,
-    [_convoyVehicles, _endPos]
+    [_missionSide, _convoyVehicles, _endPos]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_markerHandle, _stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_markerHandle, _stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true
