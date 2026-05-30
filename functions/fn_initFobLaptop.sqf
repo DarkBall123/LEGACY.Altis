@@ -26,7 +26,10 @@ private _contractAction = [
         diag_log format ["[DZ_FOB] Contract action by %1", name _player];
         [_player] remoteExecCall ["DZ_fnc_requestFobMission", 2];
     },
-    { side _this == resistance },
+    {
+        params ["_target", "_player"];
+        side _player == resistance
+    },
     {},
     [],
     {[0, 0, 0.5]},
@@ -44,7 +47,10 @@ private _statusAction = [
         params ["_target", "_player"];
         [_player] remoteExecCall ["DZ_fnc_requestMissionStatus", 2];
     },
-    { side _this == resistance },
+    {
+        params ["_target", "_player"];
+        side _player == resistance
+    },
     {},
     [],
     {[0, 0, 0.5]},
@@ -61,7 +67,8 @@ private _abortParent = [
     "",
     {},
     {
-        (side _this == resistance) &&
+        params ["_target", "_player"];
+        (side _player == resistance) &&
         { missionNamespace getVariable ["DZ_missionActive_GUER", false] }
     },
     {},
@@ -83,7 +90,8 @@ private _abortConfirm = [
         [_player] remoteExecCall ["DZ_fnc_abortMission", 2];
     },
     {
-        (side _this == resistance) &&
+        params ["_target", "_player"];
+        (side _player == resistance) &&
         { missionNamespace getVariable ["DZ_missionActive_GUER", false] }
     },
     {},

@@ -103,7 +103,7 @@ private _balanceAction = [
 private _categoryActions = createHashMap;
 
 {
-    _x params ["_categoryId", "_categoryLabel"];
+    _x params ["_categoryId", "_categoryLabel", "_categoryPriority"];
     private _catAction = [
         format ["DZ_Cartel_Cat_%1", _categoryId],
         _categoryLabel,
@@ -113,25 +113,28 @@ private _categoryActions = createHashMap;
         {},
         [],
         {[0, 0, 1.5]},
-        5,
+        _categoryPriority,
         [false, false, true, false, true]
     ] call ace_interact_menu_fnc_createAction;
 
     [_npc, 0, ["ACE_MainActions", "DZ_Cartel"], _catAction] call ace_interact_menu_fnc_addActionToObject;
     _categoryActions set [_categoryId, true];
 } forEach [
-    ["cartel_made",  "Товары Синдиката"],
-    ["aaf_captured",   "Трофеи AAF"],
+    ["cartel_made",  "Товары Синдиката", 5],
+    ["aaf_captured", "Трофеи AAF",       4]
 ];
 
+private _catalogLen = count _catalog;
 {
     _x params ["_category", "_itemId", "_displayName", "_price", "_classCandidates"];
+    private _itemIndex = _forEachIndex;
 
     private _resolvedClass = [_classCandidates] call _resolveClass;
     if (_resolvedClass == "") then {
         diag_log format ["[DZ_CARTEL] Skipping item '%1' — no class found in: %2", _itemId, _classCandidates];
     } else {
         private _label = format ["%1 (%2₽)", _displayName, _price];
+        private _itemPriority = _catalogLen - _itemIndex;
 
         private _itemAction = [
             format ["DZ_Cartel_Item_%1", _itemId],
@@ -150,7 +153,7 @@ private _categoryActions = createHashMap;
             {},
             [_itemId, _resolvedClass, _price],
             {[0, 0, 1.5]},
-            5,
+            _itemPriority,
             [false, false, true, false, true]
         ] call ace_interact_menu_fnc_createAction;
 

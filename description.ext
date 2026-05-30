@@ -42,6 +42,7 @@ class CfgFunctions
             class initRespawnMarkers {};
             class initSectorVisualState {};
             class initServer { preInit = 0; };
+            class initSideBaseMarkers {};
             class requestSavedLoadout {};
             class savePlayerLoadout {};
             class isForbiddenSpawnPos {};
