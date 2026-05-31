@@ -41,7 +41,40 @@ DZ_fnc_applySideBaseMarkerVisibility = {
     } forEach _allMarkers;
 };
 
-call DZ_fnc_applySideBaseMarkerVisibility;
+DZ_fnc_forceSideBaseMarkerVisibilityRefresh = {
+    params [["_duration", 8], ["_interval", 0.2]];
+
+    call DZ_fnc_applySideBaseMarkerVisibility;
+
+    private _oldHandle = missionNamespace getVariable ["DZ_sideBaseMarkerBurstHandle", -1];
+    if !(_oldHandle isEqualTo -1) then {
+        [_oldHandle] call CBA_fnc_removePerFrameHandler;
+    };
+
+    private _runUntil = time + _duration;
+    private _handle = [
+        {
+            params ["_args", "_handle"];
+            _args params ["_runUntil"];
+
+            call DZ_fnc_applySideBaseMarkerVisibility;
+
+            if (time >= _runUntil) then {
+                [_handle] call CBA_fnc_removePerFrameHandler;
+
+                if ((missionNamespace getVariable ["DZ_sideBaseMarkerBurstHandle", -1]) isEqualTo _handle) then {
+                    missionNamespace setVariable ["DZ_sideBaseMarkerBurstHandle", -1];
+                };
+            };
+        },
+        _interval,
+        [_runUntil]
+    ] call CBA_fnc_addPerFrameHandler;
+
+    missionNamespace setVariable ["DZ_sideBaseMarkerBurstHandle", _handle];
+};
+
+[8, 0.2] call DZ_fnc_forceSideBaseMarkerVisibilityRefresh;
 
 [
     {
@@ -50,5 +83,29 @@ call DZ_fnc_applySideBaseMarkerVisibility;
     10,
     []
 ] call CBA_fnc_addPerFrameHandler;
+
+addMissionEventHandler
+[
+    "EntityKilled",
+    {
+        params ["_killed"];
+
+        if (_killed isEqualTo player) then {
+            [12, 0.2] call DZ_fnc_forceSideBaseMarkerVisibilityRefresh;
+        };
+    }
+];
+
+addMissionEventHandler
+[
+    "EntityRespawned",
+    {
+        params ["_newEntity"];
+
+        if (_newEntity isEqualTo player) then {
+            [6, 0.2] call DZ_fnc_forceSideBaseMarkerVisibilityRefresh;
+        };
+    }
+];
 
 true

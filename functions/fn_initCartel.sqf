@@ -20,6 +20,31 @@
 params [["_npc", objNull, [objNull]]];
 
 if (isNull _npc) exitWith { false };
+
+// ── Server-side: auto-register a synthetic delivery pad if mission.sqm
+// doesn't already provide one named `cartel_delivery_pad`. Drops an
+// invisible helipad 12m in front of the broker so vehicles bought from
+// the Cartel have somewhere to spawn. Broadcast so clients see it.
+//
+// If the mission designer places an explicit `cartel_delivery_pad` in
+// Eden, that one wins (it'll already be set in missionNamespace by
+// engine init before this function runs).
+if (isServer && { isNull (missionNamespace getVariable ["cartel_delivery_pad", objNull]) }) then {
+    private _brokerPos = getPosATL _npc;
+    private _brokerDir = getDir _npc;
+    private _padPos    = _brokerPos getPos [12, _brokerDir];
+    _padPos set [2, 0];
+
+    private _pad = "Land_HelipadEmpty_F" createVehicle _padPos;
+    _pad setPosATL _padPos;
+    _pad setVariable ["dz_cartel_synth_pad", true, true];
+
+    missionNamespace setVariable ["cartel_delivery_pad", _pad, true];
+
+    diag_log format ["[DZ_CARTEL] Auto-registered cartel_delivery_pad at %1 (12m in front of broker %2)",
+        _padPos, _npc];
+};
+
 if (!hasInterface) exitWith { true };
 if (_npc getVariable ["dz_cartel_added", false]) exitWith { true };
 _npc setVariable ["dz_cartel_added", true, false];
