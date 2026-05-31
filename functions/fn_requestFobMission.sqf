@@ -1,8 +1,13 @@
 /*
  * DZ_fnc_requestFobMission
  * Server-side handler for the FOB "high-risk contract" laptop.
- * Starts a random eligible mission with source "fob" so the reward
- * handlers pay the doubled (DZ_fobRewardMultiplier) reward on success.
+ * The FOB is a Free Altis asset — the contract is forced to the
+ * resistance side, so the doubled reward (DZ_fobRewardMultiplier)
+ * lands in the Free Altis wallet.
+ *
+ * If a player from another faction operates the laptop somehow
+ * (e.g. captured), it still resolves to resistance — the laptop is
+ * resistance-gated in `fn_initFobLaptop.sqf` as an extra layer.
  */
 
 params [
@@ -17,11 +22,18 @@ private _replyTarget = owner _caller;
 
 call DZ_fnc_initMissionSystem;
 
-if (missionNamespace getVariable ["DZ_missionActive", false]) exitWith {
-    ["Передовая база", "Миссия уже активна. Дождитесь её завершения."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+// FOB belongs to Free Altis.
+private _side         = resistance;
+private _factionLabel = [_side] call DZ_fnc_missionSideLabel;
+
+if ([_side] call DZ_fnc_missionActiveForSide) exitWith {
+    [
+        "Передовая база",
+        format ["У %1 уже есть активная миссия. Дождитесь её завершения.", _factionLabel]
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-private _started = ["fob"] call DZ_fnc_startRandomMission;
+private _started = ["fob", _side] call DZ_fnc_startRandomMission;
 
 if !(_started) exitWith {
     ["Передовая база", "Нет доступных контрактов. Попробуйте позже."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
@@ -29,10 +41,12 @@ if !(_started) exitWith {
 
 private _mult = missionNamespace getVariable ["DZ_fobRewardMultiplier", 2];
 [
-    format ["Контракт с передовой базы принят. Награда увеличена в %1 раза.", _mult],
-    east
+    format ["[%1] Контракт с передовой базы принят. Награда увеличена в %2 раза.",
+        _factionLabel, _mult],
+    _side
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-diag_log format ["[DZ_FOB] Contract requested by %1 (uid=%2)", name _caller, getPlayerUID _caller];
+diag_log format ["[DZ_FOB] Contract requested by %1 (uid=%2, side=%3)",
+    name _caller, getPlayerUID _caller, _factionLabel];
 
 true

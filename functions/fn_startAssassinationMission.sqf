@@ -7,13 +7,20 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "assassination" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to. fn_startMission
+// sets DZ_missionContextSide before running this code; on direct
+// (debug) invocation we fall back to the first player side.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "assassination" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["assassination"] call DZ_fnc_getMissionDefinition;
-    ["assassination", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["assassination", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
 
@@ -26,7 +33,7 @@ private _captHash  = missionNamespace getVariable ["DZ_capturedHash",      creat
 if (_cells isEqualTo []) exitWith
 {
     diag_log "[ASSASSINATION] DZ_cells not initialized. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -83,8 +90,8 @@ if (_enemyCandidates isEqualTo []) then
 if (_enemyCandidates isEqualTo []) exitWith
 {
     diag_log "[ASSASSINATION] No enemy sectors available. Aborting.";
-    ["failure"] call DZ_fnc_endMission;
-    ["Подходящих целей не найдено. Миссия отменена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["failure", _missionSide] call DZ_fnc_endMission;
+    ["Подходящих целей не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
 
@@ -122,8 +129,8 @@ if (_nearbyBuildings isNotEqualTo []) then
 };
 
 private _targetGroup = createGroup [_sideEnemy, true];
-private _target = _targetGroup createUnit ["LOP_AFR_Infantry_SL", _targetPos, [], 0, "NONE"];
-_target setName "Командир Сулейман";
+private _target = _targetGroup createUnit ["UK3CB_MDF_O_OFF", _targetPos, [], 0, "NONE"];
+_target setName "Полковник Дюмон";
 _target setSkill 0.7;
 _target setUnitPos "UP";
 
@@ -138,7 +145,8 @@ if (!isNil "DZ_fnc_prepareSpawnedUnit") then
     [_target] + _defenderUnits,
     _defenderVehicles,
     ["marker_assassination"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_assassinationTarget",     _target];
@@ -148,20 +156,22 @@ missionNamespace setVariable ["DZ_assassinationKilled",     false];
 [
     "hint",
     "MISSION: ELIMINATE TARGET",
-    "Командир местной ячейки боевиков замечен в районе. Ликвидируйте полевого командира. Любой боец нашей стороны может забрать документы с тела (подойдите вплотную). Местоположение отмечено на карте."
+    "Командир местной ячейки захватчиков замечен в районе. Ликвидируйте полевого командира. Любой боец нашей стороны может забрать документы с тела (подойдите вплотную). Местоположение отмечено на карте."
 ] call DZ_fnc_missionUi;
 
 
+_target setVariable ["DZ_assassinationSide", _missionSide, true];
 _target addEventHandler [
     "Killed",
     {
         params ["_unit"];
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith {};
+        private _missionSide = _unit getVariable ["DZ_assassinationSide", sideUnknown];
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
         if (missionNamespace getVariable ["DZ_assassinationKilled", false]) exitWith {};
 
         missionNamespace setVariable ["DZ_assassinationKilled", true];
 
-        ["Командир ликвидирован. Любой боец может забрать документы с тела.", east]
+        ["Командир ликвидирован. Любой боец может забрать документы с тела.", _missionSide]
             remoteExecCall ["DZ_fnc_sideMessage", 0];
 
         "marker_assassination" setMarkerType "mil_pickup";
@@ -173,9 +183,9 @@ _target addEventHandler [
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_target", "_startTime"];
+        _args params ["_missionSide", "_target", "_startTime"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -184,22 +194,22 @@ private _stateHandle = [
         if (missionNamespace getVariable ["DZ_assassinationIntelTaken", false]) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["success"] call DZ_fnc_endMission;
+            ["success", _missionSide] call DZ_fnc_endMission;
         };
 
 
         if (isNull _target) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
+            ["failure", _missionSide] call DZ_fnc_endMission;
         };
 
 
         if ((time - _startTime) > 4200) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Командир скрылся. Время истекло.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Командир скрылся. Время истекло.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
@@ -210,11 +220,11 @@ private _stateHandle = [
         "marker_assassination" setMarkerPos (getPosATL _target);
 
 
-        private _sidePlayers = missionNamespace getVariable ["CH_sidePlayers", east];
+        private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
         private _picker = objNull;
         {
             if (alive _x &&
-                { (side group _x) isEqualTo _sidePlayers } &&
+                { (side group _x) in _playerSides } &&
                 { _x distance _target < 3 }) exitWith
             {
                 _picker = _x;
@@ -231,14 +241,14 @@ private _stateHandle = [
                 format ["%1 забрал документы. Миссия завершена.", name _picker]
             ] remoteExecCall ["DZ_fnc_showHint", 0];
 
-            ["Документы получены. Миссия выполнена.", east]
+            ["Документы получены. Миссия выполнена.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
     1,
-    [_target, time]
+    [_missionSide, _target, time]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

@@ -36,9 +36,20 @@ private _snapshot = [];
         private _iCargo = getItemCargo     _veh;
         private _bCargo = getBackpackCargo _veh;
 
+        private _ownerSide = _veh getVariable ["DZ_trophyVehicleOwnerSide", sideUnknown];
+        private _ownerSideKey = switch (true) do {
+            case (_ownerSide isEqualTo west):       { "west" };
+            case (_ownerSide isEqualTo resistance): { "resistance" };
+            case (_ownerSide isEqualTo east):       { "east" };
+            case (_ownerSide isEqualTo civilian):   { "civilian" };
+            default { "" };
+        };
+
         private _flags = [
             _veh getVariable ["DZ_purchasedItem", false],
-            _veh getVariable ["DZ_trackAbandoned", false]
+            _veh getVariable ["DZ_trackAbandoned", false],
+            _veh getVariable ["DZ_trophyVehicle", false],
+            _ownerSideKey
         ];
 
         _snapshot pushBack [

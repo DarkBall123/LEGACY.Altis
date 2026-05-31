@@ -1,75 +1,125 @@
 /*
  * DZ_fnc_startMission
- * Validates and dispatches a manual or automatic mission start request.
+ * Validates and dispatches a mission start request for a specific
+ * side. The side's own slot is checked — the OTHER side's mission
+ * is irrelevant. Cooldowns are GLOBAL: the same mission ID can't
+ * run on both sides back-to-back.
+ *
+ * Side resolution order:
+ *   1. Explicit `_side` parameter.
+ *   2. The caller's faction (DZ_fnc_missionSideOfPlayer).
+ *   3. west (legacy default for unattended/auto calls).
  */
 
 params [
-    ["_missionId", "", [""]],
-    ["_caller", objNull, [objNull]],
-    ["_source", "manual", [""]]
+    ["_missionId", "",      [""]],
+    ["_caller",   objNull,  [objNull]],
+    ["_source",   "manual", [""]],
+    ["_side",     sideUnknown]
 ];
 
 if (!isServer) exitWith {};
 
 private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
-diag_log format ["[DZ_START] %1 by %2 (source=%3)", _missionId, _caller, _source];
-
 call DZ_fnc_initMissionSystem;
 
-private _definition = [_missionId] call DZ_fnc_getMissionDefinition;
+// Resolve side.
+if (_side isEqualTo sideUnknown) then {
+    _side = [_caller] call DZ_fnc_missionSideOfPlayer;
+};
+if (_side isEqualTo sideUnknown) then {
+    _side = west;   // legacy default for un-attributed callers
+};
 
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_side in _playerSides) exitWith {
+    diag_log format ["[DZ_START] Side %1 isn't a player side. Refusing %2.", _side, _missionId];
+    ["Штаб", "Эта сторона не имеет штаба."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
+private _factionLabel = [_side] call DZ_fnc_missionSideLabel;
+diag_log format ["[DZ_START:%1] %2 by %3 (source=%4)", _factionLabel, _missionId, _caller, _source];
+
+private _definition = [_missionId] call DZ_fnc_getMissionDefinition;
 if ((count _definition) == 0) exitWith {
-    diag_log format ["[DZ_START] EXIT: empty definition for %1", _missionId];
+    diag_log format ["[DZ_START:%1] EXIT: empty definition for %2", _factionLabel, _missionId];
     ["Штаб", "Неизвестный тип миссии."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-if (missionNamespace getVariable ["DZ_missionActive", false]) exitWith {
-    diag_log "[DZ_START] EXIT: mission already active";
-    ["Штаб", "Миссия уже активна."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+// This side's slot: only blocked by this side's own mission.
+if ([_side] call DZ_fnc_missionActiveForSide) exitWith {
+    diag_log format ["[DZ_START:%1] EXIT: side already has an active mission", _factionLabel];
+    [
+        "Штаб",
+        format ["У %1 уже идёт активная миссия.", _factionLabel]
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
+// Block double-booking the SAME mission across sides while it's
+// already running on the other side.
+private _activeSides = call DZ_fnc_missionActiveSides;
+private _crossBooked = _activeSides findIf {
+    ([_x] call DZ_fnc_missionStateOf) get "id" == _missionId
+};
+if (_crossBooked >= 0) exitWith {
+    diag_log format ["[DZ_START:%1] EXIT: %2 already running on another side", _factionLabel, _missionId];
+    [
+        "Штаб",
+        "Эта миссия уже выполняется другой фракцией. Подождите её завершения."
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 private _manualEnabled = _definition getOrDefault ["manualEnabled", false];
 private _randomEnabled = _definition getOrDefault ["randomEnabled", false];
-private _implemented = _definition getOrDefault ["implemented", false];
+private _implemented   = _definition getOrDefault ["implemented",   false];
 
 if (_source == "manual" && { !_manualEnabled }) exitWith {
-    diag_log "[DZ_START] EXIT: not manualEnabled";
     ["Штаб", "Эта миссия недоступна для ручного запуска."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 if (_source == "auto" && { !_randomEnabled }) exitWith { false };
 
 if (!_implemented) exitWith {
-    diag_log "[DZ_START] EXIT: not implemented";
     [
         "Штаб",
         "Эта миссия пока только зарезервирована в меню."
     ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-[_missionId, _source, _definition] call DZ_fnc_prepareMissionState;
+[_missionId, _source, _definition, _side] call DZ_fnc_prepareMissionState;
 
 private _title = _definition getOrDefault ["title", _missionId];
-["hint", "Штаб", format ["Миссия активирована: %1", _title]] call DZ_fnc_missionUi;
+[
+    format ["[%1] Миссия активирована: %2", _factionLabel, _title],
+    _side
+] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _startFunction = _definition getOrDefault ["startFunction", ""];
-private _startCode = missionNamespace getVariable [_startFunction, {}];
+private _startCode     = missionNamespace getVariable [_startFunction, {}];
 
 if !(_startCode isEqualType {}) exitWith
 {
-    diag_log format ["[DZ_START] EXIT: start function '%1' not found", _startFunction];
-    ["failure"] call DZ_fnc_endMission;
+    diag_log format ["[DZ_START:%1] EXIT: start function '%2' not found", _factionLabel, _startFunction];
+    ["failure", _side] call DZ_fnc_endMission;
     false
 };
 
+// Ensure DZ_missionContextSide is set for the synchronous start so
+// any zero-arg addMissionAssets call hits THIS side's bucket.
+missionNamespace setVariable ["DZ_missionContextSide", _side, true];
+
 private _started = call _startCode;
+
+// Clear context once synchronous startup is over. PFH callbacks
+// scheduled by the mission script will pass _side via their args.
+missionNamespace setVariable ["DZ_missionContextSide", sideUnknown, true];
 
 if !(_started isEqualTo true) then
 {
-    if (missionNamespace getVariable ["DZ_missionActive", false]) then
+    if ([_side] call DZ_fnc_missionActiveForSide) then
     {
-        ["failure"] call DZ_fnc_endMission;
+        ["failure", _side] call DZ_fnc_endMission;
     };
 };
 

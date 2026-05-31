@@ -14,21 +14,26 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-private _currentMissionId = missionNamespace getVariable ["DZ_missionCurrentId", ""];
-if ((missionNamespace getVariable ["DZ_missionActive", false]) && { _currentMissionId != "heli_intercept" }) exitWith { false };
+// Wave 4: resolve the side this mission belongs to.
+private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
 
-if !(missionNamespace getVariable ["DZ_missionActive", false]) then
+private _sideState = [_missionSide] call DZ_fnc_missionStateOf;
+if ((_sideState get "active") && { (_sideState get "id") != "heli_intercept" }) exitWith { false };
+
+if !((_sideState get "active")) then
 {
     private _definition = ["heli_intercept"] call DZ_fnc_getMissionDefinition;
-    ["heli_intercept", "manual", _definition] call DZ_fnc_prepareMissionState;
+    ["heli_intercept", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
-private _heliClass = "Orkun_MTF_LittleBird_Armed";
+private _heliClass = "UK3CB_MDF_O_AH1Z_GS_NAVY";
 
 if (!isClass (configFile >> "CfgVehicles" >> _heliClass)) exitWith
 {
     diag_log format ["[HELI_INTERCEPT] Class %1 missing. Aborting.", _heliClass];
-    ["failure"] call DZ_fnc_endMission;
+    ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
 
@@ -100,7 +105,8 @@ diag_log format ["[HELI_INTERCEPT] Heli %1 spawned at %2 with %3 patrol waypoint
     units _crewGrp,
     [_heli],
     ["marker_heli"],
-    []
+    [],
+    _missionSide
 ] call DZ_fnc_addMissionAssets;
 
 missionNamespace setVariable ["DZ_heliInterceptTarget", _heli];
@@ -111,15 +117,15 @@ missionNamespace setVariable ["DZ_heliInterceptTarget", _heli];
     "Вражеский вертолёт патрулирует район и ведёт разведку. Перехватите и уничтожьте его.\n\nТекущее положение вертолёта отмечено на карте. Используйте средства ПВО, авиацию или огонь с земли.\n\nОСТОРОЖНО: вертолёт вооружён и атакует обнаруженные цели."
 ] call DZ_fnc_missionUi;
 
-["Замечен вражеский вертолёт. Перехватите и уничтожьте его — позиция на карте.", east]
+["Замечен вражеский вертолёт. Перехватите и уничтожьте его — позиция на карте.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _stateHandle = [
     {
         params ["_args", "_handle"];
-        _args params ["_heli", "_startTime"];
+        _args params ["_missionSide", "_heli", "_startTime"];
 
-        if !(missionNamespace getVariable ["DZ_missionActive", false]) exitWith
+        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
@@ -128,25 +134,25 @@ private _stateHandle = [
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             diag_log "[HELI_INTERCEPT] SUCCESS: helicopter destroyed.";
-            ["success"] call DZ_fnc_endMission;
-            ["Вражеский вертолёт уничтожен. Отличная работа!", east]
+            ["success", _missionSide] call DZ_fnc_endMission;
+            ["Вражеский вертолёт уничтожен. Отличная работа!", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if ((time - _startTime) > 3600) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
-            ["Вертолёт ушёл из зоны. Перехват не удался.", east]
+            ["failure", _missionSide] call DZ_fnc_endMission;
+            ["Вертолёт ушёл из зоны. Перехват не удался.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         "marker_heli" setMarkerPos (getPosATL _heli);
     },
     2,
-    [_heli, time]
+    [_missionSide, _heli, time]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true

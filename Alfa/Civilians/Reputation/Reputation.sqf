@@ -1,16 +1,36 @@
 /*
  * Alfa/Civilians/Reputation/Reputation.sqf
- * Maintains persistent civilian reputation state and map markers.
+ * Per-side civilian reputation pools for LEGACY.Altis.
+ *
+ * Each player faction has its own standing with the civilian
+ * population:
+ *   - APD          (west)        → ALFA_civilianReputation_west
+ *   - Free Altis   (resistance)  → ALFA_civilianReputation_resistance
+ *
+ * Persistence: profileNamespace under the same key names.
+ *
+ * Public API (all side-aware):
+ *   [_amount, _reason, _side]         call ALFA_fnc_repAdjust       -> new rep for that side
+ *   [_side]                           call ALFA_fnc_repGet           -> Number
+ *   [_side]                           call ALFA_fnc_repKeyForSide   -> profile key
+ *   [_side]                           call ALFA_fnc_repUpdateMarker (or no arg → all sides)
+ *
+ * Back-compat: the legacy global `ALFA_civilianReputation` is kept
+ * in sync with the LOWEST per-side value, so older consumers
+ * (setupCivilianReaction.sqf, etc.) see the worst-case standing —
+ * civilians grow afraid of whichever faction is most hated.
  */
 
 if (!isServer) exitWith {};
 if (missionNamespace getVariable ["ALFA_repInitialized", false]) exitWith {};
 missionNamespace setVariable ["ALFA_repInitialized", true];
 
-private _savedRep = profileNamespace getVariable ["ALFA_civilianReputation", 50];
-missionNamespace setVariable ["ALFA_civilianReputation", _savedRep, true];
+private _initialRep   = missionNamespace getVariable ["ALFA_repInitialValue", 50];
+private _playerSides  = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+
+// ── Static configuration (unchanged from Kunduz era) ─────────────────
 missionNamespace setVariable ["ALFA_repCivilianKilledPenalty", missionNamespace getVariable ["ALFA_repCivilianKilledPenalty", -0.5]];
-missionNamespace setVariable ["ALFA_repWaterReward", missionNamespace getVariable ["ALFA_repWaterReward", 0.1]];
+missionNamespace setVariable ["ALFA_repWaterReward",           missionNamespace getVariable ["ALFA_repWaterReward",            0.1]];
 
 if (isNil { missionNamespace getVariable "ALFA_repWaterItems" }) then {
     missionNamespace setVariable ["ALFA_repWaterItems", [
@@ -23,21 +43,71 @@ if (isNil { missionNamespace getVariable "ALFA_repWaterItems" }) then {
 };
 
 if (isNil { missionNamespace getVariable "ALFA_repRationItems" }) then {
-    missionNamespace setVariable ["ALFA_repRationItems", [
-        "ACE_MRE_BeefStew"
-    ]];
+    missionNamespace setVariable ["ALFA_repRationItems", ["ACE_MRE_BeefStew"]];
 };
 
 if (isNil { missionNamespace getVariable "ALFA_repMissionRewards" }) then {
     missionNamespace setVariable ["ALFA_repMissionRewards", createHashMapFromArray [
-        ["artillery_hunt", 0.4],
-        ["assassination",  0.3],
-        ["idap_repair",    0.5],
-        ["air_defense",    0.4],
+        ["artillery_hunt",   0.4],
+        ["assassination",    0.3],
+        ["idap_repair",      0.5],
+        ["air_defense",      0.4],
         ["defend_informant", 0.5],
-        ["heli_intercept", 0.3]
+        ["heli_intercept",   0.3]
     ]];
 };
+
+// ── Helpers ──────────────────────────────────────────────────────────
+
+ALFA_fnc_repKeyForSide = {
+    params ["_side"];
+    switch (true) do {
+        case (_side isEqualTo west):       { "ALFA_civilianReputation_west" };
+        case (_side isEqualTo resistance): { "ALFA_civilianReputation_resistance" };
+        case (_side isEqualTo east):       { "ALFA_civilianReputation_east" };
+        case (_side isEqualTo civilian):   { "ALFA_civilianReputation_civilian" };
+        default { "" };
+    }
+};
+
+ALFA_fnc_repSideLabel = {
+    params ["_side"];
+    switch (true) do {
+        case (_side isEqualTo west):       { "APD" };
+        case (_side isEqualTo resistance): { "Free Altis" };
+        default { str _side };
+    }
+};
+
+ALFA_fnc_repGet = {
+    params [["_side", sideUnknown]];
+    private _key = [_side] call ALFA_fnc_repKeyForSide;
+    if (_key == "") exitWith { 50 };
+    missionNamespace getVariable [_key, 50]
+};
+
+// Lowest per-side rep, broadcast under the legacy global for civilian-
+// reaction code that still reads ALFA_civilianReputation directly.
+ALFA_fnc_repRecomputeGlobal = {
+    private _sides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _values = _sides apply { [_x] call ALFA_fnc_repGet };
+    private _lowest = if (_values isEqualTo []) then { 50 } else { selectMin _values };
+
+    missionNamespace setVariable ["ALFA_civilianReputation", _lowest, true];
+    publicVariable "ALFA_civilianReputation";
+    _lowest
+};
+
+// ── Load persisted per-side starting values ──────────────────────────
+{
+    private _key   = [_x] call ALFA_fnc_repKeyForSide;
+    private _saved = profileNamespace getVariable [_key, _initialRep];
+    missionNamespace setVariable [_key, _saved, true];
+} forEach _playerSides;
+
+call ALFA_fnc_repRecomputeGlobal;
+
+// ── Marker rendering ─────────────────────────────────────────────────
 
 ALFA_fnc_repMarkerColor = {
     params [["_rep", 50, [0]]];
@@ -49,81 +119,89 @@ ALFA_fnc_repMarkerColor = {
 };
 
 ALFA_fnc_repMarkerPos = {
-    private _pos = missionNamespace getVariable ["ALFA_repMarkerPos", []];
-    if (_pos isEqualType [] && { count _pos >= 2 }) exitWith { _pos };
+    params [["_side", west]];
+    private _key      = format ["ALFA_repMarkerPos_%1", str _side];
+    private _override = missionNamespace getVariable [_key, []];
+    if (_override isEqualType [] && { count _override >= 2 }) exitWith { _override };
 
-    [10400, -100, 0]
+    // 100m east of each base's respawn so it doesn't overlap funds markers.
+    switch (true) do {
+        case (_side isEqualTo west):       { [12395.449, 8872.090, 0] };  // APD base, east
+        case (_side isEqualTo resistance): { [20891.287, 7269.035, 0] };  // Free Altis base, east
+        default { [3726.053, 12915.728, 0] };  // legacy IDAP fallback
+    }
 };
 
 ALFA_fnc_repUpdateMarker = {
-    private _rep = missionNamespace getVariable ["ALFA_civilianReputation", 50];
-    private _pos = call ALFA_fnc_repMarkerPos;
-    private _color = [_rep] call ALFA_fnc_repMarkerColor;
-    private _label = format ["Civilian reputation: %1", (_rep toFixed 1)];
-    private _markers = [
-        ["ALFA_civilian_reputation_marker", [0, 0, 0]],
-        ["ALFA_civilian_reputation_marker_bold_1", [2, 0, 0]],
-        ["ALFA_civilian_reputation_marker_bold_2", [0, -2, 0]]
-    ];
+    // No map markers for reputation. Keep the API as a cleanup hook so older
+    // sessions lose previously-created ALFA_civ_rep_* markers.
+    private _argSide       = if ((count _this) > 0) then { _this # 0 } else { sideUnknown };
+    private _playerSides   = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _sidesToUpdate = if (_argSide isEqualTo sideUnknown) then { _playerSides } else { [_argSide] };
 
     {
-        _x params ["_marker", "_offset"];
-        private _markerPos = [
-            (_pos select 0) + (_offset select 0),
-            (_pos select 1) + (_offset select 1),
-            0
+        private _side    = _x;
+        private _base    = format ["ALFA_civ_rep_%1", str _side];
+        private _markers = [
+            _base + "_a",
+            _base + "_b",
+            _base + "_c"
         ];
 
-        if (getMarkerType _marker == "") then {
-            createMarker [_marker, _markerPos];
-            _marker setMarkerType "mil_dot";
-            _marker setMarkerSize [0.55, 0.55];
-        } else {
-            _marker setMarkerPos _markerPos;
-        };
-
-        _marker setMarkerColor _color;
-        _marker setMarkerText _label;
-        _marker setMarkerAlpha 1;
-    } forEach _markers;
-
-    publicVariable "ALFA_civilianReputation";
+        {
+            if (getMarkerType _x != "") then {
+                deleteMarker _x;
+            };
+        } forEach _markers;
+    } forEach _sidesToUpdate;
 };
+
+// ── Side-aware adjust ────────────────────────────────────────────────
 
 ALFA_fnc_repAdjust = {
     params [
-        ["_amount", 0, [0]],
-        ["_reason", "", [""]]
+        ["_amount", 0,             [0]],
+        ["_reason", "",            [""]],
+        ["_side",   sideUnknown]
     ];
 
-    if (_amount == 0) exitWith { missionNamespace getVariable ["ALFA_civilianReputation", 50] };
+    private _key = [_side] call ALFA_fnc_repKeyForSide;
+    if (_key == "") exitWith {
+        diag_log format ["[ALFA_REP] Adjust called with non-player side %1 (reason=%2) — ignored.", _side, _reason];
+        50
+    };
 
-    private _oldValue = missionNamespace getVariable ["ALFA_civilianReputation", 50];
+    if (_amount == 0) exitWith { missionNamespace getVariable [_key, 50] };
+
+    private _oldValue = missionNamespace getVariable [_key, 50];
     private _newValue = ((_oldValue + _amount) max 0) min 100;
 
-    missionNamespace setVariable ["ALFA_civilianReputation", _newValue, true];
-    profileNamespace setVariable ["ALFA_civilianReputation", _newValue];
+    missionNamespace setVariable [_key, _newValue, true];
+    profileNamespace setVariable [_key, _newValue];
     saveProfileNamespace;
 
-    diag_log format ["[ALFA_REP] %1 -> %2 (%3, %4)", _oldValue, _newValue, _amount, _reason];
-    call ALFA_fnc_repUpdateMarker;
+    diag_log format ["[ALFA_REP:%1] %2 -> %3 (%4, %5)",
+        [_side] call ALFA_fnc_repSideLabel, _oldValue, _newValue, _amount, _reason];
+
+    [_side] call ALFA_fnc_repUpdateMarker;
+    call ALFA_fnc_repRecomputeGlobal;
     _newValue
 };
 
+// ── Item-handing helpers ─────────────────────────────────────────────
+
 ALFA_fnc_repTakeWaterItem = {
     params [["_player", objNull, [objNull]]];
-
     if (isNull _player) exitWith { false };
 
     private _waterItems = missionNamespace getVariable ["ALFA_repWaterItems", []];
-    private _taken = false;
+    private _taken      = false;
 
     {
         if (_x in items _player) exitWith {
             _player removeItem _x;
             _taken = true;
         };
-
         if (_x in magazines _player) exitWith {
             _player removeMagazine _x;
             _taken = true;
@@ -135,18 +213,16 @@ ALFA_fnc_repTakeWaterItem = {
 
 ALFA_fnc_repTakeRationItem = {
     params [["_player", objNull, [objNull]]];
-
     if (isNull _player) exitWith { false };
 
     private _rationItems = missionNamespace getVariable ["ALFA_repRationItems", ["ACE_MRE_BeefStew"]];
-    private _taken = false;
+    private _taken       = false;
 
     {
         if (_x in items _player) exitWith {
             _player removeItem _x;
             _taken = true;
         };
-
         if (_x in magazines _player) exitWith {
             _player removeMagazine _x;
             _taken = true;
@@ -156,10 +232,22 @@ ALFA_fnc_repTakeRationItem = {
     _taken
 };
 
+ALFA_fnc_repPlayerSideOf = {
+    // Resolve the player-side responsible for an action, or sideUnknown
+    // if the actor isn't a player or isn't on a player side.
+    params [["_unit", objNull, [objNull]]];
+    if (isNull _unit) exitWith { sideUnknown };
+
+    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _candidate   = side _unit;
+    if (_candidate in _playerSides) exitWith { _candidate };
+    sideUnknown
+};
+
 ALFA_fnc_repGiveRation = {
     params [
         ["_civilian", objNull, [objNull]],
-        ["_player", objNull, [objNull]]
+        ["_player",   objNull, [objNull]]
     ];
 
     if (isNull _civilian || { isNull _player }) exitWith {};
@@ -167,16 +255,23 @@ ALFA_fnc_repGiveRation = {
     if !(_civilian getVariable ["ALFA_repTrackedCivilian", false]) exitWith {};
     if (_civilian getVariable ["ALFA_repWaterGiven", false]) exitWith {};
     if (_player distance2D _civilian > 4) exitWith {};
+
+    private _side = [_player] call ALFA_fnc_repPlayerSideOf;
+    if (_side isEqualTo sideUnknown) exitWith {};
     if !([_player] call ALFA_fnc_repTakeRationItem) exitWith {};
 
     _civilian setVariable ["ALFA_repWaterGiven", true, true];
-    [missionNamespace getVariable ["ALFA_repWaterReward", 0.1], format ["%1 gave a ration to a civilian.", name _player]] call ALFA_fnc_repAdjust;
+    [
+        missionNamespace getVariable ["ALFA_repWaterReward", 0.1],
+        format ["%1 (%2) gave a ration to a civilian.", name _player, [_side] call ALFA_fnc_repSideLabel],
+        _side
+    ] call ALFA_fnc_repAdjust;
 };
 
 ALFA_fnc_repGiveWater = {
     params [
         ["_civilian", objNull, [objNull]],
-        ["_player", objNull, [objNull]]
+        ["_player",   objNull, [objNull]]
     ];
 
     if (isNull _civilian || { isNull _player }) exitWith {};
@@ -184,15 +279,24 @@ ALFA_fnc_repGiveWater = {
     if !(_civilian getVariable ["ALFA_repTrackedCivilian", false]) exitWith {};
     if (_civilian getVariable ["ALFA_repWaterGiven", false]) exitWith {};
     if (_player distance2D _civilian > 4) exitWith {};
+
+    private _side = [_player] call ALFA_fnc_repPlayerSideOf;
+    if (_side isEqualTo sideUnknown) exitWith {};
     if !([_player] call ALFA_fnc_repTakeWaterItem) exitWith {};
 
     _civilian setVariable ["ALFA_repWaterGiven", true, true];
-    [missionNamespace getVariable ["ALFA_repWaterReward", 0.1], format ["%1 helped a civilian.", name _player]] call ALFA_fnc_repAdjust;
+    [
+        missionNamespace getVariable ["ALFA_repWaterReward", 0.1],
+        format ["%1 (%2) helped a civilian.", name _player, [_side] call ALFA_fnc_repSideLabel],
+        _side
+    ] call ALFA_fnc_repAdjust;
 };
+
+// ── Civilian-death attribution ───────────────────────────────────────
 
 ALFA_fnc_repPlayerCausedDeath = {
     params [
-        ["_killer", objNull, [objNull]],
+        ["_killer",     objNull, [objNull]],
         ["_instigator", objNull, [objNull]]
     ];
 
@@ -212,6 +316,42 @@ ALFA_fnc_repPlayerCausedDeath = {
     false
 };
 
+ALFA_fnc_repResolveDeathSide = {
+    // Return the player-side that should be penalized for a civilian
+    // death, or sideUnknown if no player-side can be attributed.
+    params [
+        ["_killer",     objNull, [objNull]],
+        ["_instigator", objNull, [objNull]]
+    ];
+
+    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+
+    // Prefer the direct trigger-puller (instigator), else the killer.
+    {
+        if (!isNull _x && { isPlayer _x } && { (side _x) in _playerSides }) exitWith { side _x };
+        sideUnknown
+    } forEach [_instigator, _killer];
+
+    private _result = sideUnknown;
+    {
+        if (isNull _x) then { continue };
+        if (isPlayer _x && { (side _x) in _playerSides }) exitWith {
+            _result = side _x;
+        };
+        private _veh = vehicle _x;
+        if (!isNull _veh && { _veh != _x }) then {
+            private _playerCrew = (crew _veh) select { isPlayer _x && { (side _x) in _playerSides } };
+            if (_playerCrew isNotEqualTo []) exitWith {
+                _result = side (_playerCrew # 0);
+            };
+        };
+    } forEach [_instigator, _killer];
+
+    _result
+};
+
+// ── Civilian registration / actions ──────────────────────────────────
+
 ALFA_fnc_repRegisterCivilian = {
     params [["_civilian", objNull, [objNull]]];
 
@@ -226,13 +366,21 @@ ALFA_fnc_repRegisterCivilian = {
         params ["_unit", "_killer", "_instigator"];
 
         if (!isServer) exitWith {};
-
         if (_unit getVariable ["ALFA_repDeathHandled", false]) exitWith {};
         _unit setVariable ["ALFA_repDeathHandled", true, true];
 
-        if ([_killer, _instigator] call ALFA_fnc_repPlayerCausedDeath) then {
-            [missionNamespace getVariable ["ALFA_repCivilianKilledPenalty", -0.5], "A civilian was killed by player actions."] call ALFA_fnc_repAdjust;
+        if !([_killer, _instigator] call ALFA_fnc_repPlayerCausedDeath) exitWith {};
+
+        private _side = [_killer, _instigator] call ALFA_fnc_repResolveDeathSide;
+        if (_side isEqualTo sideUnknown) exitWith {
+            diag_log format ["[ALFA_REP] Civ %1 killed by player action but no player-side attributable.", name _unit];
         };
+
+        [
+            missionNamespace getVariable ["ALFA_repCivilianKilledPenalty", -0.5],
+            format ["A civilian was killed by %1 actions.", [_side] call ALFA_fnc_repSideLabel],
+            _side
+        ] call ALFA_fnc_repAdjust;
     }];
 
     [
@@ -272,6 +420,7 @@ ALFA_fnc_repRegisterCivilian = {
     ] remoteExec ["addAction", 0, _civilian];
 };
 
+// ── Periodic civilian registration / marker tick ─────────────────────
 call ALFA_fnc_repUpdateMarker;
 
 [] spawn {
@@ -290,18 +439,21 @@ call ALFA_fnc_repUpdateMarker;
     };
 };
 
+// ── Mission reward hook ──────────────────────────────────────────────
+
 ["DZ_missionEnded", {
     params [
         ["_missionId", "", [""]],
-        ["_result", "", [""]],
-        ["_source", "", [""]],
-        ["_title", "", [""]]
+        ["_result",    "", [""]],
+        ["_source",    "", [""]],
+        ["_title",     "", [""]],
+        ["_endedSide", sideUnknown]
     ];
 
     if (_result != "success") exitWith {};
 
     private _rewards = missionNamespace getVariable ["ALFA_repMissionRewards", createHashMap];
-    private _amount = _rewards getOrDefault [_missionId, 0];
+    private _amount  = _rewards getOrDefault [_missionId, 0];
     if (_amount == 0) exitWith {};
 
     // FOB contracts pay a multiplied reputation reward.
@@ -310,17 +462,32 @@ call ALFA_fnc_repUpdateMarker;
         _amount = _amount * _mult;
     };
 
-    private _reason = switch (_missionId) do {
-        case "artillery_hunt": { "Mortar position destroyed." };
-        case "assassination":  { "Field commander eliminated." };
-        case "idap_repair":    { "IDAP vehicle repaired and crew rescued." };
-        case "air_defense":    { "Enemy air-defense network destroyed." };
-        case "defend_informant": { "Informant defended and extracted." };
-        case "heli_intercept": { "Enemy helicopter intercepted." };
-        default { format ["Mission completed: %1", _title] };
+    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _rewardSide = if (_endedSide in _playerSides) then { _endedSide } else {
+        switch (_source) do {
+            case "manual": { west };
+            case "fob":    { resistance };
+            default        { sideUnknown };
+        }
     };
 
-    [_amount, _reason] call ALFA_fnc_repAdjust;
+    private _recipients  = if (_rewardSide isEqualTo sideUnknown) then { _playerSides } else { [_rewardSide] };
+
+    private _reason = switch (_missionId) do {
+        case "artillery_hunt":   { "Mortar position destroyed." };
+        case "assassination":    { "Field commander eliminated." };
+        case "idap_repair":      { "IDAP vehicle repaired and crew rescued." };
+        case "air_defense":      { "Enemy air-defense network destroyed." };
+        case "defend_informant": { "Informant defended and extracted." };
+        case "heli_intercept":   { "Enemy helicopter intercepted." };
+        default                  { format ["Mission completed: %1", _title] };
+    };
+
+    {
+        [_amount, _reason, _x] call ALFA_fnc_repAdjust;
+    } forEach _recipients;
 }] call CBA_fnc_addEventHandler;
 
-diag_log format ["[ALFA_REP] Civilian reputation system initialized. Reputation=%1", _savedRep];
+diag_log format ["[ALFA_REP] Per-side civilian reputation initialized. APD=%1 FreeAltis=%2",
+    [west] call ALFA_fnc_repGet,
+    [resistance] call ALFA_fnc_repGet];

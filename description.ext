@@ -1,7 +1,7 @@
-onLoadName = "Операция: Красные Пески";
-briefingName = "Операция: Красные Пески";
-overviewPicture = "\MainMenu\meta\preview.jpg";
-loadScreen = "\MainMenu\meta\preview.jpg";
+onLoadName = "Операция: Наследие";
+briefingName = "Операция: Наследие";
+overviewPicture = "\MainMenu\meta\preview.png";
+loadScreen = "\MainMenu\meta\preview.png";
 respawn = 3;
 respawnDelay = 30;
 respawnOnStart = -1;
@@ -39,9 +39,11 @@ class CfgFunctions
             class getUrbanLocations {};
             class handleStateUpdate {};
             class handleZonesPFH {};
+            class initEnemyAirSupport {};
             class initRespawnMarkers {};
             class initSectorVisualState {};
             class initServer { preInit = 0; };
+            class initSideBaseMarkers {};
             class requestSavedLoadout {};
             class savePlayerLoadout {};
             class isForbiddenSpawnPos {};
@@ -53,6 +55,7 @@ class CfgFunctions
             class resolveSpawnGroupDef {};
             class selectSpawnProfile {};
             class setSectorVisualState {};
+            class spawnEnemyAirSupport {};
             class spawnCheckpoint {};
             class spawnCounterattackForce {};
             class spawnForZone {};
@@ -61,10 +64,14 @@ class CfgFunctions
             class manualSaveProgress {};
             class initSquadFunds           {};
             class initQuartermaster        {};
+            class initCartel               {};
             class purchaseItem             {};
             class squadFundsRequestBalance {};
             class saveAssets               {};
             class restoreAssets            {};
+            class initTrophyVehicleStorage  {};
+            class isTrophyVehicleStorable   {};
+            class saveTrophyVehicle         {};
         };
 
 
@@ -112,6 +119,7 @@ class CfgFunctions
 
             class initHqLaptop          {};
             class initFobLaptop         {};
+            class initMissionIntelLeak  {};
             class initTransportMenu     {};
             class initEwJammer          {};
             class initKshmVehicle       {};
