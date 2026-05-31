@@ -133,10 +133,26 @@ diag_log format ["[HUMANITARIAN] Chosen villages: %1", _chosenVillages];
 } forEach _chosenVillages;
 
 
-private _basePos = [1577.408, 8535.449, 0];
-if ((markerType "respawn_east") != "") then
+// Crates spawn at the IDAP quartermaster delivery pad — shared by
+// both player factions (IDAP is humanitarian, both APD and Free Altis
+// can take this contract and pick up the crates from the same place).
+private _basePos = [];
+private _pad = missionNamespace getVariable ["vehicle_delivery_pad", objNull];
+if (!isNull _pad) then
 {
-    _basePos = getMarkerPos "respawn_east";
+    _basePos = getPosATL _pad;
+}
+else
+{
+    diag_log "[HUMANITARIAN] vehicle_delivery_pad not found — falling back to APD respawn.";
+    if ((markerType "respawn_west") != "") then
+    {
+        _basePos = getMarkerPos "respawn_west";
+    }
+    else
+    {
+        _basePos = [worldSize * 0.5, worldSize * 0.5, 0];
+    };
 };
 
 private _crateClass = "";
@@ -470,11 +486,11 @@ private _stateHandle = [
         if ((count _useableCrates) < _undeliveredVillages) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure"] call DZ_fnc_endMission;
+            ["failure", _missionSide] call DZ_fnc_endMission;
             [
                 format ["Недостаточно ящиков для завершения миссии. Доставлено: %1/%2.",
                     _deliveredCount, count _villages],
-                east
+                _missionSide
             ] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },
