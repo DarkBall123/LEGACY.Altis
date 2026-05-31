@@ -22,15 +22,37 @@ missionNamespace setVariable ["DZ_hiddenRespawnMapMarkers", missionNamespace get
     ["respawn_west", "respawn_guerilla", "respawn_guerrila"]
 ]];
 
+DZ_fnc_getSideBaseMarkerPlayerSide = {
+    private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+    private _side = playerSide;
+
+    if (_side in _playerSides) exitWith {
+        missionNamespace setVariable ["DZ_sideBaseMarkerPlayerSide", _side];
+        _side
+    };
+
+    if (!isNull player) then {
+        private _groupSide = side group player;
+
+        if (_groupSide in _playerSides) exitWith {
+            missionNamespace setVariable ["DZ_sideBaseMarkerPlayerSide", _groupSide];
+            _groupSide
+        };
+    };
+
+    missionNamespace getVariable ["DZ_sideBaseMarkerPlayerSide", sideUnknown]
+};
+
 DZ_fnc_applySideBaseMarkerVisibility = {
     private _apdMarkers = missionNamespace getVariable ["DZ_sideBaseMarkersAPD", []];
     private _freeMarkers = missionNamespace getVariable ["DZ_sideBaseMarkersFreeAltis", []];
     private _respawnMarkers = missionNamespace getVariable ["DZ_hiddenRespawnMapMarkers", []];
     private _allMarkers = (_apdMarkers + _freeMarkers + _respawnMarkers) arrayIntersect (_apdMarkers + _freeMarkers + _respawnMarkers);
-    private _visibleMarkers = switch (side player) do {
+    private _localSide = call DZ_fnc_getSideBaseMarkerPlayerSide;
+    private _visibleMarkers = switch (_localSide) do {
         case west: { _apdMarkers };
         case resistance: { _freeMarkers };
-        default { _allMarkers };
+        default { [] };
     };
 
     {
