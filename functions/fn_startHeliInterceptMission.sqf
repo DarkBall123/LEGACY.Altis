@@ -28,7 +28,7 @@ if !((_sideState get "active")) then
     ["heli_intercept", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
-private _heliClass = "Orkun_MTF_LittleBird_Armed";
+private _heliClass = "UK3CB_MDF_O_AH1Z_GS_NAVY";
 
 if (!isClass (configFile >> "CfgVehicles" >> _heliClass)) exitWith
 {

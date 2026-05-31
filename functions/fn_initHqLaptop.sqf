@@ -26,7 +26,7 @@ private _missionList = [
     ["idap_repair",      "Миссия: Дозаправка транспорта IDAP"],
     ["air_defense",      "Миссия: Подавление ПВО MEF"],
     ["defend_informant", "Миссия: Прикрытие перебежчика"],
-    ["heli_intercept",   "Миссия: Перехват разведчика MEF"]
+    ["heli_intercept",   "Миссия: Воздушный перехват"]
 ];
 
 {

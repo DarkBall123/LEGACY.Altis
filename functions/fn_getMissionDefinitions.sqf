@@ -167,8 +167,8 @@ private _register =
     "heli_intercept",
     createHashMapFromArray
     [
-        ["title", "Перехват разведчика MEF"],
-        ["description", "Найти и уничтожить разведывательный вертолёт MEF, патрулирующий район. Текущее положение отмечено на карте."],
+        ["title", "Воздушный перехват"],
+        ["description", "Найти и уничтожить ударный вертолёт MEF, патрулирующий район. Текущее положение отмечено на карте."],
         ["startFunction", "DZ_fnc_startHeliInterceptMission"],
         ["implemented", true],
         ["manualEnabled", true],
