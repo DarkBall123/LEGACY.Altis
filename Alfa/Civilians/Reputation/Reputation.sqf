@@ -124,34 +124,56 @@ ALFA_fnc_repMarkerPos = {
     private _override = missionNamespace getVariable [_key, []];
     if (_override isEqualType [] && { count _override >= 2 }) exitWith { _override };
 
-    // 100m east of each base's respawn so it doesn't overlap funds markers.
     switch (true) do {
-        case (_side isEqualTo west):       { [12395.449, 8872.090, 0] };  // APD base, east
-        case (_side isEqualTo resistance): { [20891.287, 7269.035, 0] };  // Free Altis base, east
+        case (_side isEqualTo west):       { [28000.033, 2998.383, 0] };  // APD rep marker
+        case (_side isEqualTo resistance): { [28005.713, 1987.348, 0] };  // Free Altis rep marker
         default { [3726.053, 12915.728, 0] };  // legacy IDAP fallback
     }
 };
 
 ALFA_fnc_repUpdateMarker = {
-    // No map markers for reputation. Keep the API as a cleanup hook so older
-    // sessions lose previously-created ALFA_civ_rep_* markers.
+    // Render one rep marker per player side at the position returned by
+    // ALFA_fnc_repMarkerPos. Color follows ALFA_fnc_repMarkerColor based
+    // on the side's current reputation value. Triple-dot cluster gives
+    // a readable label on the strategic map.
     private _argSide       = if ((count _this) > 0) then { _this # 0 } else { sideUnknown };
     private _playerSides   = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _sidesToUpdate = if (_argSide isEqualTo sideUnknown) then { _playerSides } else { [_argSide] };
 
     {
         private _side    = _x;
+        private _rep     = [_side] call ALFA_fnc_repGet;
+        private _pos     = [_side] call ALFA_fnc_repMarkerPos;
+        private _color   = [_rep]  call ALFA_fnc_repMarkerColor;
+        private _faction = [_side] call ALFA_fnc_repSideLabel;
+        private _label   = format ["%1 rep: %2", _faction, (_rep toFixed 1)];
+
         private _base    = format ["ALFA_civ_rep_%1", str _side];
         private _markers = [
-            _base + "_a",
-            _base + "_b",
-            _base + "_c"
+            [_base + "_a", [0,  0, 0]],
+            [_base + "_b", [2,  0, 0]],
+            [_base + "_c", [0, -2, 0]]
         ];
 
         {
-            if (getMarkerType _x != "") then {
-                deleteMarker _x;
+            _x params ["_marker", "_offset"];
+            private _markerPos = [
+                (_pos select 0) + (_offset select 0),
+                (_pos select 1) + (_offset select 1),
+                0
+            ];
+
+            if (getMarkerType _marker == "") then {
+                createMarker [_marker, _markerPos];
+                _marker setMarkerType "mil_dot";
+                _marker setMarkerSize [0.55, 0.55];
+            } else {
+                _marker setMarkerPos _markerPos;
             };
+
+            _marker setMarkerColor _color;
+            _marker setMarkerText  _label;
+            _marker setMarkerAlpha 1;
         } forEach _markers;
     } forEach _sidesToUpdate;
 };
