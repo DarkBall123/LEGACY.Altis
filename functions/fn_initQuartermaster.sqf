@@ -42,7 +42,8 @@ private _catalog = [
     ["crates",    "crate_medical",     "Ящик с медикаментами",          500, ["ACE_medicalSupplyCrate_advanced"]],
 
     // ── Оборудование ──────────────────────────────────────────────
-    ["equipment", "equip_searchlight", "Прожектор",                     200, ["UK3CB_UN_B_Searchlight"]]
+    ["equipment", "equip_searchlight", "Прожектор",                     200, ["UK3CB_UN_B_Searchlight"]],
+    ["equipment", "equip_cargo_net",   "Грузовая сеть (коробка)",       250, ["CargoNet_01_box_F"]]
 ];
 
 private _resolveClass = {
