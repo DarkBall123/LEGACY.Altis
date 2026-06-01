@@ -9,7 +9,11 @@ private _urbanHash = missionNamespace getVariable ["DZ_urbanHash", createHashMap
 private _zoneTemplate = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
 private _styleEnemyDormant = missionNamespace getVariable ["DZ_styleEnemyDormant", 0];
 private _stylePlayerOwned = missionNamespace getVariable ["DZ_stylePlayerOwned", 2];
+private _styleEastOwned = missionNamespace getVariable ["DZ_styleEastOwned", _styleEnemyDormant];
 private _maxSectorId = (count _sectorGrid) - 1;
+private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", east];
+private _sectorOwner = missionNamespace getVariable ["DZ_sectorOwner", []];
+private _savedOwners = profileNamespace getVariable ["DZ_savedSectorOwners", []];
 
 private _saved = profileNamespace getVariable ["DZ_savedCaptures", []];
 private _forbiddenSpawnAreas = [];
@@ -34,6 +38,62 @@ private _fnc_hasTriggerZoneFlag =
     ((toLower _activation) find (toLower _flagName)) >= 0
 };
 
+private _fnc_sideToKey =
+{
+    params ["_side"];
+
+    switch (true) do
+    {
+        case (_side isEqualTo west):       { "WEST" };
+        case (_side isEqualTo east):       { "EAST" };
+        case (_side isEqualTo resistance): { "GUER" };
+        default { "" };
+    }
+};
+
+private _fnc_keyToSide =
+{
+    params [["_key", ""]];
+
+    switch (toUpper _key) do
+    {
+        case "WEST": { west };
+        case "EAST": { east };
+        case "GUER": { resistance };
+        default { sideUnknown };
+    }
+};
+
+private _fnc_setSavedOwner =
+{
+    params ["_sectorId", "_side"];
+
+    private _entryIdx = _savedOwners findIf { (_x param [0, -1]) isEqualTo _sectorId };
+    if (_entryIdx >= 0) then
+    {
+        _savedOwners deleteAt _entryIdx;
+    };
+
+    private _key = [_side] call _fnc_sideToKey;
+    if (_key != "" && { !(_side isEqualTo _sideEnemy) }) then
+    {
+        _savedOwners pushBack [_sectorId, _key];
+    };
+};
+
+private _fnc_ownerStyle =
+{
+    params ["_side"];
+
+    switch (true) do
+    {
+        case (_side isEqualTo west):       { missionNamespace getVariable ["DZ_styleWestOwned", 0] };
+        case (_side isEqualTo east):       { missionNamespace getVariable ["DZ_styleEastOwned", 1] };
+        case (_side isEqualTo resistance): { missionNamespace getVariable ["DZ_styleResistanceOwned", 2] };
+        default { _styleEastOwned };
+    }
+};
+
 if !(_saved isEqualType []) then
 {
     _saved = [];
@@ -46,17 +106,69 @@ _saved = (_saved select
 
 _saved = _saved arrayIntersect _saved;
 
+if !(_savedOwners isEqualType []) then
+{
+    _savedOwners = [];
+};
+
+_savedOwners = _savedOwners select
+{
+    (_x isEqualType []) &&
+    { (_x param [0, -1]) isEqualType 0 } &&
+    { (_x param [1, ""]) isEqualType "" }
+};
+
+_sectorOwner resize (count _sectorGrid);
+for "_idx" from 0 to ((count _sectorGrid) - 1) do
+{
+    if (isNil { _sectorOwner # _idx }) then
+    {
+        _sectorOwner set [_idx, _sideEnemy];
+    };
+};
+
 private _captHash = createHashMap;
 {
-    _captHash set [_x, true];
+    private _sectorId = _x;
+    private _hasSavedOwner = (_savedOwners findIf { (_x param [0, -1]) isEqualTo _sectorId }) >= 0;
+
+    _captHash set [_sectorId, true];
+
+    if (!_hasSavedOwner) then
+    {
+        _sectorOwner set [_sectorId, west];
+        [_sectorId, west] call _fnc_setSavedOwner;
+    };
 } forEach _saved;
+
+if (_savedOwners isEqualType []) then
+{
+    {
+        private _sectorId = _x param [0, -1];
+        private _ownerSide = [_x param [1, ""]] call _fnc_keyToSide;
+
+        if (_sectorId >= 0 && { _sectorId <= _maxSectorId } && { !(_ownerSide isEqualTo sideUnknown) }) then
+        {
+            _sectorOwner set [_sectorId, _ownerSide];
+            if (!(_ownerSide isEqualTo _sideEnemy)) then
+            {
+                _captHash set [_sectorId, true];
+                _saved pushBackUnique _sectorId;
+            };
+        };
+    } forEach _savedOwners;
+}
+else
+{
+    _savedOwners = [];
+};
 
 {
     private _state = +_zoneTemplate;
     _state set [4, true];
     _state set [6, true];
     _zoneData set [_x, _state];
-    [_x, _stylePlayerOwned] call DZ_fnc_setSectorVisualState;
+    [_x, [_sectorOwner param [_x, west]] call _fnc_ownerStyle] call DZ_fnc_setSectorVisualState;
 } forEach _saved;
 
 {
@@ -101,6 +213,8 @@ private _captHash = createHashMap;
             _state set [4, true];
             _state set [6, true];
             _zoneData set [_sectorId, _state];
+            _sectorOwner set [_sectorId, west];
+            [_sectorId, west] call _fnc_setSavedOwner;
             [_sectorId, _stylePlayerOwned] call DZ_fnc_setSectorVisualState;
             _playerAreaSectors = _playerAreaSectors + 1;
         }
@@ -118,6 +232,8 @@ private _captHash = createHashMap;
 
             _urbanHash set [_sectorId, true];
             _zoneData set [_sectorId, +_zoneTemplate];
+            _sectorOwner set [_sectorId, _sideEnemy];
+            [_sectorId, _sideEnemy] call _fnc_setSavedOwner;
             [_sectorId, _styleEnemyDormant] call DZ_fnc_setSectorVisualState;
             _enemyAreaSectors = _enemyAreaSectors + 1;
         };
@@ -125,11 +241,14 @@ private _captHash = createHashMap;
 } forEach (allMissionObjects "EmptyDetector" select { !isNull _x });
 
 profileNamespace setVariable ["DZ_savedCaptures", _saved];
+profileNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 saveProfileNamespace;
 
 missionNamespace setVariable ["DZ_zoneData", _zoneData];
+missionNamespace setVariable ["DZ_sectorOwner", _sectorOwner];
 missionNamespace setVariable ["DZ_urbanHash", _urbanHash];
 missionNamespace setVariable ["DZ_savedCapturesCache", _saved];
+missionNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 missionNamespace setVariable ["DZ_capturedHash", _captHash];
 missionNamespace setVariable ["DZ_forbiddenSpawnAreas", _forbiddenSpawnAreas];
 

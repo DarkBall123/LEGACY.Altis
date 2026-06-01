@@ -43,6 +43,13 @@ ENGIMA_CIVILIANS_GetAllPlayersPositions = {
 	_playerPositions
 };
 
+ENGIMA_CIVILIANS_GetAllPlayers = {
+	allPlayers select {
+		alive _x
+		&& { !(_x isKindOf "HeadlessClient_F") }
+	}
+};
+
 ENGIMA_CIVILIANS_CountPositionsInBuilding = {
 	private ["_building"];
 	private ["_count"];
@@ -280,7 +287,8 @@ ENGIMA_CIVILIANS_StartCivilians = {
 	while { true } do {
         private _civilianCount = count _civilianItems;
 
-		_allPlayerPositions = call ENGIMA_CIVILIANS_GetAllPlayersPositions;
+		private _allPlayers = call ENGIMA_CIVILIANS_GetAllPlayers;
+		_allPlayerPositions = _allPlayers apply { position vehicle _x };
 		_playerBuildings = [_allPlayerPositions, _maxSpawnDistance, _blackListMarkers] call ENGIMA_CIVILIANS_GetPlayerBuildings;
 		_maxUnitsCount = ceil (_unitsPerBuilding * count _playerBuildings);
 
@@ -313,30 +321,107 @@ ENGIMA_CIVILIANS_StartCivilians = {
 				};
 			} foreach _civilianItems;
 
-			private _targetPerPlayer = _maxUnitsCount / (count _allPlayerPositions);
 			private _spawnPlayerIndex = -1;
 			private _spawnPlayerBuildings = [];
-			private _lowestQuotaFill = 1e10;
+			private _activeSides = [];
+			{
+				private _playerSide = side group _x;
+				if !(_playerSide in _activeSides) then {
+					_activeSides pushBack _playerSide;
+				};
+			} foreach _allPlayers;
+
+			private _targetSide = sideUnknown;
+			private _lowestSideQuotaFill = 1e10;
+			{
+				private _candidateSide = _x;
+				private _sidePlayerCount = { side group _x isEqualTo _candidateSide } count _allPlayers;
+				private _sideCivilianCount = 0;
+
+				{
+					if (side group (_allPlayers select _forEachIndex) isEqualTo _candidateSide) then {
+						_sideCivilianCount = _sideCivilianCount + _x;
+					};
+				} forEach _civilianCountsByPlayer;
+
+				private _sideTarget = _maxUnitsCount * _sidePlayerCount / (count _allPlayers);
+				private _sideQuotaFill = _sideCivilianCount - _sideTarget;
+				if (_sideQuotaFill < _lowestSideQuotaFill) then {
+					_lowestSideQuotaFill = _sideQuotaFill;
+					_targetSide = _candidateSide;
+				};
+			} foreach _activeSides;
 
 			{
 				private _playerCivilianCount = _civilianCountsByPlayer select _forEachIndex;
-				private _quotaFill = _playerCivilianCount - _targetPerPlayer;
+				private _playerSide = side group (_allPlayers select _forEachIndex);
 
-				if (_playerCivilianCount < (ceil _targetPerPlayer) && { _quotaFill < _lowestQuotaFill }) then {
+				if (_playerSide isEqualTo _targetSide && { _spawnPlayerIndex < 0 || { _playerCivilianCount < (_civilianCountsByPlayer select _spawnPlayerIndex) } }) then {
 					private _candidateBuildings = [[_x], _maxSpawnDistance, _blackListMarkers] call ENGIMA_CIVILIANS_GetPlayerBuildings;
 					if (count _candidateBuildings > 0) then {
-						_lowestQuotaFill = _quotaFill;
 						_spawnPlayerIndex = _forEachIndex;
 						_spawnPlayerBuildings = _candidateBuildings;
 					};
 				};
 			} foreach _allPlayerPositions;
 
+			if (_spawnPlayerIndex < 0) then {
+				{
+					private _playerCivilianCount = _civilianCountsByPlayer select _forEachIndex;
+
+					if (_spawnPlayerIndex < 0 || { _playerCivilianCount < (_civilianCountsByPlayer select _spawnPlayerIndex) }) then {
+						private _candidateBuildings = [[_x], _maxSpawnDistance, _blackListMarkers] call ENGIMA_CIVILIANS_GetPlayerBuildings;
+						if (count _candidateBuildings > 0) then {
+							_spawnPlayerIndex = _forEachIndex;
+							_spawnPlayerBuildings = _candidateBuildings;
+						};
+					};
+				} foreach _allPlayerPositions;
+			};
+
 			if (_spawnPlayerIndex >= 0) then {
 				_unit = [_side, _minSpawnDistance, _unitClasses, _spawnPlayerBuildings, _blackListMarkers, _fnc_OnSpawningCallback, _fnc_OnSpawnedCallback, _civilianCount, _maxUnitsCount] call _spawnUnit;
 				if (!isNull _unit) then {
 					_unit setSkill _minSkill + random (_maxSkill - _minSkill);
-					_civilianItems pushBack [_unit, "CITIZEN", [], getPos _unit, false, time, random 1 < ENGIMA_CIVILIANS_RUNNINGCHANCE, time];
+
+					private _nearestPlayerPos = [];
+					private _nearestPlayerDistance = 1e10;
+					{
+						private _distance = _x distance2D _unit;
+						if (_distance < _nearestPlayerDistance) then {
+							_nearestPlayerDistance = _distance;
+							_nearestPlayerPos = _x;
+						};
+					} foreach _allPlayerPositions;
+
+					private _initialDestination = [];
+					if !(_nearestPlayerPos isEqualTo []) then {
+						private _distance = 12 + random 16;
+						private _direction = random 360;
+						private _candidate = [
+							(_nearestPlayerPos select 0) + sin _direction * _distance,
+							(_nearestPlayerPos select 1) + cos _direction * _distance,
+							0
+						];
+
+						if (!surfaceIsWater _candidate && { !([_candidate, _blackListMarkers] call ENGIMA_CIVILIANS_PositionInsideBlackMarker) }) then {
+							_initialDestination = _candidate;
+							_unit setBehaviour "CARELESS";
+							_unit setSpeedMode "LIMITED";
+							_unit doMove _initialDestination;
+						};
+					};
+
+					_civilianItems pushBack [
+						_unit,
+						"CITIZEN",
+						_initialDestination,
+						getPos _unit,
+						!(_initialDestination isEqualTo []),
+						time + 30,
+						false,
+						time
+					];
 				};
 			};
 
@@ -418,7 +503,7 @@ ENGIMA_CIVILIANS_StartCivilians = {
 				_destPos = [_unit, _blackListMarkers, _maxSpawnDistance] call ENGIMA_CIVILIANS_FindDestinationPosition;
 				if (count _destPos > 0) then {
 					_unit doMove _destPos;
-					_unit setBehaviour "SAFE";
+					_unit setBehaviour "CARELESS";
 
 					_destinationPos = _destPos;
 					_isMoving = true;

@@ -5,17 +5,49 @@
 
 private ["_parameters"];
 
+if (isNil { missionNamespace getVariable "ALFA_fnc_prepareCivilianUnit" }) then {
+	ALFA_fnc_prepareCivilianUnit = {
+		params ["_unit"];
 
+		if (isNull _unit) exitWith {};
+		if (!alive _unit) exitWith {};
+		if !(vehicle _unit isEqualTo _unit) exitWith {};
+		if (!((side group _unit) isEqualTo civilian)) exitWith {};
+		if (_unit getVariable ["ALFA_civScripted", false]) exitWith {};
+
+		_unit setVariable ["ALFA_civScripted", true, true];
+		_unit setVariable ["ALFA_civAmbient", true, true];
+
+		private _rep = missionNamespace getVariable ["ALFA_civilianReputation", 50];
+		private _roleRoll = random 1;
+		private _role = switch (true) do {
+			case (_rep >= 80): { if (_roleRoll < 0.80) then { "grateful" } else { "friendly" } };
+			case (_rep >= 50): { if (_roleRoll < 0.65) then { "friendly" } else { "neutral" } };
+			case (_rep >= 20): { if (_roleRoll < 0.75) then { "cautious" } else { "neutral" } };
+			default { if (_roleRoll < 0.70) then { "hostile" } else { "cautious" } };
+		};
+
+		_unit setVariable ["ALFA_civCrowdRole", _role, true];
+		_unit setBehaviour "CARELESS";
+		_unit setCombatMode "BLUE";
+		_unit disableAI "AUTOCOMBAT";
+		_unit allowFleeing 0;
+		[_unit] execVM "Alfa\Civilians\setupCivilianReaction.sqf";
+	};
+};
 _parameters = [
 	["UNIT_CLASSES", ["C_man_p_fugitive_F", "C_man_p_shorts_1_F", "C_man_1", "C_man_polo_1_F", "C_ManJacket_01_white", "C_Man_Fisherman_01_F", "C_Man_UtilityWorker_01_F", "C_man_p_beggar_F", "C_man_hunter_1_F", "C_Man_Messenger_01_F", "C_man_polo_6_F", "C_ManSweater_01_khaki"]],
 	["UNITS_PER_BUILDING", 0.2],
-	["MAX_GROUPS_COUNT", 15],
+	["MAX_GROUPS_COUNT", 25],
 	["MIN_SPAWN_DISTANCE", 50],
-	["MAX_SPAWN_DISTANCE", 500],
+	["MAX_SPAWN_DISTANCE", 300],
 	["MAX_CIVILIAN_LIFETIME", 600],
 	["BLACKLIST_MARKERS", []],
 	["HIDE_BLACKLIST_MARKERS", true],
-	["ON_UNIT_SPAWNED_CALLBACK", { params ["_unit"]; [_unit] execVM "Alfa\Civilians\setupCivilianReaction.sqf"; }],
+	["ON_UNIT_SPAWNED_CALLBACK", {
+		params ["_unit"];
+		[_unit] call ALFA_fnc_prepareCivilianUnit;
+	}],
 	["ON_UNIT_REMOVE_CALLBACK", { true }],
 	["DEBUG", false]
 ];

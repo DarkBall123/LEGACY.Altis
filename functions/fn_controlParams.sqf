@@ -239,6 +239,7 @@ private _spawnTaskConfigs = createHashMapFromArray
 missionNamespace setVariable ["DZ_gridSize", _gridSize];
 missionNamespace setVariable ["DZ_alpha", 0.35];
 missionNamespace setVariable ["DZ_eps", _gridSize * 0.9];
+missionNamespace setVariable ["DZ_sectorInfluenceRadius", _gridSize * 0.9];
 missionNamespace setVariable ["DZ_preSpawnFactor", 1.5];
 missionNamespace setVariable ["DZ_updateInterval", 1];
 missionNamespace setVariable ["DZ_corpseCleanupInterval", 1200];
@@ -259,6 +260,11 @@ missionNamespace setVariable ["DZ_playerSides", [west, resistance]];
 missionNamespace setVariable ["CH_sidePlayers", west];
 
 missionNamespace setVariable ["DZ_captureHold", 60];
+missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
+missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
+missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];
+missionNamespace setVariable ["DZ_frontierPruneDisconnectedSaves", true];
+missionNamespace setVariable ["DZ_frontierAllowDisconnectedLandings", true];
 missionNamespace setVariable ["DZ_recaptureSpawnCooldown", 180];
 missionNamespace setVariable ["DZ_spawnRetryCooldown", 30];
 missionNamespace setVariable ["DZ_counterRepeatCooldown", 1000];
@@ -283,9 +289,12 @@ missionNamespace setVariable ["DZ_enemyAirSupportHeliSpawnDistance", 2500];
 missionNamespace setVariable ["DZ_enemyAirSupportPlaneSpawnDistance", 4500];
 missionNamespace setVariable ["DZ_enemyAirSupportSafeMarkers", ["base_safe_zone"]];
 
-missionNamespace setVariable ["DZ_styleEnemyDormant", 0];
+missionNamespace setVariable ["DZ_styleWestOwned", 0];
+missionNamespace setVariable ["DZ_styleEastOwned", 1];
+missionNamespace setVariable ["DZ_styleResistanceOwned", 2];
+missionNamespace setVariable ["DZ_styleEnemyDormant", 1];
 missionNamespace setVariable ["DZ_styleEnemyActive", 1];
-missionNamespace setVariable ["DZ_stylePlayerOwned", 2];
+missionNamespace setVariable ["DZ_stylePlayerOwned", 0];
 missionNamespace setVariable ["DZ_styleContested", 3];
 
 missionNamespace setVariable ["DZ_zoneStateTemplate", _zoneTemplate];

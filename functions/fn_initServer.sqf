@@ -14,6 +14,7 @@ private _zoneTemplate = missionNamespace getVariable ["DZ_zoneStateTemplate", [f
 private _zoneData = [];
 private _sectorAdjacency = [];
 private _sectorDominance = [];
+private _sectorOwner = [];
 private _spawnBlockedUntil = [];
 private _firstCounterDone = [];
 private _nextCounterAt = [];
@@ -21,14 +22,19 @@ private _nextCounterAt = [];
 _zoneData resize (count _sectorGrid);
 _sectorAdjacency resize (count _sectorGrid);
 _sectorDominance resize (count _sectorGrid);
+_sectorOwner resize (count _sectorGrid);
 _spawnBlockedUntil resize (count _sectorGrid);
 _firstCounterDone resize (count _sectorGrid);
 _nextCounterAt resize (count _sectorGrid);
+
+private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", east];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 
 for "_idx" from 0 to ((count _sectorGrid) - 1) do
 {
     _zoneData set [_idx, +_zoneTemplate];
     _sectorDominance set [_idx, [sideUnknown, -1]];
+    _sectorOwner set [_idx, _sideEnemy];
     _spawnBlockedUntil set [_idx, 0];
     _firstCounterDone set [_idx, false];
     _nextCounterAt set [_idx, 0];
@@ -64,6 +70,48 @@ for "_idx" from 0 to ((count _sectorGrid) - 1) do
     _sectorAdjacency set [_sectorId, _neighbors];
 } forEach _sectorGrid;
 
+if (missionNamespace getVariable ["DZ_frontierSeedBaseSectors", true]) then
+{
+    private _baseRadius = missionNamespace getVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];
+    private _respawnPoints = missionNamespace getVariable ["DZ_respawnPoints", []];
+
+    {
+        _x params ["_label", "_pos", "_side"];
+
+        if (_side in _playerSides) then
+        {
+            private _seedIds = [];
+            private _nearestId = -1;
+            private _nearestDist = 1e12;
+
+            {
+                private _sectorId = _forEachIndex;
+                private _dist = _x distance2D _pos;
+
+                if (_dist < _nearestDist) then
+                {
+                    _nearestDist = _dist;
+                    _nearestId = _sectorId;
+                };
+
+                if (_dist <= _baseRadius) then
+                {
+                    _seedIds pushBackUnique _sectorId;
+                };
+            } forEach _cells;
+
+            if (_seedIds isEqualTo [] && { _nearestId >= 0 }) then
+            {
+                _seedIds pushBack _nearestId;
+            };
+
+            {
+                _sectorOwner set [_x, _side];
+            } forEach _seedIds;
+        };
+    } forEach _respawnPoints;
+};
+
 missionNamespace setVariable ["DZ_gridSize", _gridSize, true];
 missionNamespace setVariable ["DZ_sectorGrid", _sectorGrid, true];
 missionNamespace setVariable ["DZ_sectorLookup", _sectorLookup];
@@ -71,10 +119,12 @@ missionNamespace setVariable ["DZ_sectorAdjacency", _sectorAdjacency];
 missionNamespace setVariable ["DZ_cells", _cells];
 missionNamespace setVariable ["DZ_zoneData", _zoneData];
 missionNamespace setVariable ["DZ_sectorDominance", _sectorDominance];
+missionNamespace setVariable ["DZ_sectorOwner", _sectorOwner];
 missionNamespace setVariable ["DZ_spawnBlockedUntil", _spawnBlockedUntil];
 missionNamespace setVariable ["DZ_firstCounterDone", _firstCounterDone];
 missionNamespace setVariable ["DZ_nextCounterAt", _nextCounterAt];
-missionNamespace setVariable ["DZ_savedCapturesCache", []];
+missionNamespace setVariable ["DZ_savedCapturesCache", profileNamespace getVariable ["DZ_savedCaptures", []]];
+missionNamespace setVariable ["DZ_savedSectorOwners", profileNamespace getVariable ["DZ_savedSectorOwners", []]];
 missionNamespace setVariable ["DZ_capturedHash", createHashMap];
 missionNamespace setVariable ["DZ_lastSectorVisualState", []];
 missionNamespace setVariable ["DZ_loadoutsDirty", false];

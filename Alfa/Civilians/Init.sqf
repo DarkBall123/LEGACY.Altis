@@ -33,4 +33,28 @@ if (_runOnThisMachine) then {
 
 call compile preprocessFileLineNumbers "Alfa\Civilians\Server\ServerFunctions.sqf";
 call compile preprocessFileLineNumbers "Alfa\Civilians\ConfigAndStart.sqf";
+[] execVM "Alfa\Civilians\CrowdCheers.sqf";
+
+if (isNil { missionNamespace getVariable "ALFA_civZeusAutoScriptEh" }) then {
+    private _eh = addMissionEventHandler ["EntityCreated", {
+        params ["_entity"];
+
+        [_entity] spawn {
+            params ["_entity"];
+
+            sleep 0.2;
+
+            if (isNull _entity) exitWith {};
+            if !(_entity isKindOf "CAManBase") exitWith {};
+            if (!alive _entity) exitWith {};
+            if (!((side group _entity) isEqualTo civilian)) exitWith {};
+            if (isNil { missionNamespace getVariable "ALFA_fnc_prepareCivilianUnit" }) exitWith {};
+
+            [_entity] call ALFA_fnc_prepareCivilianUnit;
+        };
+    }];
+
+    missionNamespace setVariable ["ALFA_civZeusAutoScriptEh", _eh];
+    diag_log "[ALFA_CIV] Zeus-created civilians will be scripted automatically.";
+};
 };
