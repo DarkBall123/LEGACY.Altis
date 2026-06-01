@@ -8,6 +8,11 @@ respawnOnStart = -1;
 respawnTemplates[] = { "MenuPosition" };
 respawnTemplatesEast[] = { "MenuPosition" };
 
+// Mission-level difficulty enforcement. Carries our hardcore preset
+// regardless of which hosting provider runs the server — game-hosting
+// rentals usually don't let us touch server.cfg directly, so we pin
+// it here instead. Players can't override it.
+forcedDifficulty = "Custom";
 
 class Header
 {
@@ -15,6 +20,55 @@ class Header
     minPlayers = 1;
     maxPlayers = 16;
     disabledAI = 1;
+};
+
+class DifficultyPresets
+{
+    class CustomDifficulty
+    {
+        class Options
+        {
+            /* Simulation */
+            reducedDamage     = 0;     // Reduced damage
+            /* Situational awareness */
+            groupIndicators   = 0;     // 0 = never, 1 = limited distance, 2 = always
+            friendlyTags      = 0;
+            enemyTags         = 0;
+            detectedMines     = 0;
+            commands          = 0;
+            waypoints         = 0;
+            tacticalPing      = 0;     // 0 = disable, 1 = 3D scene, 2 = on map, 3 = both
+            /* Personal awareness */
+            weaponInfo        = 2;
+            stanceIndicator   = 0;
+            staminaBar        = 1;
+            weaponCrosshair   = 0;
+            visionAid         = 0;
+            /* View */
+            thirdPersonView   = 0;     // 1st person only
+            cameraShake       = 1;
+            /* Multiplayer */
+            scoreTable        = 0;
+            deathMessages     = 0;
+            vonID             = 0;
+            /* Misc */
+            mapContentFriendly = 0;
+            mapContentEnemy    = 0;
+            mapContentMines    = 0;
+            autoReport         = 0;
+            multipleSaves      = 0;
+        };
+
+        // aiLevelPreset: 0=Low, 1=Normal, 2=High, 3=Custom
+        // 3 → pull skill/precision from class CustomAILevel below.
+        aiLevelPreset = 3;
+    };
+
+    class CustomAILevel
+    {
+        skillAI     = 0.65;
+        precisionAI = 0.4;
+    };
 };
 
 class CfgFunctions
