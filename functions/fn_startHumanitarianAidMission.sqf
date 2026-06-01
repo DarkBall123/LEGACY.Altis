@@ -47,40 +47,36 @@ private _playerHeldPositions = [];
     };
 } forEach _cells;
 
+// ── Village picker: use Arma 3's real named locations (Stratis/Altis
+// has these baked in as map metadata: NameVillage / NameCity / etc.)
+// instead of "any cluster of buildings near a sector centre", which
+// on Altis ends up pointing at random fields with a barn.
 private _villageCandidates = [];
+private _allVillages = nearestLocations [
+    [worldSize * 0.5, worldSize * 0.5, 0],
+    ["NameVillage", "NameCity", "NameCityCapital", "NameLocal"],
+    worldSize
+];
+
 {
-    private _sectorPos = _x;
-    private _nearBuildings = nearestObjects [_sectorPos, ["House"], 200];
+    private _loc        = _x;
+    private _villagePos = locationPosition _loc;
 
-    if (count _nearBuildings >= 3) then
+    private _minDist = 99999;
     {
-        private _minDist = 99999;
-        {
-            private _d = _sectorPos distance2D _x;
-            if (_d < _minDist) then { _minDist = _d; };
-        } forEach _playerHeldPositions;
+        private _d = _villagePos distance2D _x;
+        if (_d < _minDist) then { _minDist = _d; };
+    } forEach _playerHeldPositions;
 
-        if (_playerHeldPositions isEqualTo [] ||
-            { _minDist >= 1500 && _minDist <= 2500 }) then
-        {
-
-            private _closeBuildings = _nearBuildings select [0, 8 min (count _nearBuildings)];
-            private _sumX = 0;
-            private _sumY = 0;
-            {
-                private _bp = getPosATL _x;
-                _sumX = _sumX + (_bp # 0);
-                _sumY = _sumY + (_bp # 1);
-            } forEach _closeBuildings;
-
-            private _avgX = _sumX / (count _closeBuildings);
-            private _avgY = _sumY / (count _closeBuildings);
-            private _villageCenter = [_avgX, _avgY, 0];
-
-            _villageCandidates pushBack _villageCenter;
-        };
+    if (_playerHeldPositions isEqualTo [] ||
+        { _minDist >= 1500 && _minDist <= 4000 }) then
+    {
+        _villageCandidates pushBack [_villagePos # 0, _villagePos # 1, 0];
     };
-} forEach _cells;
+} forEach _allVillages;
+
+diag_log format ["[HUMANITARIAN] %1 named locations on map, %2 in the 1500-4000m band from player territory",
+    count _allVillages, count _villageCandidates];
 
 if ((count _villageCandidates) < 3) exitWith
 {
@@ -495,9 +491,9 @@ private _stateHandle = [
         };
     },
     3,
-    [_crates, _crateMarkers, _chosenVillages, _villageMarkers, time, _spawnAmbush, _fnc_crateOnGround]
+    [_missionSide, _crates, _crateMarkers, _chosenVillages, _villageMarkers, time, _spawnAmbush, _fnc_crateOnGround]
 ] call CBA_fnc_addPerFrameHandler;
 
-[[], [], [], [_stateHandle]] call DZ_fnc_addMissionAssets;
+[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
 
 true
