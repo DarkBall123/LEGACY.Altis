@@ -107,7 +107,21 @@ DZ_fnc_missionEmptyState = {
     };
 } forEach _playerSides;
 
-missionNamespace setVariable ["DZ_missionStates", _states, true];
+// IMPORTANT: server-local store, NO broadcast. Hashmap-broadcast on
+// Arma 3 serialises across the network and (on dedicated servers with
+// connected clients) replaces the server's local reference with the
+// deserialised copy on every setVariable call. That breaks in-place
+// mutations of inner per-side state hashmaps: endMission would set
+// `state.active = false` on an orphaned reference, then the next
+// initMissionSystem call would rebroadcast a fresh copy where active
+// is still true. State never cleared, abort/end appeared to silently
+// fail — which is exactly the bug players hit on the dedi.
+//
+// Clients don't need this hashmap directly; they read the broadcast
+// bools (DZ_missionActive_WEST, _GUER, …) which ARE published via
+// DZ_fnc_missionSyncLegacyGlobals below as scalar setVariables, where
+// serialisation is harmless.
+missionNamespace setVariable ["DZ_missionStates", _states];
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

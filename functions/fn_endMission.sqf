@@ -68,6 +68,11 @@ if (_missionId != "") then
 ["DZ_missionEnded", [_missionId, _result, _missionSource, _missionTitle, _side]] call CBA_fnc_localEvent;
 
 // ── Clear side-bucket state ──────────────────────────────────────────
+//   Mutate the existing reference AND explicitly re-anchor a fresh
+//   empty state into the outer DZ_missionStates hashmap. Belt + braces:
+//   if anything (network broadcast / serialisation / engine quirk) ever
+//   orphaned the inner reference, the re-anchor guarantees the next
+//   missionStateOf lookup sees the cleared values.
 _state set ["active",     false];
 _state set ["id",         ""];
 _state set ["title",      ""];
@@ -77,6 +82,13 @@ _state set ["units",      []];
 _state set ["markers",    []];
 _state set ["vehicles",   []];
 _state set ["pfhHandles", []];
+
+private _outerStates = missionNamespace getVariable ["DZ_missionStates", createHashMap];
+_outerStates set [str _side, [_side] call DZ_fnc_missionEmptyState];
+missionNamespace setVariable ["DZ_missionStates", _outerStates];
+
+diag_log format ["[DZ_END:trace] side=%1 cleared. activeAfter=%2",
+    _side, (_outerStates getOrDefault [str _side, createHashMap]) get "active"];
 
 // Mission-started-by-side cleared if no other side is still mid-mission.
 if !(call DZ_fnc_missionAnySideActive) then {
