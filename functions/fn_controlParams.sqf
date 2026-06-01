@@ -315,3 +315,10 @@ missionNamespace setVariable ["DZ_missionCleanupDelay",      1200];
 missionNamespace setVariable ["DZ_abandonedVehicleEnabled",  true];
 missionNamespace setVariable ["DZ_abandonedVehicleTimeout",  1800];
 missionNamespace setVariable ["DZ_abandonedVehicleCheckInterval", 180];
+
+// Trophy vehicle storage: pad object Variable Names that grant the
+// "Сохранить трофейную технику" ACE action. vehicle_delivery_pad is the
+// IDAP shop pad (both factions), logistics_point is the Free Altis FOB
+// motorcycle dispatcher, police_trophy is the APD base trophy pad.
+missionNamespace setVariable ["DZ_trophyVehicleStoragePadNames",
+    ["vehicle_delivery_pad", "logistics_point", "police_trophy"], true];
