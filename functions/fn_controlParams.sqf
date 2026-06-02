@@ -29,85 +29,113 @@ private _enemyAirSupportClasses =
 
 
 // ── MEF (UK3CB Malden Defence Force) unit pools ───────────────────────
-// Lean roster by design (no APC, no AT technical, no AR assistant, no
-// rifleman variants). Weights tuned to keep MEF threatening but not OP.
+// Rebalanced for variety: the old pools were RIF_1-dominated (weight
+// 1.0 vs everyone else at 0.10-0.55), so every squad looked the same.
+// New shape: RIF_1 is the baseline anchor at 1.0, but the
+// supporting specialists are bumped to 0.40-0.70 so a 4-man squad
+// reliably picks up a mix of AR/LAT/GL/MD + the occasional sniper or
+// HMG. Each pool has a clear flavour:
+//   urban    : close-combat heavy (LAT, GL, HMG, MD)
+//   open     : long-range capable (SNI, SPOT, AT, AA)
+//   counter  : assault loadout (more AR/HMG, AT pairs, MD)
 
 private _urbanUnitPool =
 [
     ["UK3CB_MDF_O_RIF_1",    1.00],
-    ["UK3CB_MDF_O_LAT",      0.55],
+    ["UK3CB_MDF_O_AR",       0.70],
+    ["UK3CB_MDF_O_LAT",      0.65],
     ["UK3CB_MDF_O_GL",       0.55],
-    ["UK3CB_MDF_O_AR",       0.55],
-    ["UK3CB_MDF_O_AT",       0.25],
-    ["UK3CB_MDF_O_AT_ASST",  0.18],
-    ["UK3CB_MDF_O_SNI",      0.20],
-    ["UK3CB_MDF_O_SPOT",     0.15],
-    ["UK3CB_MDF_O_MD",       0.20],
-    ["UK3CB_MDF_O_HMG",      0.15],
-    ["UK3CB_MDF_O_HMG_ASST", 0.10],
-    ["UK3CB_MDF_O_ENG",      0.10],
-    ["UK3CB_MDF_O_DEM",      0.08]
+    ["UK3CB_MDF_O_MD",       0.45],
+    ["UK3CB_MDF_O_HMG",      0.40],
+    ["UK3CB_MDF_O_HMG_ASST", 0.30],
+    ["UK3CB_MDF_O_AT",       0.30],
+    ["UK3CB_MDF_O_AT_ASST",  0.22],
+    ["UK3CB_MDF_O_ENG",      0.25],
+    ["UK3CB_MDF_O_DEM",      0.20],
+    ["UK3CB_MDF_O_SNI",      0.18],
+    ["UK3CB_MDF_O_SPOT",     0.15]
 ];
 
 private _openUnitPool =
 [
     ["UK3CB_MDF_O_RIF_1",    1.00],
-    ["UK3CB_MDF_O_LAT",      0.65],
-    ["UK3CB_MDF_O_GL",       0.50],
-    ["UK3CB_MDF_O_AR",       0.55],
-    ["UK3CB_MDF_O_AT",       0.45],
-    ["UK3CB_MDF_O_AT_ASST",  0.25],
-    ["UK3CB_MDF_O_SNI",      0.35],
-    ["UK3CB_MDF_O_SPOT",     0.25],
-    ["UK3CB_MDF_O_MD",       0.18],
-    ["UK3CB_MDF_O_AA",       0.10],
-    ["UK3CB_MDF_O_AA_ASST",  0.18]
+    ["UK3CB_MDF_O_AR",       0.65],
+    ["UK3CB_MDF_O_LAT",      0.60],
+    ["UK3CB_MDF_O_AT",       0.50],
+    ["UK3CB_MDF_O_AT_ASST",  0.40],
+    ["UK3CB_MDF_O_SNI",      0.45],
+    ["UK3CB_MDF_O_SPOT",     0.35],
+    ["UK3CB_MDF_O_GL",       0.45],
+    ["UK3CB_MDF_O_MD",       0.40],
+    ["UK3CB_MDF_O_AA",       0.30],
+    ["UK3CB_MDF_O_AA_ASST",  0.25],
+    ["UK3CB_MDF_O_ENG",      0.18]
 ];
 
 private _counterUnitPool =
 [
-    ["UK3CB_MDF_O_RIF_1",    0.95],
-    ["UK3CB_MDF_O_LAT",      0.55],
+    ["UK3CB_MDF_O_RIF_1",    1.00],
+    ["UK3CB_MDF_O_AR",       0.75],
+    ["UK3CB_MDF_O_LAT",      0.65],
+    ["UK3CB_MDF_O_AT",       0.55],
+    ["UK3CB_MDF_O_AT_ASST",  0.40],
     ["UK3CB_MDF_O_GL",       0.55],
-    ["UK3CB_MDF_O_AR",       0.60],
-    ["UK3CB_MDF_O_AT",       0.50],
-    ["UK3CB_MDF_O_AT_ASST",  0.30],
-    ["UK3CB_MDF_O_SNI",      0.30],
-    ["UK3CB_MDF_O_SPOT",     0.22],
-    ["UK3CB_MDF_O_MD",       0.18],
-    ["UK3CB_MDF_O_HMG",      0.25],
-    ["UK3CB_MDF_O_HMG_ASST", 0.20]
+    ["UK3CB_MDF_O_HMG",      0.45],
+    ["UK3CB_MDF_O_HMG_ASST", 0.35],
+    ["UK3CB_MDF_O_MD",       0.40],
+    ["UK3CB_MDF_O_SNI",      0.25],
+    ["UK3CB_MDF_O_SPOT",     0.20],
+    ["UK3CB_MDF_O_DEM",      0.15]
 ];
 
 private _urbanFixedSquads =
 [
-    [["UK3CB_MDF_O_TL"],                                                                       0.35],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"],                                                  0.50],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                1.00],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_LAT"],                               0.85],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                0.95],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_MD"],                                0.90],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_DEM",   "UK3CB_MDF_O_RIF_1"],                             0.55]
+    // Solo / pair / triad scout patterns ─────────────────────────────
+    [["UK3CB_MDF_O_TL"],                                                                                                     0.35],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"],                                                                                0.50],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                                              1.00],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_LAT"],                                                             0.85],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                                              0.95],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_MD"],                                                              0.90],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_DEM",   "UK3CB_MDF_O_RIF_1"],                                                           0.55],
+    // Quad+ urban specialist mixes ────────────────────────────────────
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_HMG",    "UK3CB_MDF_O_HMG_ASST"],                                  0.65],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT",    "UK3CB_MDF_O_AT_ASST","UK3CB_MDF_O_RIF_1"],                                     0.70],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_ENG",   "UK3CB_MDF_O_DEM",    "UK3CB_MDF_O_RIF_1"],                                     0.40],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_LAT",    "UK3CB_MDF_O_MD"],                                        0.65]
 ];
 
 private _openFixedSquads =
 [
-    [["UK3CB_MDF_O_TL"],                                                                       0.45],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"],                                                  0.55],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_AT"],                                0.70],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                                0.90],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_LAT"],                               0.85],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_MD",    "UK3CB_MDF_O_AT"],                                0.70]
+    // Lean recce ─────────────────────────────────────────────────────
+    [["UK3CB_MDF_O_TL"],                                                                                                     0.45],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"],                                                                                0.55],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_SPOT"],                                                            0.70],
+    // Standard fireteams ─────────────────────────────────────────────
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                                                              0.90],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_LAT"],                                                             0.85],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_MD",    "UK3CB_MDF_O_AT"],                                                              0.70],
+    // AT pairs + AA fire teams ───────────────────────────────────────
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT",    "UK3CB_MDF_O_AT_ASST","UK3CB_MDF_O_RIF_1"],                                     0.65],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AA",    "UK3CB_MDF_O_AA_ASST","UK3CB_MDF_O_RIF_1"],                                     0.55],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_SPOT",   "UK3CB_MDF_O_RIF_1"],                                     0.45],
+    // Big footprint mixed patrol ─────────────────────────────────────
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_LAT",    "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_MD"],                   0.50]
 ];
 
 private _counterFixedSquads =
 [
-    [["UK3CB_MDF_O_SL"],                                                                       0.55],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                                0.65],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_AT"],                                0.55],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                0.95],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_HMG"],             0.70],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_MD",    "UK3CB_MDF_O_AT"],                                0.65]
+    // Aggressive assault patterns ────────────────────────────────────
+    [["UK3CB_MDF_O_SL"],                                                                                                     0.45],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                                                              0.65],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_AT"],                                                              0.55],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                                              0.95],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR",     "UK3CB_MDF_O_HMG"],                                       0.70],
+    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_MD",    "UK3CB_MDF_O_AT"],                                                              0.65],
+    // Heavy-hitter compositions ──────────────────────────────────────
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT",    "UK3CB_MDF_O_AT_ASST","UK3CB_MDF_O_AR",     "UK3CB_MDF_O_MD"],                  0.60],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_HMG",   "UK3CB_MDF_O_HMG_ASST","UK3CB_MDF_O_LAT",   "UK3CB_MDF_O_RIF_1"],               0.55],
+    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_AR",     "UK3CB_MDF_O_LAT",    "UK3CB_MDF_O_RIF_1"],               0.55]
 ];
 
 private _urbanRandomSquads =
@@ -136,60 +164,106 @@ private _openSquads    = _openFixedSquads    + _openRandomSquads;
 private _counterSquads = _counterFixedSquads + _counterRandomSquads;
 
 // ── Packages: infantry team + a paired vehicle ────────────────────────
-// MEF has no APC, so the "heavy" pairing is the M1151 armed HMMWV and
-// (very rarely, counter only) the M60A3 tank.
+// Pre-built crew + vehicle units. Expanded with the M113 humvee family
+// and M998/M1025 light transports so MEF appearances stop looking
+// repetitive. The MTVR truck shows up more often in counter-attacks
+// (it's the natural reinforcement truck — drops a 5-man team).
 
 private _urbanPackages =
 [
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_MB4WD_LMG"],     0.60],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],   "UK3CB_MDF_O_MTVR_Open"],       0.30],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                     "UK3CB_MDF_O_M1151_OGPK_M2"],   0.25]
+    // Light technical patrols ──────────────────────────────────────────
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_MB4WD_LMG"],       0.12],   // Apex DLC — rare
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.55],   // bumped
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M113_M240"],       0.55],
+    // Heavier humvee patrols ──────────────────────────────────────────
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M113_M2"],         0.45],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M1151_OGPK_M2"],   0.40],
+    // Unarmed light transport patrols ─────────────────────────────────
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_MD"],                                        "UK3CB_MDF_O_M998_2DR"],        0.30],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_GL"],                                        "UK3CB_MDF_O_M1025_Unarmed"],   0.30],
+    // Reinforcement truck (rare) ──────────────────────────────────────
+    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],    "UK3CB_MDF_O_MTVR_Open"],       0.25]
 ];
 
 private _openPackages =
 [
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.60],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],   "UK3CB_MDF_O_MTVR_Open"],       0.35],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                     "UK3CB_MDF_O_M1151_OGPK_M2"],   0.18],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M1151"],     0.60]
+    // Mobile light recon ──────────────────────────────────────────────
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.55],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M1151"],           0.50],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_MB4WD_LMG"],       0.12],   // Apex DLC — rare
+    // Crew-served + AT pair ───────────────────────────────────────────
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M1151_OGPK_M2"],   0.40],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M113_M2"],         0.35],
+    // Light unarmed transports ────────────────────────────────────────
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_SNI"],                                       "UK3CB_MDF_O_M998_2DR"],        0.30],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_MD"],                                        "UK3CB_MDF_O_M113_Unarmed"],    0.30],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_GL", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M1025_Unarmed"],   0.30],
+    // Big reinforcement (rare) ────────────────────────────────────────
+    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],    "UK3CB_MDF_O_MTVR_Open"],       0.25]
 ];
 
 private _counterPackages =
 [
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.55],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],   "UK3CB_MDF_O_MTVR_Open"],       0.32],
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                     "UK3CB_MDF_O_M1151_OGPK_M2"],   0.20]
+    // Heavy assault crews ─────────────────────────────────────────────
+    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M1151_OGPK_M2"],   0.50],
+    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M113_M2"],         0.50],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.45],
+    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M113_M240"],       0.45],
+    // Truck-borne reinforcements ──────────────────────────────────────
+    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],    "UK3CB_MDF_O_MTVR_Open"],       0.50],
+    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_GL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_HMG"],   "UK3CB_MDF_O_MTVR_Open"],       0.40]
 ];
 
-// ── Vehicle pools (light technicals → M1151 → very rare tank) ─────────
+// ── Vehicle pools ────────────────────────────────────────────────────
+// Re-shaped after adding the M113 humvee family and M1025/M998 light
+// transports. Pools are bigger and more varied so AI sightings stop
+// being "again with the same MB4WD". Weights are RELATIVE — RIF-vs-
+// AT-pattern-style probability split — not absolute %.
 
+// Urban patrols favour the M113 family (close-quarters firepower) and
+// the M1151 OGPK turret. Open offroads are de-emphasised because they
+// die fast in built-up areas.
 private _urbanVehiclePool =
 [
-    ["UK3CB_MDF_O_Offroad_HMG",      0.60],
-    ["UK3CB_MDF_O_MB4WD_LMG",        0.85],
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.30],
-    ["UK3CB_MDF_O_M60A3",            0.15]
+    ["UK3CB_MDF_O_M113_M2",          0.65],
+    ["UK3CB_MDF_O_M113_M240",        0.70],
+    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.50],
+    ["UK3CB_MDF_O_Offroad_HMG",      0.55],   // bumped (covers some of MB4WD's slack)
+    ["UK3CB_MDF_O_MB4WD_LMG",        0.12],   // Apex DLC — rare cameo, not common patrol
+    ["UK3CB_MDF_O_M998_2DR",         0.35],
+    ["UK3CB_MDF_O_M1025_Unarmed",    0.30],
+    ["UK3CB_MDF_O_M60A3",            0.10]
 ];
 
+// Open / rural pool — mobility matters more. Mix armed and unarmed
+// light transports liberally. Tanks remain rare punctuation.
 private _openVehiclePool =
 [
-    ["UK3CB_MDF_O_Offroad_HMG",      0.65],
-    ["UK3CB_MDF_O_MB4WD_LMG",        0.75],
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.40],
-    ["UK3CB_MDF_O_M1151",            0.55],
-    ["UK3CB_MDF_O_Offroad_Unarmed",  0.80],
-    ["UK3CB_MDF_O_MB4WD_Unarmed",    0.80],
-    ["UK3CB_MDF_O_M60A3",            0.15]
+    ["UK3CB_MDF_O_Offroad_HMG",      0.65],   // bumped
+    ["UK3CB_MDF_O_MB4WD_LMG",        0.12],   // Apex DLC — rare cameo
+    ["UK3CB_MDF_O_M1151",            0.55],   // bumped
+    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.45],
+    ["UK3CB_MDF_O_M113_M240",        0.45],   // bumped
+    ["UK3CB_MDF_O_M113_Unarmed",     0.45],
+    ["UK3CB_MDF_O_M1025_Unarmed",    0.55],
+    ["UK3CB_MDF_O_M998_2DR",         0.50],
+    ["UK3CB_MDF_O_Offroad_Unarmed",  0.50],   // bumped
+    ["UK3CB_MDF_O_MB4WD_Unarmed",    0.10],   // Apex DLC — rare cameo
+    ["UK3CB_MDF_O_M60A3",            0.12]
 ];
 
+// Counter-attacks lean heavy: armed humvees + M113 gunners + the tank
+// has a marginally higher chance of showing up.
 private _counterVehiclePool =
 [
-    ["UK3CB_MDF_O_Offroad_HMG",      0.50],
-    ["UK3CB_MDF_O_MB4WD_LMG",        0.60],
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.45],
-    ["UK3CB_MDF_O_M1151",            0.20],
+    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.55],
+    ["UK3CB_MDF_O_M113_M2",          0.55],
+    ["UK3CB_MDF_O_M113_M240",        0.50],
+    ["UK3CB_MDF_O_Offroad_HMG",      0.55],   // bumped
+    ["UK3CB_MDF_O_MB4WD_LMG",        0.12],   // Apex DLC — rare cameo
+    ["UK3CB_MDF_O_M1151",            0.30],
     ["UK3CB_MDF_O_MTVR_Open",        0.30],
-    ["UK3CB_MDF_O_M60A3",            0.15]
+    ["UK3CB_MDF_O_M60A3",            0.20]
 ];
 
 private _vehicleMeta = createHashMapFromArray
@@ -204,7 +278,15 @@ private _vehicleMeta = createHashMapFromArray
     ["UK3CB_MDF_O_MTVR_Open",        ["truck"]],
     ["UK3CB_MDF_O_MTVR_Refuel",      ["truck"]],
     ["UK3CB_MDF_O_MTVR_Repair",      ["truck"]],
-    ["UK3CB_MDF_O_MTVR_Reammo",      ["truck"]]
+    ["UK3CB_MDF_O_MTVR_Reammo",      ["truck"]],
+    // Humvee family (additions): two armed M113 humvee variants plus
+    // three light unarmed transports. Categorise armed = technical,
+    // unarmed = utility so caps still gate them sensibly.
+    ["UK3CB_MDF_O_M113_M2",          ["technical"]],
+    ["UK3CB_MDF_O_M113_M240",        ["technical"]],
+    ["UK3CB_MDF_O_M113_Unarmed",     ["utility"]],
+    ["UK3CB_MDF_O_M1025_Unarmed",    ["utility"]],
+    ["UK3CB_MDF_O_M998_2DR",         ["utility"]]
 ];
 
 // MEF has no APC class — the "apc" cap is dropped (caps only fire for
