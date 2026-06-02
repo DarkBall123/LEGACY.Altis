@@ -289,6 +289,27 @@ missionNamespace setVariable ["DZ_enemyAirSupportHeliSpawnDistance", 2500];
 missionNamespace setVariable ["DZ_enemyAirSupportPlaneSpawnDistance", 4500];
 missionNamespace setVariable ["DZ_enemyAirSupportSafeMarkers", ["base_safe_zone"]];
 
+// ── Option B sector model: zone radii per BIS location type ─────────
+// Sectors are now anchored on real named locations (towns, airports,
+// villages…) instead of a uniform 350m grid. Each type has a default
+// radius; override via DZ_zoneRadiiOverride below if you want capitals
+// to be bigger, villages smaller, etc.
+//
+// Defaults (in metres):       capital 1000 / city 800 / village 500
+//                             local 400  /  airport 900 / CityCenter 700
+//
+// DZ_adjacencyBuffer: extra gap (m) between two zones' boundaries
+// before they're considered neighbours for the frontier graph. Smaller
+// buffer = more disconnected zones (harder to push deep). Larger = more
+// chained captures possible.
+//
+// DZ_adjacencyMaxNeighbours: cap on how many neighbours each zone can
+// have. Prevents a capital surrounded by villages from accumulating
+// 20+ frontier links and bogging down the graph.
+missionNamespace setVariable ["DZ_zoneRadiiOverride",     createHashMap];
+missionNamespace setVariable ["DZ_adjacencyBuffer",       800];
+missionNamespace setVariable ["DZ_adjacencyMaxNeighbours", 8];
+
 missionNamespace setVariable ["DZ_styleWestOwned", 0];
 missionNamespace setVariable ["DZ_styleEastOwned", 1];
 missionNamespace setVariable ["DZ_styleResistanceOwned", 2];

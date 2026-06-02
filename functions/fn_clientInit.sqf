@@ -70,22 +70,27 @@ addMissionEventHandler
         [_handle] call CBA_fnc_removePerFrameHandler;
 
         private _sectorGrid = missionNamespace getVariable ["DZ_sectorGrid", []];
-        private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];
-        private _halfSize = _gridSize * 0.5;
+        private _gridSize   = missionNamespace getVariable ["DZ_gridSize", 350];
+        private _zoneRadii  = missionNamespace getVariable ["DZ_zoneRadii", []];  // Option B
+        private _zoneNames  = missionNamespace getVariable ["DZ_zoneNames", []];  // Option B
+        private _fallbackRadius = _gridSize * 0.5;
         private _sectorMarkers = [];
 
         {
             _x params ["_sectorId", "_centerX", "_centerY"];
 
             private _markerPos = [_centerX, _centerY, 0];
-            private _marker = createMarkerLocal [format ["DZ_zone_%1", _sectorId], _markerPos];
+            private _radius    = _zoneRadii param [_sectorId, _fallbackRadius];
+            private _label     = _zoneNames param [_sectorId, ""];
+            private _marker    = createMarkerLocal [format ["DZ_zone_%1", _sectorId], _markerPos];
 
-            _marker setMarkerShapeLocal "RECTANGLE";
+            // Option B: circular zones anchored on named locations.
+            _marker setMarkerShapeLocal "ELLIPSE";
             _marker setMarkerBrushLocal "DiagGrid";
-            _marker setMarkerSizeLocal [_halfSize, _halfSize];
+            _marker setMarkerSizeLocal  [_radius, _radius];
             _marker setMarkerColorLocal "ColorBlue";
             _marker setMarkerAlphaLocal 0;
-            _marker setMarkerTextLocal "";
+            _marker setMarkerTextLocal  _label;
 
             _sectorMarkers pushBack _marker;
         } forEach _sectorGrid;

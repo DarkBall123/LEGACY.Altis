@@ -5,6 +5,7 @@
 
 private _eps = missionNamespace getVariable ["DZ_eps", 300];
 private _sectorInfluenceRadius = missionNamespace getVariable ["DZ_sectorInfluenceRadius", _eps];
+private _zoneRadii = missionNamespace getVariable ["DZ_zoneRadii", []];   // Option B: per-zone radii
 private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];
 private _preMul = missionNamespace getVariable ["DZ_preSpawnFactor", 1.5];
 private _preR = _eps * _preMul;
@@ -647,7 +648,10 @@ for "_idx" from 0 to (_sectorCount - 1) do
             continue;
         };
 
-        if ((_pos distance2D _candidateCenter) > _sectorInfluenceRadius) then
+        // Per-zone radius (Option B). Falls back to the legacy constant
+        // for any sectorId that doesn't have a registered radius.
+        private _candidateRadius = _zoneRadii param [_candidateId, _sectorInfluenceRadius];
+        if ((_pos distance2D _candidateCenter) > _candidateRadius) then
         {
             continue;
         };
@@ -737,7 +741,9 @@ for "_idx" from 0 to (_sectorCount - 1) do
             continue;
         };
 
-        if (((getPosATL _unitVehicle) distance2D _sectorCenter) > _sectorInfluenceRadius) then
+        // Per-zone radius (Option B).
+        private _sectorRadius = _zoneRadii param [_idx, _sectorInfluenceRadius];
+        if (((getPosATL _unitVehicle) distance2D _sectorCenter) > _sectorRadius) then
         {
             continue;
         };
@@ -1326,7 +1332,9 @@ for "_idx" from 0 to (_sectorCount - 1) do
             continue;
         };
 
-        if (((getPosATL _unitVehicle) distance2D _sectorCenter) > _sectorInfluenceRadius) then
+        // Per-zone radius (Option B).
+        private _sectorRadius = _zoneRadii param [_idx, _sectorInfluenceRadius];
+        if (((getPosATL _unitVehicle) distance2D _sectorCenter) > _sectorRadius) then
         {
             continue;
         };

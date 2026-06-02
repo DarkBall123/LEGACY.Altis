@@ -5,10 +5,13 @@
 
 diag_log "[DZ] === Dynamic Zones INIT ===";
 
-private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];
+private _gridSize    = missionNamespace getVariable ["DZ_gridSize", 350];
 private _sectorBuild = [_gridSize, worldSize] call DZ_fnc_buildSectorGrid;
-private _sectorGrid = _sectorBuild # 0;
+private _sectorGrid   = _sectorBuild # 0;
 private _sectorLookup = _sectorBuild # 1;
+private _zoneRadii    = _sectorBuild param [2, []];   // NEW (Option B refactor)
+private _zoneNames    = _sectorBuild param [3, []];   // NEW
+private _zoneTypes    = _sectorBuild param [4, []];   // NEW
 private _cells = _sectorGrid apply { [_x # 1, _x # 2, 0] };
 private _zoneTemplate = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
 private _zoneData = [];
@@ -40,32 +43,41 @@ for "_idx" from 0 to ((count _sectorGrid) - 1) do
     _nextCounterAt set [_idx, 0];
 };
 
+// Proximity-based adjacency (Option B): two zones are neighbours if
+// their boundaries are close enough to walk between. Threshold is
+// (radius_A + radius_B + DZ_adjacencyBuffer). Default buffer 800 m.
+//
+// Each zone is also capped at DZ_adjacencyMaxNeighbours (default 8)
+// nearest neighbours so a capital surrounded by villages doesn't end
+// up with 20+ links bogging down the frontier graph.
+private _adjacencyBuffer  = missionNamespace getVariable ["DZ_adjacencyBuffer", 800];
+private _adjacencyMaxN    = missionNamespace getVariable ["DZ_adjacencyMaxNeighbours", 8];
+
 {
     _x params ["_sectorId", "_centerX", "_centerY"];
+    private _ownPos    = [_centerX, _centerY, 0];
+    private _ownRadius = _zoneRadii param [_sectorId, 600];
 
-    private _xIndex = floor (_centerX / _gridSize);
-    private _yIndex = floor (_centerY / _gridSize);
-    private _neighbors = [];
+    private _candidates = [];
 
     {
-        private _dx = _x;
+        _x params ["_otherId", "_otherX", "_otherY"];
+        if (_otherId == _sectorId) then { continue };
 
+        private _otherPos    = [_otherX, _otherY, 0];
+        private _otherRadius = _zoneRadii param [_otherId, 600];
+        private _dist        = _ownPos distance2D _otherPos;
+        private _threshold   = _ownRadius + _otherRadius + _adjacencyBuffer;
+
+        if (_dist <= _threshold) then
         {
-            private _dy = _x;
+            _candidates pushBack [_dist, _otherId];
+        };
+    } forEach _sectorGrid;
 
-            if (_dx == 0 && { _dy == 0 }) then
-            {
-                continue;
-            };
-
-            private _neighborId = _sectorLookup getOrDefault [format ["%1_%2", _xIndex + _dx, _yIndex + _dy], -1];
-
-            if (_neighborId >= 0) then
-            {
-                _neighbors pushBackUnique _neighborId;
-            };
-        } forEach [-1, 0, 1];
-    } forEach [-1, 0, 1];
+    // Keep only the N closest, sorted ascending by distance.
+    _candidates sort true;
+    private _neighbors = (_candidates select [0, _adjacencyMaxN]) apply { _x # 1 };
 
     _sectorAdjacency set [_sectorId, _neighbors];
 } forEach _sectorGrid;
@@ -112,12 +124,36 @@ if (missionNamespace getVariable ["DZ_frontierSeedBaseSectors", true]) then
     } forEach _respawnPoints;
 };
 
-missionNamespace setVariable ["DZ_gridSize", _gridSize, true];
-missionNamespace setVariable ["DZ_sectorGrid", _sectorGrid, true];
-missionNamespace setVariable ["DZ_sectorLookup", _sectorLookup];
-missionNamespace setVariable ["DZ_sectorAdjacency", _sectorAdjacency];
-missionNamespace setVariable ["DZ_cells", _cells];
-missionNamespace setVariable ["DZ_zoneData", _zoneData];
+missionNamespace setVariable ["DZ_gridSize",       _gridSize, true];
+missionNamespace setVariable ["DZ_sectorGrid",     _sectorGrid, true];
+missionNamespace setVariable ["DZ_sectorLookup",   _sectorLookup];
+missionNamespace setVariable ["DZ_sectorAdjacency",_sectorAdjacency];
+missionNamespace setVariable ["DZ_cells",          _cells];
+missionNamespace setVariable ["DZ_zoneData",       _zoneData];
+
+// NEW (Option B refactor): per-zone radius / display name / type.
+missionNamespace setVariable ["DZ_zoneRadii",      _zoneRadii, true];
+missionNamespace setVariable ["DZ_zoneNames",      _zoneNames, true];
+missionNamespace setVariable ["DZ_zoneTypes",      _zoneTypes, true];
+
+// Helper that resolves a sector's effective radius. Falls back to the
+// legacy DZ_sectorInfluenceRadius constant for safety so any caller
+// that misses the new array still gets a usable value.
+DZ_fnc_sectorRadius = {
+    params [["_sectorId", -1, [0]]];
+    private _radii    = missionNamespace getVariable ["DZ_zoneRadii", []];
+    private _fallback = missionNamespace getVariable ["DZ_sectorInfluenceRadius", 315];
+    if (_sectorId < 0 || { _sectorId >= count _radii }) exitWith { _fallback };
+    _radii param [_sectorId, _fallback]
+};
+
+// Helper for human-readable name (side messages, hints, debug logs).
+DZ_fnc_sectorName = {
+    params [["_sectorId", -1, [0]]];
+    private _names = missionNamespace getVariable ["DZ_zoneNames", []];
+    if (_sectorId < 0 || { _sectorId >= count _names }) exitWith { format ["сектор #%1", _sectorId] };
+    _names param [_sectorId, format ["сектор #%1", _sectorId]]
+};
 missionNamespace setVariable ["DZ_sectorDominance", _sectorDominance];
 missionNamespace setVariable ["DZ_sectorOwner", _sectorOwner];
 missionNamespace setVariable ["DZ_spawnBlockedUntil", _spawnBlockedUntil];
