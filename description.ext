@@ -126,6 +126,8 @@ class CfgFunctions
             class initTrophyVehicleStorage  {};
             class isTrophyVehicleStorable   {};
             class saveTrophyVehicle         {};
+            class initResourceNodes         {};
+            class resourceTick              {};
         };
 
 

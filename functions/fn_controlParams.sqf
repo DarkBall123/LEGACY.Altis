@@ -392,6 +392,45 @@ missionNamespace setVariable ["DZ_zoneRadiiOverride",     createHashMap];
 missionNamespace setVariable ["DZ_adjacencyBuffer",       800];
 missionNamespace setVariable ["DZ_adjacencyMaxNeighbours", 8];
 
+// ── Resource node system (Tier 1) ────────────────────────────────────
+// Strategic income nodes. Each is anchored at a real Altis location.
+// Whichever player faction controls the sector containing the node
+// gets a wallet income tick every DZ_resourceTickInterval seconds.
+// MEF-held / contested nodes pay nothing.
+//
+// Entry shape: [nodeId, displayName, position, type, perTickIncome]
+//   - type is a free-form tag for now; future versions can attach
+//     special effects per type (intel reveal, price discount, …).
+//
+// Position tweakable in Eden by anyone with admin — these are sensible
+// defaults near each landmark, but you can override via
+// DZ_resourceNodePosOverride hashmap (nodeId → [x,y,0]) without
+// editing this file.
+missionNamespace setVariable ["DZ_resourceTickInterval", 1800];   // 30 min
+missionNamespace setVariable ["DZ_resourceMarkerRefreshInterval", 15]; // visual refresh
+
+missionNamespace setVariable ["DZ_resourceNodes",
+[
+    // [nodeId,             displayName,                       position,             type,            perTick]
+    ["athanos_oil",        "Athanos Refinery",                [17800, 5300,    0],  "oil",           300],
+    ["altis_intl_fuel",    "Altis International Airport",     [18800, 13500,   0],  "air_fuel",      160],
+    ["selakano_quarry",    "Selakano Quarry",                 [22500, 6500,    0],  "quarry",        200],
+    ["pyrgos_intel",       "Pyrgos Data Center",              [16800, 12500,   0],  "intel",         120],
+    ["kavala_factory",     "Kavala Factory",                  [3700,  13000,   0],  "manufacturing", 160],
+    ["sofia_oil",          "Sofia Oil Pump",                  [22600, 19500,   0],  "oil",           300],
+    ["molos_airfield",     "Molos Airfield",                  [12300, 18000,   0],  "air_fuel",      160]
+]];
+
+// Marker icon per resource type. Anything not listed falls back to mil_dot.
+missionNamespace setVariable ["DZ_resourceNodeMarkerType", createHashMapFromArray
+[
+    ["oil",           "loc_Fuelstation"],
+    ["air_fuel",      "loc_Heliport"],
+    ["quarry",        "loc_Quarry"],
+    ["intel",         "loc_Transmitter"],
+    ["manufacturing", "loc_Power"]
+]];
+
 missionNamespace setVariable ["DZ_styleWestOwned", 0];
 missionNamespace setVariable ["DZ_styleEastOwned", 1];
 missionNamespace setVariable ["DZ_styleResistanceOwned", 2];
