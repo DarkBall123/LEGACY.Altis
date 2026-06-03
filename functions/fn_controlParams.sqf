@@ -411,14 +411,14 @@ missionNamespace setVariable ["DZ_resourceMarkerRefreshInterval", 15]; // visual
 
 missionNamespace setVariable ["DZ_resourceNodes",
 [
-    // [nodeId,             displayName,                       position,             type,            perTick]
-    ["athanos_oil",        "Athanos Refinery",                [17800, 5300,    0],  "oil",           300],
-    ["altis_intl_fuel",    "Altis International Airport",     [18800, 13500,   0],  "air_fuel",      160],
-    ["selakano_quarry",    "Selakano Quarry",                 [22500, 6500,    0],  "quarry",        200],
-    ["pyrgos_intel",       "Pyrgos Data Center",              [16800, 12500,   0],  "intel",         120],
-    ["kavala_factory",     "Kavala Factory",                  [3700,  13000,   0],  "manufacturing", 160],
-    ["sofia_oil",          "Sofia Oil Pump",                  [22600, 19500,   0],  "oil",           300],
-    ["molos_airfield",     "Molos Airfield",                  [12300, 18000,   0],  "air_fuel",      160]
+    // [nodeId,                displayName,                                              position,                  type,            perTick]
+    ["everland_factory",      "Фабрика Everland",                                       [6176.11,  16242.6,   0],  "manufacturing", 160],
+    ["telos_intel",           "Разведовательно-исследовательный военный центр Телос",   [16084.8,  16998.2,   0],  "intel",         120],
+    ["sofia_radar",           "РЛС София",                                              [25323.4,  21812.7,   0],  "intel",         120],
+    ["agola_solar",           "Солнечная Электростанция AGOLA SOLAR",                   [15497.3,  16283.0,   0],  "manufacturing", 160],
+    ["agola_diesel",          "Дизельная Электростанция AGOLA SOLAR",                   [25406.1,  20328.3,   0],  "oil",           300],
+    ["molos_airfield",        "Аэродром Молос",                                         [26995.1,  24743.4,   0],  "air_fuel",      160],
+    ["aviation_club_airfield","Аэродром Авиаклуба",                                     [11512.5,  11662.1,   0],  "air_fuel",      160]
 ]];
 
 // Marker icon per resource type. Anything not listed falls back to mil_dot.
