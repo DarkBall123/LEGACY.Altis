@@ -436,6 +436,40 @@ missionNamespace setVariable ["DZ_resourceNodeMarkerType", createHashMapFromArra
     ["manufacturing", "loc_Power"]
 ]];
 
+// ── AI per-class skill (Option 3 from AI-difficulty discussion) ───────
+// Applied per-unit by fn_prepareSpawnedUnit on every MEF spawn. Sets
+// setSkill <number> which spreads uniformly across subskills. Overrides
+// the engine CustomDifficulty preset for these units — preset (skillAI
+// = 0.65) still drives civilians and any AI not routed here.
+//
+// Tier S (0.70): leaders + snipers — should be a real fight
+// Tier A (0.65): officers + team leaders
+// Tier B (0.60): heavy weapons crews (AR, HMG, AT, AA), spotters
+// Tier C (0.55): grenadiers, light AT, engineers, demo
+// Tier D (0.50): assistants, medics, baseline riflemen — the mooks
+missionNamespace setVariable ["DZ_aiBaseSkill", 0.55];
+missionNamespace setVariable ["DZ_aiSkillByClass", createHashMapFromArray
+[
+    ["UK3CB_MDF_O_SL",       0.70],   // Squad leader — tactical brain
+    ["UK3CB_MDF_O_SNI",      0.70],   // Sniper — proper threat at range
+    ["UK3CB_MDF_O_TL",       0.65],   // Team leader
+    ["UK3CB_MDF_O_OFF",      0.65],   // Officer (UAV ops, command)
+    ["UK3CB_MDF_O_AR",       0.60],   // Auto rifleman — sustained fire
+    ["UK3CB_MDF_O_HMG",      0.60],   // HMG gunner
+    ["UK3CB_MDF_O_AT",       0.60],   // AT specialist
+    ["UK3CB_MDF_O_AA",       0.60],   // AA gunner — needs to actually hit
+    ["UK3CB_MDF_O_SPOT",     0.60],   // Spotter — calls targets
+    ["UK3CB_MDF_O_LAT",      0.55],   // Light AT (rifleman + RPG)
+    ["UK3CB_MDF_O_GL",       0.55],   // Grenadier
+    ["UK3CB_MDF_O_ENG",      0.55],   // Engineer
+    ["UK3CB_MDF_O_DEM",      0.55],   // Demolitions
+    ["UK3CB_MDF_O_HMG_ASST", 0.50],   // Assistants — learning the trade
+    ["UK3CB_MDF_O_AT_ASST",  0.50],
+    ["UK3CB_MDF_O_AA_ASST",  0.50],
+    ["UK3CB_MDF_O_MD",       0.50],   // Medic — not combat focused
+    ["UK3CB_MDF_O_RIF_1",    0.50]    // Rifleman — base mook
+]];
+
 missionNamespace setVariable ["DZ_styleWestOwned", 0];
 missionNamespace setVariable ["DZ_styleEastOwned", 1];
 missionNamespace setVariable ["DZ_styleResistanceOwned", 2];
