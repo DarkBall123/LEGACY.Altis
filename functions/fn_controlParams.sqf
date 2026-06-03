@@ -324,8 +324,13 @@ missionNamespace setVariable ["DZ_eps", _gridSize * 0.9];
 missionNamespace setVariable ["DZ_sectorInfluenceRadius", _gridSize * 0.9];
 missionNamespace setVariable ["DZ_preSpawnFactor", 1.5];
 missionNamespace setVariable ["DZ_updateInterval", 1];
-missionNamespace setVariable ["DZ_corpseCleanupInterval", 1800];
+missionNamespace setVariable ["DZ_corpseCleanupInterval", 2400];   // 40 min between global sweeps
 missionNamespace setVariable ["DZ_enableCorpseCleanup", true];
+// Proximity gate: corpses or wrecks within this many metres of any
+// alive player at sweep time are SKIPPED (let players loot in peace,
+// keep wrecks as cover while a fight is still nearby). Pick up on the
+// next sweep once players have moved on.
+missionNamespace setVariable ["DZ_corpseCleanupPlayerProximity", 50];
 missionNamespace setVariable ["DZ_loadoutSaveInterval", 60];
 missionNamespace setVariable ["DZ_respawnPoints", _respawnPoints];
 missionNamespace setVariable ["DZ_scriptRespawnMarkersEnabled", false];
