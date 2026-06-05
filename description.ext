@@ -102,6 +102,7 @@ class CfgFunctions
             class savePlayerLoadout {};
             class isForbiddenSpawnPos {};
             class isLandSector {};
+            class playCrowdSound3DLocal {};
             class processTriggerZones {};
             class prepareSpawnedUnit {};
             class publishSectorState {};
@@ -230,11 +231,14 @@ class CfgRemoteExec
     {
         mode = 2;
         jip = 0;
+
+        class DZ_fnc_playCrowdSound3DLocal { allowedTargets = 0; jip = 0; };
     };
 
     class Commands
     {
         mode = 2;
         jip = 0;
+
     };
 };

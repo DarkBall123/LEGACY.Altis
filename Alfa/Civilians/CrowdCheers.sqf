@@ -92,8 +92,6 @@ while { true } do {
                         case "cautious": { ["ALFA_CrowdChill"] };
                         case "neutral": { ["ALFA_CrowdChill", "ALFA_CrowdChillLarge"] };
                         default { ["ALFA_CrowdHappy"] };
-                    } select {
-                        isClass (configFile >> "CfgSounds" >> _x)
                     };
                     private _maxCrowd = switch (_role) do {
                         case "grateful": { 5 };
@@ -143,7 +141,7 @@ while { true } do {
                         private _cheerUntil = time + 12 + random 8;
                         private _leader = _civilians param [0, objNull];
                         if (!isNull _leader && { alive _leader } && { !(_soundPool isEqualTo []) }) then {
-                            _leader say3D (selectRandom _soundPool);
+                            [_leader, _soundPool] remoteExecCall ["DZ_fnc_playCrowdSound3DLocal", 0];
                         };
 
                         {
