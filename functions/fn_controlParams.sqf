@@ -346,7 +346,8 @@ missionNamespace setVariable ["DZ_playerSides", [west, resistance]];
 // paths (set to the more military faction); prefer DZ_playerSides.
 missionNamespace setVariable ["CH_sidePlayers", west];
 
-missionNamespace setVariable ["DZ_captureHold", 60];
+missionNamespace setVariable ["DZ_captureHold",      60];   // hold time for player captures
+missionNamespace setVariable ["DZ_captureHoldEnemy", 30];   // hold time for MEF (east) recaptures — shorter so they're a credible threat
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
 missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
 missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];
