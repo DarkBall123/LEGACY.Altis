@@ -348,6 +348,11 @@ missionNamespace setVariable ["CH_sidePlayers", west];
 
 missionNamespace setVariable ["DZ_captureHold",      60];   // hold time for player captures
 missionNamespace setVariable ["DZ_captureHoldEnemy", 30];   // hold time for MEF (east) recaptures — shorter so they're a credible threat
+
+// Night-skip cost (per attempt). Side that triggers it pays the bill.
+// Tune higher to make night-fighting more committed (players can't
+// just buy their way out of darkness whenever they want).
+missionNamespace setVariable ["DZ_nightSkipCost", 1000];   // ₽ per skip
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
 missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
 missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];

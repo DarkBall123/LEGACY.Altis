@@ -39,6 +39,7 @@ private _lastSkipTime   = missionNamespace getVariable ["DZ_nightSkipLastTime", 
 private _nightStartHour = missionNamespace getVariable ["DZ_nightSkipNightStart",   20];    // 20:00 = night begins
 private _nightEndHour   = missionNamespace getVariable ["DZ_nightSkipNightEnd",     6];     // 06:00 = night ends
 private _dawnHour       = missionNamespace getVariable ["DZ_nightSkipDawnHour",     6];     // skip to 06:00
+private _cost           = missionNamespace getVariable ["DZ_nightSkipCost",         1000];  // ₽ from caller's side wallet
 private _playerSides    = missionNamespace getVariable ["DZ_playerSides",           [west, resistance]];
 
 // ── Gate 1: cooldown ─────────────────────────────────────────────────
@@ -66,11 +67,29 @@ if (!_isNight) exitWith {
     ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-// ── Gate 3: in-progress lock ─────────────────────────────────────────
+// ── Gate 3: caller's faction can afford it ───────────────────────────
+// Only the paying side is checked — Free Altis pressing doesn't tap
+// APD's wallet and vice versa. No money is touched yet, only checked.
+if !(_callerSide in _playerSides) exitWith {
+    ["Штаб", "Эта сторона не имеет общего бюджета."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+if !([_cost, _callerSide] call DZ_fnc_squadFundsHasEnough) exitWith {
+    private _balance = [_callerSide] call DZ_fnc_squadFundsGetBalance;
+    [
+        "Штаб",
+        format ["Недостаточно средств у %1. Цена промотки: %2₽. Баланс: %3₽.",
+            _factionLabel, _cost, _balance]
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
+// ── Gate 4: in-progress lock ─────────────────────────────────────────
 if (missionNamespace getVariable ["DZ_nightSkipInProgress", false]) exitWith {
     ["Штаб", "Промотка уже выполняется. Подождите."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 missionNamespace setVariable ["DZ_nightSkipInProgress", true, true];
+
+// ── Deduct cost (only after all gates passed) ────────────────────────
+[(0 - _cost), format ["Night skip by %1", name _caller], _callerSide] call DZ_fnc_squadFundsAdjust;
 
 // ── Compute hours to skip to reach dawn ──────────────────────────────
 private _hoursToSkip = if (_curHourFloat >= _nightStartHour) then {
@@ -81,12 +100,15 @@ private _hoursToSkip = if (_curHourFloat >= _nightStartHour) then {
     _dawnHour - _curHourFloat
 };
 
-// Sanity clamp — shouldn't fire but defensive
+// Sanity clamp — shouldn't fire but defensive. If it does, refund the
+// cost we just deducted so the player isn't punished for an internal
+// math error.
 if (_hoursToSkip <= 0 || { _hoursToSkip > 24 }) exitWith {
+    [_cost, format ["Refund: night skip math error (%1h)", _hoursToSkip], _callerSide] call DZ_fnc_squadFundsAdjust;
     missionNamespace setVariable ["DZ_nightSkipInProgress", false, true];
-    diag_log format ["[DZ_NIGHTSKIP] Refused: computed _hoursToSkip=%1 (curHour=%2, dawnHour=%3, nightStart=%4)",
-        _hoursToSkip, _curHourFloat, _dawnHour, _nightStartHour];
-    ["Штаб", "Ошибка расчёта времени. Сообщите администратору."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    diag_log format ["[DZ_NIGHTSKIP] Refused (refunded %1₽): computed _hoursToSkip=%2 (curHour=%3, dawnHour=%4, nightStart=%5)",
+        _cost, _hoursToSkip, _curHourFloat, _dawnHour, _nightStartHour];
+    ["Штаб", "Ошибка расчёта времени. Средства возвращены. Сообщите администратору."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 // ── Do the skip — global, all clients sync via setDate ───────────────
@@ -96,13 +118,20 @@ skipTime _hoursToSkip;
 missionNamespace setVariable ["DZ_nightSkipLastTime", time, true];
 missionNamespace setVariable ["DZ_nightSkipInProgress", false, true];
 
-diag_log format ["[DZ_NIGHTSKIP] %1 (%2) skipped %3h. New time: %4",
-    name _caller, _factionLabel, _hoursToSkip toFixed 2, date];
+diag_log format ["[DZ_NIGHTSKIP] %1 (%2) skipped %3h for %4₽. New time: %5",
+    name _caller, _factionLabel, _hoursToSkip toFixed 2, _cost, date];
 
 // ── Announce to BOTH sides so neither faction is surprised ───────────
+// Paying faction's message includes the cost; the other faction sees
+// the announcement without the price (they didn't pay it).
+private _payerBalance = [_callerSide] call DZ_fnc_squadFundsGetBalance;
 {
-    [
-        format ["[Сервер] %1 промотали ночь. Доброе утро.", _factionLabel],
-        _x
-    ] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    private _side = _x;
+    private _msg = if (_side isEqualTo _callerSide) then {
+        format ["[Сервер] %1 промотали ночь за %2₽. Баланс: %3₽. Доброе утро.",
+            _factionLabel, _cost, _payerBalance]
+    } else {
+        format ["[Сервер] %1 промотали ночь. Доброе утро.", _factionLabel]
+    };
+    [_msg, _side] remoteExecCall ["DZ_fnc_sideMessage", 0];
 } forEach _playerSides;
