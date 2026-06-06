@@ -361,6 +361,12 @@ missionNamespace setVariable ["DZ_nightSkipCost", 1000];   // ₽ per skip
 // spot — frequent enough to lose at most 5 min of trophies on a crash,
 // rare enough to not thrash the disk.
 missionNamespace setVariable ["DZ_trophyCrateSaveInterval", 300];
+
+// Trophy vehicle sell price: fixed payout when players sell a saved
+// trophy at the logistics pad. Same low value regardless of vehicle —
+// the system rewards "captured + brought home" not "valuable asset".
+// Tune higher (500-800) if you want trophy sales to be a real income source.
+missionNamespace setVariable ["DZ_trophyVehicleSellPrice", 300];
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
 missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
 missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];

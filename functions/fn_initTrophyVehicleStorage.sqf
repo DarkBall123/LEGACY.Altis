@@ -101,6 +101,29 @@ if (hasInterface) then {
                 [false, false, true, false, true]
             ] call ace_interact_menu_fnc_createAction;
 
+            // Sell action — fixed 300₽ payout (DZ_trophyVehicleSellPrice) to caller's faction.
+            private _sellAction = [
+                "DZ_TrophyVehicleSell",
+                "Продать трофейную технику",
+                "",
+                {
+                    params ["_target", "_player"];
+
+                    private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
+                    [_actualPlayer, _target] remoteExecCall ["DZ_fnc_sellTrophyVehicle", 2];
+                },
+                {
+                    params ["_target", "_player"];
+
+                    alive _player && { (_player distance2D _target) <= 8 }
+                },
+                {},
+                [],
+                {[0, 0, 1.5]},
+                4,
+                [false, false, true, false, true]
+            ] call ace_interact_menu_fnc_createAction;
+
             private _padNames = missionNamespace getVariable ["DZ_trophyVehicleStoragePadNames", ["vehicle_delivery_pad", "logistics_point"]];
             private _resolvedPads = [];
             {
@@ -118,7 +141,8 @@ if (hasInterface) then {
                 private _storagePad = _x;
                 if !(_storagePad getVariable ["DZ_trophyVehicleStorageActionAdded", false]) then {
                     _storagePad setVariable ["DZ_trophyVehicleStorageActionAdded", true, false];
-                    [_storagePad, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject;
+                    [_storagePad, 0, ["ACE_MainActions"], _action]     call ace_interact_menu_fnc_addActionToObject;
+                    [_storagePad, 0, ["ACE_MainActions"], _sellAction] call ace_interact_menu_fnc_addActionToObject;
                 };
             } forEach _resolvedPads;
         },

@@ -127,6 +127,7 @@ class CfgFunctions
             class initTrophyVehicleStorage  {};
             class isTrophyVehicleStorable   {};
             class saveTrophyVehicle         {};
+            class sellTrophyVehicle         {};
             class initTrophyCrate           {};
             class saveTrophyCrates          {};
             class restoreTrophyCrateContents {};
