@@ -353,6 +353,14 @@ missionNamespace setVariable ["DZ_captureHoldEnemy", 30];   // hold time for MEF
 // Tune higher to make night-fighting more committed (players can't
 // just buy their way out of darkness whenever they want).
 missionNamespace setVariable ["DZ_nightSkipCost", 1000];   // ₽ per skip
+
+// Trophy crate persistence: how often the periodic save PFH snapshots
+// every registered crate's contents to profileNamespace. Also saves on
+// each player disconnect, so this interval only matters for catastrophic
+// crashes (server lost power mid-session). 300 s (5 min) is the sweet
+// spot — frequent enough to lose at most 5 min of trophies on a crash,
+// rare enough to not thrash the disk.
+missionNamespace setVariable ["DZ_trophyCrateSaveInterval", 300];
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
 missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
 missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];

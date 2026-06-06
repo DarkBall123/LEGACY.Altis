@@ -49,3 +49,21 @@ call compile preprocessFileLineNumbers "Alfa\Civilians\Reputation\IedThreat.sqf"
 call DZ_fnc_initSquadFunds;
 call DZ_fnc_initTrophyVehicleStorage;
 call DZ_fnc_initResourceNodes;
+
+// ── Trophy crate persistence ─────────────────────────────────────────
+// Periodic save snapshot of every Eden-registered trophy crate's
+// contents. Also fires on every player disconnect so the latest
+// state is captured even if a player leaves between save windows.
+// (Per-crate registration happens via [this] call DZ_fnc_initTrophyCrate
+// from each crate's Eden init field.)
+private _crateSaveInterval = missionNamespace getVariable ["DZ_trophyCrateSaveInterval", 300];   // 5 min default
+[
+    { call DZ_fnc_saveTrophyCrates; },
+    _crateSaveInterval,
+    []
+] call CBA_fnc_addPerFrameHandler;
+
+addMissionEventHandler ["HandleDisconnect", {
+    call DZ_fnc_saveTrophyCrates;
+    false
+}];
