@@ -262,8 +262,23 @@ if ((missionNamespace getVariable ["DZ_enableCorpseCleanup", false]) && { !(miss
         {
             sleep (missionNamespace getVariable ["DZ_corpseCleanupInterval", 600]);
 
-            private _corpses = allDeadMen select { !isNull _x };
-            private _vehicleCleanupCandidates = vehicles select
+            // Snapshot alive players once per sweep — proximity gate so
+            // a body/wreck within DZ_corpseCleanupPlayerProximity metres
+            // of any alive player is preserved (player is looting it or
+            // using the wreck as cover; let them be, try again next sweep).
+            private _proximity = missionNamespace getVariable ["DZ_corpseCleanupPlayerProximity", 50];
+            private _alivePlayers = allPlayers select { alive _x };
+
+            private _corpsesAll = allDeadMen select { !isNull _x };
+            private _corpsesSkipped = 0;
+            private _corpses = _corpsesAll select
+            {
+                private _body = _x;
+                private _hit = _alivePlayers findIf { _x distance2D _body < _proximity };
+                if (_hit >= 0) then { _corpsesSkipped = _corpsesSkipped + 1; false } else { true };
+            };
+
+            private _deadVehiclesAll = vehicles select
             {
                 private _vehicle = _x;
 
@@ -272,7 +287,13 @@ if ((missionNamespace getVariable ["DZ_enableCorpseCleanup", false]) && { !(miss
                 { (!alive _vehicle) || { !canMove _vehicle } } &&
                 { ({ alive _x } count crew _vehicle) == 0 }
             };
-            private _deadVehicles = _vehicleCleanupCandidates arrayIntersect _vehicleCleanupCandidates;
+            private _wrecksSkipped = 0;
+            private _deadVehicles = _deadVehiclesAll select
+            {
+                private _wreck = _x;
+                private _hit = _alivePlayers findIf { _x distance2D _wreck < _proximity };
+                if (_hit >= 0) then { _wrecksSkipped = _wrecksSkipped + 1; false } else { true };
+            };
 
             {
                 deleteVehicle _x;
@@ -291,9 +312,12 @@ if ((missionNamespace getVariable ["DZ_enableCorpseCleanup", false]) && { !(miss
 
             diag_log format
             [
-                "[DZ] Cleanup removed %1 corpses and %2 dead vehicles",
+                "[DZ] Cleanup removed %1 corpses and %2 wrecks (skipped %3 corpses + %4 wrecks near players, proximity=%5m)",
                 count _corpses,
-                count _deadVehicles
+                count _deadVehicles,
+                _corpsesSkipped,
+                _wrecksSkipped,
+                _proximity
             ];
         };
     };
