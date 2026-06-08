@@ -1,4 +1,4 @@
-/*
+﻿/*
  * DZ_fnc_showHint
  * Shows a local formatted hint with title and message text.
  */
@@ -11,7 +11,11 @@ params [
 if (!hasInterface) exitWith {};
 
 if (_body isEqualTo "") then {
-    hintSilent _title;
+    hintSilent parseText format ["<t size='1.15' color='#ff7e2a'>%1</t>", _title];
 } else {
-    hintSilent format ["%1\n\n%2", _title, _body];
+    hintSilent parseText format [
+        "<t size='1.15' color='#ff7e2a'>%1</t><br/><br/><t size='1'>%2</t>",
+        _title,
+        _body
+    ];
 };

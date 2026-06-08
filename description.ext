@@ -1,5 +1,5 @@
-onLoadName = "Операция: Наследие";
-briefingName = "Операция: Наследие";
+﻿onLoadName = "РћРїРµСЂР°С†РёСЏ: РќР°СЃР»РµРґРёРµ";
+briefingName = "РћРїРµСЂР°С†РёСЏ: РќР°СЃР»РµРґРёРµ";
 overviewPicture = "\MainMenu\meta\preview.png";
 loadScreen = "\MainMenu\meta\preview.png";
 respawn = 3;
@@ -9,7 +9,7 @@ respawnTemplates[] = { "MenuPosition" };
 respawnTemplatesEast[] = { "MenuPosition" };
 
 // Mission-level difficulty enforcement. Carries our hardcore preset
-// regardless of which hosting provider runs the server — game-hosting
+// regardless of which hosting provider runs the server вЂ” game-hosting
 // rentals usually don't let us touch server.cfg directly, so we pin
 // it here instead. Players can't override it.
 forcedDifficulty = "Custom";
@@ -60,7 +60,7 @@ class DifficultyPresets
         };
 
         // aiLevelPreset: 0=Low, 1=Normal, 2=High, 3=Custom
-        // 3 → pull skill/precision from class CustomAILevel below.
+        // 3 в†’ pull skill/precision from class CustomAILevel below.
         aiLevelPreset = 3;
     };
 
@@ -127,12 +127,9 @@ class CfgFunctions
             class initTrophyVehicleStorage  {};
             class isTrophyVehicleStorable   {};
             class saveTrophyVehicle         {};
-            class sellTrophyVehicle         {};
-            class initTrophyCrate           {};
-            class saveTrophyCrates          {};
-            class restoreTrophyCrateContents {};
             class initResourceNodes         {};
             class resourceTick              {};
+            class initFortifyEconomy        {};
         };
 
 
@@ -189,7 +186,6 @@ class CfgFunctions
 
             class requestTransport      {};
             class requestFobMission     {};
-            class requestNightSkip      {};
             class setKshmDeployed       {};
             class radioControl          {};
             class radioPlayLocal        {};
@@ -217,6 +213,23 @@ class CfgFunctions
     };
 };
 
+class ACE_Settings
+{
+    class ace_fortify_timeMin
+    {
+        value = 4;
+        typeName = "SCALAR";
+        force = 1;
+    };
+
+    class ace_fortify_timeCostCoefficient
+    {
+        value = 0.05;
+        typeName = "SCALAR";
+        force = 1;
+    };
+};
+
 class CfgSounds
 {
     class DZ_SoundAmbience
@@ -238,12 +251,13 @@ class CfgRemoteExec
         jip = 0;
 
         class DZ_fnc_playCrowdSound3DLocal { allowedTargets = 0; jip = 0; };
+        class DZ_fnc_showHint              { allowedTargets = 1; jip = 0; };
+        class DZ_fnc_sideMessage           { allowedTargets = 0; jip = 0; };
     };
 
     class Commands
     {
         mode = 2;
         jip = 0;
-
     };
 };
