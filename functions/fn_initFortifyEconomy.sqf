@@ -1,4 +1,4 @@
-﻿/*
+/*
  * DZ_fnc_initFortifyEconomy
  * Connects ACE Fortify to the mission squad funds system.
  */
