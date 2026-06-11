@@ -37,6 +37,6 @@ private _zoneNames = missionNamespace getVariable ["DZ_zoneNames", []];
 
     publicVariable _markerName;
 
-    diag_log format ["[DZ] ▸ %1 ELLIPSE r=%2 @%3 \"%4\"",
+    diag_log format ["[DZ] ▸ %1 ELLIPSE r=%2 @%3 ""%4""",
         _markerName, _radius, _pos, _label];
 } forEach _cells;

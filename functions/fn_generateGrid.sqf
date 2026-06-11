@@ -16,5 +16,5 @@ for "_ix" from 0 to floor(_size / _g) do {
     };
 };
 
-diag_log format ["[DZ] Grid ▶ %1 dry‑land cells (gridSize=%2 m)", count _cells, _g];
+diag_log format ["[DZ] Grid ▶ %1 dry-land cells (gridSize=%2 m)", count _cells, _g];
 _cells
