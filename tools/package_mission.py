@@ -28,12 +28,7 @@ def copy_entry(source: Path, target: Path) -> None:
         shutil.copy2(source, target)
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output", required=True, type=Path)
-    args = parser.parse_args()
-
-    output = args.output
+def package_mission(output: Path) -> Path:
     if not output.is_absolute():
         output = ROOT / output
     if output.exists():
@@ -44,6 +39,16 @@ def main() -> int:
         source = ROOT / item
         if source.exists():
             copy_entry(source, output / item)
+
+    return output
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args()
+
+    output = package_mission(args.output)
 
     print(f"Packaged mission folder at {output.relative_to(ROOT)}")
     return 0
