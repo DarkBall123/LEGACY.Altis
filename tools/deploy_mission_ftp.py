@@ -65,6 +65,14 @@ def remote_exists(ftp: ftplib.FTP, path: str) -> bool:
         return False
 
 
+def delete_if_exists(ftp: ftplib.FTP, path: str) -> None:
+    try:
+        ftp.delete(path)
+    except ftplib.error_perm as error:
+        if not str(error).startswith("550"):
+            raise
+
+
 def main() -> int:
     load_env(ROOT / ".env")
 
@@ -99,14 +107,14 @@ def main() -> int:
     try:
         ftp.cwd(remote_dir)
         if remote_exists(ftp, temporary_name):
-            ftp.delete(temporary_name)
+            delete_if_exists(ftp, temporary_name)
 
         with pbo.open("rb") as source:
             ftp.storbinary(f"STOR {temporary_name}", source, blocksize=1024 * 1024)
 
         remote_size = ftp.size(temporary_name)
         if remote_size != pbo.stat().st_size:
-            ftp.delete(temporary_name)
+            delete_if_exists(ftp, temporary_name)
             raise RuntimeError(
                 f"Remote size mismatch: expected {pbo.stat().st_size}, got {remote_size}"
             )
@@ -120,11 +128,21 @@ def main() -> int:
                     print(
                         f"Backup rename failed ({error}); deleting existing mission PBO instead"
                     )
-                    ftp.delete(target_name)
+                    delete_if_exists(ftp, target_name)
             else:
-                ftp.delete(target_name)
+                delete_if_exists(ftp, target_name)
 
-        ftp.rename(temporary_name, target_name)
+        try:
+            ftp.rename(temporary_name, target_name)
+        except ftplib.error_perm as error:
+            if remote_exists(ftp, target_name):
+                print(
+                    f"Publish rename failed ({error}); deleting existing mission PBO and retrying"
+                )
+                delete_if_exists(ftp, target_name)
+                ftp.rename(temporary_name, target_name)
+            else:
+                raise
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
     finally:
         try:
