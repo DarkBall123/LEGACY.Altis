@@ -16,6 +16,10 @@ from package_mission import ROOT
 from package_mission_pbo import get_mission_name
 
 
+class MissionPboLockedError(RuntimeError):
+    """The hosting provider cannot mutate the active mission PBO."""
+
+
 def connect() -> ftplib.FTP:
     host = required_env("DEPLOY_HOST")
     port = int(os.environ.get("DEPLOY_PORT", "21"))
@@ -65,12 +69,12 @@ def remote_exists(ftp: ftplib.FTP, path: str) -> bool:
         return False
 
 
-def delete_if_exists(ftp: ftplib.FTP, path: str) -> None:
-    try:
-        ftp.delete(path)
-    except ftplib.error_perm as error:
-        if not str(error).startswith("550"):
-            raise
+def delete_existing(ftp: ftplib.FTP, path: str) -> None:
+    if not remote_exists(ftp, path):
+        return
+    ftp.delete(path)
+    if remote_exists(ftp, path):
+        raise RuntimeError(f"FTP server did not delete {path}")
 
 
 def upload_verified(ftp: ftplib.FTP, local_path: Path, remote_name: str) -> int:
@@ -80,11 +84,33 @@ def upload_verified(ftp: ftplib.FTP, local_path: Path, remote_name: str) -> int:
 
     remote_size = ftp.size(remote_name)
     if remote_size != local_size:
-        delete_if_exists(ftp, remote_name)
+        delete_existing(ftp, remote_name)
         raise RuntimeError(
             f"Remote size mismatch for {remote_name}: expected {local_size}, got {remote_size}"
         )
     return remote_size
+
+
+def stage_upload(ftp: ftplib.FTP, local_path: Path, remote_name: str) -> int:
+    local_size = local_path.stat().st_size
+    if remote_exists(ftp, remote_name):
+        remote_size = ftp.size(remote_name)
+        if remote_size == local_size:
+            print(f"Reusing staged mission PBO {remote_name} ({remote_size} bytes)")
+            return remote_size
+        delete_existing(ftp, remote_name)
+    return upload_verified(ftp, local_path, remote_name)
+
+
+def locked_pbo_error(
+    target_name: str, temporary_name: str, error: ftplib.error_perm
+) -> MissionPboLockedError:
+    return MissionPboLockedError(
+        f"Cannot replace {target_name}: {error}. The running Arma 3 server "
+        f"is likely locking the active mission PBO. The new PBO is safely "
+        f"staged as {temporary_name}. Stop the server in ArkHoster, then "
+        "re-run the failed GitHub Actions jobs."
+    )
 
 
 def main() -> int:
@@ -120,32 +146,24 @@ def main() -> int:
     ftp = connect()
     try:
         ftp.cwd(remote_dir)
-        if remote_exists(ftp, temporary_name):
-            delete_if_exists(ftp, temporary_name)
-
-        remote_size = upload_verified(ftp, pbo, temporary_name)
+        remote_size = stage_upload(ftp, pbo, temporary_name)
 
         if remote_exists(ftp, target_name):
-            if env_bool("DEPLOY_BACKUP_EXISTING", True):
-                try:
+            try:
+                if env_bool("DEPLOY_BACKUP_EXISTING", True):
                     ftp.rename(target_name, backup_name)
                     print(f"Backed up previous mission PBO as {backup_name}")
-                except ftplib.error_perm as error:
-                    print(
-                        f"Backup rename failed ({error}); deleting existing mission PBO instead"
-                    )
-                    delete_if_exists(ftp, target_name)
-            else:
-                delete_if_exists(ftp, target_name)
+                else:
+                    delete_existing(ftp, target_name)
+            except ftplib.error_perm as error:
+                raise locked_pbo_error(
+                    target_name, temporary_name, error
+                ) from error
 
         try:
             ftp.rename(temporary_name, target_name)
         except ftplib.error_perm as error:
-            print(
-                f"Publish rename failed ({error}); uploading directly to final mission PBO"
-            )
-            remote_size = upload_verified(ftp, pbo, target_name)
-            delete_if_exists(ftp, temporary_name)
+            raise locked_pbo_error(target_name, temporary_name, error) from error
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
     finally:
         try:
@@ -157,4 +175,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except MissionPboLockedError as error:
+        print(f"::error title=Active mission PBO is locked::{error}")
+        raise SystemExit(1) from None

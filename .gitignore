@@ -1,5 +1,10 @@
 .hemttout/
 .hemtt/cache/
+.hemttprivatekey
+.biprivatekey
+.env
+.env.*
+!.env.example
 .DS_Store
 docs/
 AGENTS.md
@@ -8,3 +13,4 @@ agents.md
 CLAUDE.md
 CLAUDE.MD
 claude.md
+.vs/
