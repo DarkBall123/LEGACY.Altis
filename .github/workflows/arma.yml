@@ -120,10 +120,6 @@ jobs:
       DEPLOY_REMOTE_CURRENT_MISSION: ${{ vars.DEPLOY_REMOTE_CURRENT_MISSION || 'LEGACY.Altis' }}
       DEPLOY_ARCHIVE_UNPACKED_MISSION: ${{ vars.DEPLOY_ARCHIVE_UNPACKED_MISSION || 'true' }}
       DEPLOY_BACKUP_EXISTING: ${{ vars.DEPLOY_BACKUP_EXISTING || 'true' }}
-      RCON_HOST: ${{ secrets.RCON_HOST }}
-      RCON_PORT: ${{ vars.RCON_PORT || '2905' }}
-      RCON_PASSWORD: ${{ secrets.RCON_PASSWORD }}
-      RCON_COMMAND: ${{ vars.RCON_COMMAND || '#mission LEGACY.Altis' }}
     steps:
       - name: Checkout deployment tools
         uses: actions/checkout@v4
@@ -134,11 +130,5 @@ jobs:
           name: mission-pbo-${{ github.sha }}
           path: .hemttout
 
-      - name: Check BattlEye RCon
-        run: python3 tools/arma_rcon.py players
-
       - name: Publish mission PBO
         run: python3 tools/deploy_mission_ftp.py
-
-      - name: Restart mission through BattlEye RCon
-        run: python3 tools/arma_rcon.py "$RCON_COMMAND"
