@@ -45,6 +45,7 @@ jobs:
       - name: Setup HEMTT
         uses: arma-actions/hemtt@v1
         with:
+          version: 'v1.19.1'
           annotate: true
 
       - name: Run HEMTT check
