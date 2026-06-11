@@ -81,6 +81,26 @@ private _statusAction = [
 
 [_laptop, 0, ["ACE_MainActions"], _statusAction] call ace_interact_menu_fnc_addActionToObject;
 
+private _nightSkipAction = [
+    "dz_night_skip",
+    "Промотать ночь",
+    "",
+    {
+        params ["_target", "_player"];
+        [_player] remoteExecCall ["DZ_fnc_requestNightSkip", 2];
+    },
+    {
+        params ["_target", "_player"];
+        side _player == west
+    },
+    {},
+    [],
+    {[0, 0, 0.5]},
+    5,
+    [false, false, true, false, true]
+] call ace_interact_menu_fnc_createAction;
+
+[_laptop, 0, ["ACE_MainActions"], _nightSkipAction] call ace_interact_menu_fnc_addActionToObject;
 // Abort menu: parent + confirmation child. Parent only shows when
 // west has an active mission; the second click on "Подтвердить
 // отмену" actually fires the abort. Two-step keeps misclicks from

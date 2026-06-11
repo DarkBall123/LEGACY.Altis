@@ -95,7 +95,7 @@ private _restored = 0;
                     [_bCargo, _veh, { (_this # 0) addBackpackCargoGlobal (_this # 1) }] call _restoreCargo;
                 };
 
-                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false], ["_trophyOwnerKey", ""]];
+                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false], ["_trophyOwnerKey", ""], ["_kshmDeployed", false]];
 
                 _veh setVariable ["DZ_persist", true, true];
                 if (_purchased) then {
@@ -118,6 +118,16 @@ private _restored = 0;
                     if !(_trophyOwnerSide isEqualTo sideUnknown) then {
                         _veh setVariable ["DZ_trophyVehicleOwnerSide", _trophyOwnerSide, true];
                     };
+                };
+
+                if ((typeOf _veh) isEqualTo "B_Respawn_TentA_F") then {
+                    _veh setVariable ["DZ_noCleanup", true, true];
+                };
+
+                if (_kshmDeployed) then {
+                    private _respawnId = [west, _veh, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
+                    _veh setVariable ["respawn_id", _respawnId, true];
+                    _veh setVariable ["kshm_deployed", true, true];
                 };
 
                 _restored = _restored + 1;

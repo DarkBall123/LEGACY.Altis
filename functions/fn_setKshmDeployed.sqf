@@ -36,6 +36,8 @@ if (_deploy) then {
     private _respawnId = [west, _vehicle, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
     _vehicle setVariable ["respawn_id", _respawnId, true];
     _vehicle setVariable ["kshm_deployed", true, true];
+    missionNamespace setVariable ["DZ_assetsDirty", true];
+    [true] call DZ_fnc_saveAssets;
 
     ["КШМ", "КШМ развернута. Точка возрождения активна."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
     ["КШМ развернута. APD получает мобильную точку возрождения.", west] remoteExecCall ["DZ_fnc_sideMessage", 0];
@@ -51,6 +53,8 @@ if (_deploy) then {
 
     _vehicle setVariable ["respawn_id", [], true];
     _vehicle setVariable ["kshm_deployed", false, true];
+    missionNamespace setVariable ["DZ_assetsDirty", true];
+    [true] call DZ_fnc_saveAssets;
 
     ["КШМ", "КШМ свернута."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
     ["КШМ свернута. Мобильная точка возрождения APD отключена.", west] remoteExecCall ["DZ_fnc_sideMessage", 0];

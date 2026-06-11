@@ -185,6 +185,7 @@ class CfgFunctions
 
             class requestTransport      {};
             class requestFobMission     {};
+            class requestNightSkip      {};
             class setKshmDeployed       {};
             class radioControl          {};
             class radioPlayLocal        {};

@@ -13,6 +13,8 @@ if (!_force && { !(missionNamespace getVariable ["DZ_assetsDirty", false]) }) ex
 };
 
 private _snapshot = [];
+private _saveTargets = vehicles + (allMissionObjects "B_Respawn_TentA_F");
+_saveTargets = _saveTargets arrayIntersect _saveTargets;
 
 {
     private _veh = _x;
@@ -49,7 +51,8 @@ private _snapshot = [];
             _veh getVariable ["DZ_purchasedItem", false],
             _veh getVariable ["DZ_trackAbandoned", false],
             _veh getVariable ["DZ_trophyVehicle", false],
-            _ownerSideKey
+            _ownerSideKey,
+            _veh getVariable ["kshm_deployed", false]
         ];
 
         _snapshot pushBack [
@@ -64,7 +67,7 @@ private _snapshot = [];
             _flags
         ];
     };
-} forEach vehicles;
+} forEach _saveTargets;
 
 profileNamespace setVariable ["DZ_savedAssets", _snapshot];
 saveProfileNamespace;

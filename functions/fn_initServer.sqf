@@ -165,6 +165,8 @@ missionNamespace setVariable ["DZ_capturedHash", createHashMap];
 missionNamespace setVariable ["DZ_lastSectorVisualState", []];
 missionNamespace setVariable ["DZ_loadoutsDirty", false];
 
+missionNamespace setVariable ["DZ_persistentRespawnClasses", ["B_Respawn_TentA_F"]];
+
 private _urbanHash = call DZ_fnc_getUrbanCells;
 missionNamespace setVariable ["DZ_urbanHash", _urbanHash];
 
@@ -188,6 +190,31 @@ call DZ_fnc_publishSectorState;
 
 missionNamespace setVariable ["DZ_assetsDirty", false];
 call DZ_fnc_restoreAssets;
+
+addMissionEventHandler
+[
+    "EntityCreated",
+    {
+        params ["_entity"];
+
+        if (isNull _entity) exitWith {};
+
+        private _classes = missionNamespace getVariable ["DZ_persistentRespawnClasses", ["B_Respawn_TentA_F"]];
+        if (!((typeOf _entity) in _classes)) exitWith {};
+
+        [_entity] spawn
+        {
+            params ["_entity"];
+            sleep 1;
+            if (isNull _entity) exitWith {};
+            _entity setVariable ["DZ_noCleanup", true, true];
+            _entity setVariable ["DZ_persist", true, true];
+            missionNamespace setVariable ["DZ_assetsDirty", true];
+            call DZ_fnc_saveAssets;
+        };
+    }
+];
+
 
 if !(missionNamespace getVariable ["DZ_zoneSchedulerStarted", false]) then
 {

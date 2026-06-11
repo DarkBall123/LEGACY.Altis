@@ -28,9 +28,7 @@ jobs:
         run: python3 tools/check_strings.py
 
       - name: Check for BOM
-        uses: arma-actions/bom-check@master
-        with:
-          path: "."
+        run: python3 tools/check_bom.py
 
       - name: Validate function headers
         run: python3 tools/document_functions.py --debug

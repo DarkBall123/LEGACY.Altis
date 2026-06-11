@@ -9,8 +9,16 @@ if (isNull _vehicle) exitWith { false };
 
 if (isServer) then
 {
-    _vehicle setVariable ["respawn_id", [], true];
-    _vehicle setVariable ["kshm_deployed", false, true];
+    if (isNil { _vehicle getVariable "respawn_id" }) then {
+        _vehicle setVariable ["respawn_id", [], true];
+    };
+
+    if (isNil { _vehicle getVariable "kshm_deployed" }) then {
+        _vehicle setVariable ["kshm_deployed", false, true];
+    };
+
+    _vehicle setVariable ["DZ_noCleanup", true, true];
+    _vehicle setVariable ["DZ_persist", true, true];
 
     if !(_vehicle getVariable ["kshm_killedEh", false]) then
     {

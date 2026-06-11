@@ -1,0 +1,11 @@
+root = true
+
+[*.{sqf,ext,cpp,hpp,h}]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+
+[*.sqm]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
