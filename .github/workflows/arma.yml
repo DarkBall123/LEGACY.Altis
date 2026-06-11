@@ -64,7 +64,8 @@ jobs:
           unzip -q "$archive" -d "$install_dir"
           chmod +x "$install_dir/hemtt"
           echo "$install_dir" >> "$GITHUB_PATH"
-          "$install_dir/hemtt" --version
+          # HEMTT 1.19.1 prints its version correctly but exits with status 1.
+          "$install_dir/hemtt" --version || test "$?" -eq 1
 
       - name: Run HEMTT check
         run: hemtt check
