@@ -134,6 +134,9 @@ jobs:
           name: mission-pbo-${{ github.sha }}
           path: .hemttout
 
+      - name: Check BattlEye RCon
+        run: python3 tools/arma_rcon.py players
+
       - name: Publish mission PBO
         run: python3 tools/deploy_mission_ftp.py
 
