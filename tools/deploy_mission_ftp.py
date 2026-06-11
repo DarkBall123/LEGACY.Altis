@@ -145,11 +145,19 @@ def main() -> int:
             and env_bool("DEPLOY_ARCHIVE_UNPACKED_MISSION", True)
             and remote_directory_exists(ftp, unpacked)
         ):
-            ftp.rename(unpacked, unpacked_backup)
-            print(
-                "Archived unpacked mission as "
-                f"{posixpath.basename(unpacked_backup)}"
-            )
+            try:
+                ftp.rename(unpacked, unpacked_backup)
+                print(
+                    "Archived unpacked mission as "
+                    f"{posixpath.basename(unpacked_backup)}"
+                )
+            except ftplib.error_perm as error:
+                if not str(error).startswith("550"):
+                    raise
+                print(
+                    "Warning: FTP server refused to archive the unpacked "
+                    f"mission ({error}); published PBO remains available"
+                )
     finally:
         try:
             ftp.quit()
