@@ -73,6 +73,20 @@ def delete_if_exists(ftp: ftplib.FTP, path: str) -> None:
             raise
 
 
+def upload_verified(ftp: ftplib.FTP, local_path: Path, remote_name: str) -> int:
+    local_size = local_path.stat().st_size
+    with local_path.open("rb") as source:
+        ftp.storbinary(f"STOR {remote_name}", source, blocksize=1024 * 1024)
+
+    remote_size = ftp.size(remote_name)
+    if remote_size != local_size:
+        delete_if_exists(ftp, remote_name)
+        raise RuntimeError(
+            f"Remote size mismatch for {remote_name}: expected {local_size}, got {remote_size}"
+        )
+    return remote_size
+
+
 def main() -> int:
     load_env(ROOT / ".env")
 
@@ -109,15 +123,7 @@ def main() -> int:
         if remote_exists(ftp, temporary_name):
             delete_if_exists(ftp, temporary_name)
 
-        with pbo.open("rb") as source:
-            ftp.storbinary(f"STOR {temporary_name}", source, blocksize=1024 * 1024)
-
-        remote_size = ftp.size(temporary_name)
-        if remote_size != pbo.stat().st_size:
-            delete_if_exists(ftp, temporary_name)
-            raise RuntimeError(
-                f"Remote size mismatch: expected {pbo.stat().st_size}, got {remote_size}"
-            )
+        remote_size = upload_verified(ftp, pbo, temporary_name)
 
         if remote_exists(ftp, target_name):
             if env_bool("DEPLOY_BACKUP_EXISTING", True):
@@ -135,14 +141,11 @@ def main() -> int:
         try:
             ftp.rename(temporary_name, target_name)
         except ftplib.error_perm as error:
-            if remote_exists(ftp, target_name):
-                print(
-                    f"Publish rename failed ({error}); deleting existing mission PBO and retrying"
-                )
-                delete_if_exists(ftp, target_name)
-                ftp.rename(temporary_name, target_name)
-            else:
-                raise
+            print(
+                f"Publish rename failed ({error}); uploading directly to final mission PBO"
+            )
+            remote_size = upload_verified(ftp, pbo, target_name)
+            delete_if_exists(ftp, temporary_name)
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
     finally:
         try:
