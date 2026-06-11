@@ -113,8 +113,14 @@ def main() -> int:
 
         if remote_exists(ftp, target_name):
             if env_bool("DEPLOY_BACKUP_EXISTING", True):
-                ftp.rename(target_name, backup_name)
-                print(f"Backed up previous mission PBO as {backup_name}")
+                try:
+                    ftp.rename(target_name, backup_name)
+                    print(f"Backed up previous mission PBO as {backup_name}")
+                except ftplib.error_perm as error:
+                    print(
+                        f"Backup rename failed ({error}); deleting existing mission PBO instead"
+                    )
+                    ftp.delete(target_name)
             else:
                 ftp.delete(target_name)
 
