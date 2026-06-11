@@ -1,5 +1,5 @@
-onLoadName = "РћРїРµСЂР°С†РёСЏ: РќР°СЃР»РµРґРёРµ";
-briefingName = "РћРїРµСЂР°С†РёСЏ: РќР°СЃР»РµРґРёРµ";
+onLoadName = "Операция: Наследие";
+briefingName = "Операция: Наследие";
 respawn = 3;
 respawnDelay = 30;
 respawnOnStart = -1;
