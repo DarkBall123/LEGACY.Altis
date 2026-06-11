@@ -65,19 +65,6 @@ def remote_exists(ftp: ftplib.FTP, path: str) -> bool:
         return False
 
 
-def remote_directory_exists(ftp: ftplib.FTP, path: str) -> bool:
-    current = ftp.pwd()
-    try:
-        ftp.cwd(path)
-    except ftplib.error_perm as error:
-        if not str(error).startswith("550"):
-            raise
-        return False
-    finally:
-        ftp.cwd(current)
-    return True
-
-
 def main() -> int:
     load_env(ROOT / ".env")
 
@@ -102,16 +89,9 @@ def main() -> int:
     temporary = f"{target}.uploading"
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     backup = f"{target}.{timestamp}.bak"
-    unpacked_name = os.environ.get("DEPLOY_REMOTE_CURRENT_MISSION", "").strip()
-    unpacked = posixpath.join(remote_dir, unpacked_name) if unpacked_name else ""
-    unpacked_backup = (
-        f"{unpacked}.{timestamp}.unpacked.bak" if unpacked else ""
-    )
 
     if args.dry_run:
         print(f"Would upload {pbo.name} ({pbo.stat().st_size} bytes) to {target}")
-        if unpacked:
-            print(f"Would archive unpacked mission {unpacked} if it exists")
         return 0
 
     ftp = connect()
@@ -139,25 +119,6 @@ def main() -> int:
 
         ftp.rename(temporary, target)
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
-
-        if (
-            unpacked
-            and env_bool("DEPLOY_ARCHIVE_UNPACKED_MISSION", True)
-            and remote_directory_exists(ftp, unpacked)
-        ):
-            try:
-                ftp.rename(unpacked, unpacked_backup)
-                print(
-                    "Archived unpacked mission as "
-                    f"{posixpath.basename(unpacked_backup)}"
-                )
-            except ftplib.error_perm as error:
-                if not str(error).startswith("550"):
-                    raise
-                print(
-                    "Warning: FTP server refused to archive the unpacked "
-                    f"mission ({error}); published PBO remains available"
-                )
     finally:
         try:
             ftp.quit()

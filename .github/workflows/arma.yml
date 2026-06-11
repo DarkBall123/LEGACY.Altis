@@ -116,8 +116,6 @@ jobs:
       DEPLOY_FTP_PASSIVE: ${{ vars.DEPLOY_FTP_PASSIVE || 'true' }}
       DEPLOY_FTP_TLS: ${{ vars.DEPLOY_FTP_TLS || 'off' }}
       DEPLOY_REMOTE_MISSIONS_DIR: ${{ vars.DEPLOY_REMOTE_MISSIONS_DIR || '/MPMissions' }}
-      DEPLOY_REMOTE_CURRENT_MISSION: ${{ vars.DEPLOY_REMOTE_CURRENT_MISSION || 'LEGACY.Altis' }}
-      DEPLOY_ARCHIVE_UNPACKED_MISSION: ${{ vars.DEPLOY_ARCHIVE_UNPACKED_MISSION || 'true' }}
       DEPLOY_BACKUP_EXISTING: ${{ vars.DEPLOY_BACKUP_EXISTING || 'true' }}
     steps:
       - name: Checkout deployment tools
