@@ -85,10 +85,11 @@ def main() -> int:
     remote_dir = os.environ.get(
         "DEPLOY_REMOTE_MISSIONS_DIR", "/MPMissions"
     ).rstrip("/") or "/"
-    target = posixpath.join(remote_dir, f"{mission_name}.pbo")
-    temporary = f"{target}.uploading"
+    target_name = f"{mission_name}.pbo"
+    target = posixpath.join(remote_dir, target_name)
+    temporary_name = f"{target_name}.uploading"
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup = f"{target}.{timestamp}.bak"
+    backup_name = f"{target_name}.{timestamp}.bak"
 
     if args.dry_run:
         print(f"Would upload {pbo.name} ({pbo.stat().st_size} bytes) to {target}")
@@ -97,27 +98,27 @@ def main() -> int:
     ftp = connect()
     try:
         ftp.cwd(remote_dir)
-        if remote_exists(ftp, temporary):
-            ftp.delete(temporary)
+        if remote_exists(ftp, temporary_name):
+            ftp.delete(temporary_name)
 
         with pbo.open("rb") as source:
-            ftp.storbinary(f"STOR {temporary}", source, blocksize=1024 * 1024)
+            ftp.storbinary(f"STOR {temporary_name}", source, blocksize=1024 * 1024)
 
-        remote_size = ftp.size(temporary)
+        remote_size = ftp.size(temporary_name)
         if remote_size != pbo.stat().st_size:
-            ftp.delete(temporary)
+            ftp.delete(temporary_name)
             raise RuntimeError(
                 f"Remote size mismatch: expected {pbo.stat().st_size}, got {remote_size}"
             )
 
-        if remote_exists(ftp, target):
+        if remote_exists(ftp, target_name):
             if env_bool("DEPLOY_BACKUP_EXISTING", True):
-                ftp.rename(target, backup)
-                print(f"Backed up previous mission PBO as {posixpath.basename(backup)}")
+                ftp.rename(target_name, backup_name)
+                print(f"Backed up previous mission PBO as {backup_name}")
             else:
-                ftp.delete(target)
+                ftp.delete(target_name)
 
-        ftp.rename(temporary, target)
+        ftp.rename(temporary_name, target_name)
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
     finally:
         try:
