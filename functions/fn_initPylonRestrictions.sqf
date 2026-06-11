@@ -5,6 +5,56 @@
 
 private _attachCuratorHandler =
 {
+    private _ensureSaveAction =
+    {
+        if (isNil { missionNamespace getVariable "DZ_zeusManualSaveProgressAction" }) then
+        {
+            missionNamespace setVariable
+            [
+                "DZ_zeusManualSaveProgressAction",
+                [
+                    "DZ_manual_save_progress",
+                    "Сохранить прогресс",
+                    "",
+                    {
+                        [] remoteExecCall ["DZ_fnc_manualSaveProgress", 2];
+                    },
+                    {
+                        params ["_target", "_player", "_params"];
+                        !isNull _target &&
+                        { local _target } &&
+                        { (getAssignedCuratorUnit _target) isEqualTo _player }
+                    }
+                ] call ace_interact_menu_fnc_createAction
+            ];
+        };
+
+        if (isNil { missionNamespace getVariable "DZ_zeusManualSaveProgressSelfAction" }) then
+        {
+            missionNamespace setVariable
+            [
+                "DZ_zeusManualSaveProgressSelfAction",
+                [
+                    "DZ_manual_save_progress_self",
+                    "Сохранить прогресс",
+                    "",
+                    {
+                        [] remoteExecCall ["DZ_fnc_manualSaveProgress", 2];
+                    },
+                    {
+                        params ["_target", "_player", "_params"];
+                        _target isEqualTo _player &&
+                        {
+                            ({
+                                (getAssignedCuratorUnit _x) isEqualTo _player
+                            } count allCurators) > 0
+                        }
+                    }
+                ] call ace_interact_menu_fnc_createAction
+            ];
+        };
+    };
+
     {
         private _curator = _x;
 
@@ -30,7 +80,33 @@ private _attachCuratorHandler =
                 }
             ];
         };
+
+        if (!isNil "ace_interact_menu_fnc_createAction" && {!isNil "ace_interact_menu_fnc_addActionToObject"}) then
+        {
+            call _ensureSaveAction;
+
+            private _saveAction = missionNamespace getVariable ["DZ_zeusManualSaveProgressAction", []];
+            if (_saveAction isEqualType [] && { !(_curator getVariable ["DZ_zeusManualSaveProgressActionAdded", false]) }) then
+            {
+                _curator setVariable ["DZ_zeusManualSaveProgressActionAdded", true];
+                [_curator, 0, ["ACE_MainActions"], _saveAction] call ace_interact_menu_fnc_addActionToObject;
+            };
+        };
     } forEach allCurators;
+
+    if (!isNil "ace_interact_menu_fnc_createAction" &&
+        {!isNil "ace_interact_menu_fnc_addActionToClass"} &&
+        { !(missionNamespace getVariable ["DZ_zeusManualSaveProgressSelfActionAdded", false]) }) then
+    {
+        call _ensureSaveAction;
+        missionNamespace setVariable ["DZ_zeusManualSaveProgressSelfActionAdded", true];
+
+        private _selfSaveAction = missionNamespace getVariable ["DZ_zeusManualSaveProgressSelfAction", []];
+        if (_selfSaveAction isEqualType []) then
+        {
+            ["CAManBase", 1, ["ACE_SelfActions"], _selfSaveAction, true] call ace_interact_menu_fnc_addActionToClass;
+        };
+    };
 };
 
 if (hasInterface && { !(missionNamespace getVariable ["DZ_pylonRestrictionsCuratorWatcherDone", false]) }) then
