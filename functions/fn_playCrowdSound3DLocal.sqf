@@ -1,4 +1,4 @@
-/*
+﻿/*
  * DZ_fnc_playCrowdSound3DLocal
  * Plays a crowd CfgSounds class locally through playSound3D.
  */

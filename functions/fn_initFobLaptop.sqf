@@ -60,31 +60,6 @@ private _statusAction = [
 
 [_laptop, 0, ["ACE_MainActions"], _statusAction] call ace_interact_menu_fnc_addActionToObject;
 
-// Night skip — global cooldown is enforced server-side, so the HQ
-// laptop pressing the same action won't double-skip. Both sides see
-// a single side-message announcing who triggered it.
-private _nightSkipAction = [
-    "dz_night_skip",
-    "Промотать ночь",
-    "",
-    {
-        params ["_target", "_player"];
-        diag_log format ["[DZ_LAPTOP_FOB] Night skip requested by %1", name _player];
-        [_player] remoteExecCall ["DZ_fnc_requestNightSkip", 2];
-    },
-    {
-        params ["_target", "_player"];
-        side _player == resistance
-    },
-    {},
-    [],
-    {[0, 0, 0.5]},
-    4,
-    [false, false, true, false, true]
-] call ace_interact_menu_fnc_createAction;
-
-[_laptop, 0, ["ACE_MainActions"], _nightSkipAction] call ace_interact_menu_fnc_addActionToObject;
-
 // Two-step abort for the resistance slot.
 private _abortParent = [
     "dz_fob_abort",

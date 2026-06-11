@@ -34,6 +34,7 @@ private _catalog = [
     ["vehicles",  "veh_hilux_med",     "Toyota Hilux (медицинский)",    800, ["UK3CB_C_Hilux_Ambulance"]],
     ["vehicles",  "veh_ural_repair",   "Урал-4320 (ремонтный)",         800, ["UK3CB_C_Ural_Repair"]],
     ["vehicles",  "veh_ural_fuel",     "Урал-4320 (топливный)",         800, ["UK3CB_C_Ural_Fuel"]],
+    ["vehicles",  "veh_ural_fortify",  "Урал-4320 (фортификации)",      800, ["rhsgref_cdf_b_ural"]],
     ["vehicles",  "veh_landrover",     "Land Rover (транспортный)",    1000, ["UK3CB_C_LandRover_Softtop_Transport_Open"]],
     ["vehicles",  "veh_tahoe",         "Chevrolet Tahoe",              1400, ["UK3CB_C_SUV"]],
     ["vehicles",  "veh_uh1h",          "UH-1H (транспортный)",         3000, ["UK3CB_C_UH1H"]],

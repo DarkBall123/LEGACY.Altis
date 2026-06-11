@@ -346,27 +346,7 @@ missionNamespace setVariable ["DZ_playerSides", [west, resistance]];
 // paths (set to the more military faction); prefer DZ_playerSides.
 missionNamespace setVariable ["CH_sidePlayers", west];
 
-missionNamespace setVariable ["DZ_captureHold",      60];   // hold time for player captures
-missionNamespace setVariable ["DZ_captureHoldEnemy", 30];   // hold time for MEF (east) recaptures — shorter so they're a credible threat
-
-// Night-skip cost (per attempt). Side that triggers it pays the bill.
-// Tune higher to make night-fighting more committed (players can't
-// just buy their way out of darkness whenever they want).
-missionNamespace setVariable ["DZ_nightSkipCost", 1000];   // ₽ per skip
-
-// Trophy crate persistence: how often the periodic save PFH snapshots
-// every registered crate's contents to profileNamespace. Also saves on
-// each player disconnect, so this interval only matters for catastrophic
-// crashes (server lost power mid-session). 300 s (5 min) is the sweet
-// spot — frequent enough to lose at most 5 min of trophies on a crash,
-// rare enough to not thrash the disk.
-missionNamespace setVariable ["DZ_trophyCrateSaveInterval", 300];
-
-// Trophy vehicle sell price: fixed payout when players sell a saved
-// trophy at the logistics pad. Same low value regardless of vehicle —
-// the system rewards "captured + brought home" not "valuable asset".
-// Tune higher (500-800) if you want trophy sales to be a real income source.
-missionNamespace setVariable ["DZ_trophyVehicleSellPrice", 300];
+missionNamespace setVariable ["DZ_captureHold", 60];
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
 missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
 missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];
@@ -395,6 +375,18 @@ missionNamespace setVariable ["DZ_enemyAirSupportPatrolRadius", 900];
 missionNamespace setVariable ["DZ_enemyAirSupportHeliSpawnDistance", 2500];
 missionNamespace setVariable ["DZ_enemyAirSupportPlaneSpawnDistance", 4500];
 missionNamespace setVariable ["DZ_enemyAirSupportSafeMarkers", ["base_safe_zone"]];
+
+missionNamespace setVariable ["DZ_weatherSystemEnabled", true];
+missionNamespace setVariable ["DZ_weatherPresets",
+[
+    ["clear",    0.08, 0.00, 0.02, 2400, 4],
+    ["cloudy",   0.35, 0.00, 0.04, 2100, 5],
+    ["windy",    0.45, 0.00, 0.03, 1800, 3],
+    ["drizzle",  0.55, 0.18, 0.06, 1500, 3],
+    ["rain",     0.75, 0.65, 0.08, 1500, 2],
+    ["storm",    0.95, 1.00, 0.16, 1200, 1],
+    ["foggy",    0.22, 0.00, 0.30, 1800, 2]
+]];
 
 // ── Option B sector model: zone radii per BIS location type ─────────
 // Sectors are now anchored on real named locations (towns, airports,
@@ -523,3 +515,5 @@ missionNamespace setVariable ["DZ_abandonedVehicleCheckInterval", 180];
 // motorcycle dispatcher, police_trophy is the APD base trophy pad.
 missionNamespace setVariable ["DZ_trophyVehicleStoragePadNames",
     ["vehicle_delivery_pad", "logistics_point", "police_trophy"], true];
+
+

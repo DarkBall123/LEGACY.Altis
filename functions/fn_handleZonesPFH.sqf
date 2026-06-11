@@ -13,8 +13,7 @@ private _delayCleanup = missionNamespace getVariable ["DZ_cleanupDelay", 30];
 private _enableLiveDespawn = missionNamespace getVariable ["DZ_enableLiveDespawn", false];
 private _cpChance = missionNamespace getVariable ["DZ_cpChance", 0.003];
 
-private _captureHold      = missionNamespace getVariable ["DZ_captureHold",      60];   // player hold time
-private _captureHoldEnemy = missionNamespace getVariable ["DZ_captureHoldEnemy", 30];   // MEF recapture hold (shorter so they're a credible threat)
+private _captureHold = missionNamespace getVariable ["DZ_captureHold", 60];
 private _recaptureSpawnCooldown = missionNamespace getVariable ["DZ_recaptureSpawnCooldown", 180];
 private _counterRepeatCooldown = missionNamespace getVariable ["DZ_counterRepeatCooldown", 180];
 private _counterGlobalCooldown = missionNamespace getVariable ["DZ_counterGlobalCooldown", 180];
@@ -771,28 +770,6 @@ for "_idx" from 0 to (_sectorCount - 1) do
         };
     } forEach _activePlayers;
 
-    // BUGFIX (capture-block): the player loop above only set
-    // _ownerNearForCapture when an OWNER-SIDE PLAYER stood in the sector.
-    // AI defenders were completely ignored, so a single player could
-    // "capture" a sector with 20 MEF defenders still shooting at them.
-    //
-    // Use the side-counts we already gathered: owner blocks capture if
-    // they have at least as many units (AI + players) as the attacker.
-    private _ownerCount = switch (true) do {
-        case (_ownerSide isEqualTo west):       { _westCount };
-        case (_ownerSide isEqualTo resistance): { _resistanceCount };
-        case (_ownerSide isEqualTo east):       { _eastCount };
-        default { 0 };
-    };
-    private _attackerCount = switch (true) do {
-        case (_playerCaptureSide isEqualTo west):       { _westCount };
-        case (_playerCaptureSide isEqualTo resistance): { _resistanceCount };
-        default { 0 };
-    };
-    if (_ownerCount > 0 && { _ownerCount >= _attackerCount }) then {
-        _ownerNearForCapture = true;
-    };
-
     if (!_ownerNearForCapture && { !(_playerCaptureSide isEqualTo sideUnknown) } && { [_idx, _playerCaptureSide, _ownerSide] call _fnc_canCaptureByFrontier }) then
     {
         _dominantSide = _playerCaptureSide;
@@ -821,13 +798,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
     _sectorDominance set [_idx, _dominanceState];
     _dominanceState params ["_activeDominantSide", "_activeHoldStart"];
 
-    // MEF recapture uses a SHORTER hold time — when AI is overrunning a
-    // player-owned sector, the 60s player-hold is too long to maintain
-    // under fire and the dominance flips back before it elapses. Half
-    // the hold for east attacks gives MEF a real recapture window.
-    private _effectiveHold = if (_activeDominantSide isEqualTo _sideEnemy) then { _captureHoldEnemy } else { _captureHold };
-
-    if (!(_activeDominantSide isEqualTo sideUnknown) && { _activeHoldStart >= 0 } && { _now - _activeHoldStart >= _effectiveHold }) then
+    if (!(_activeDominantSide isEqualTo sideUnknown) && { _activeHoldStart >= 0 } && { _now - _activeHoldStart >= _captureHold }) then
     {
         if (!(_activeDominantSide isEqualTo _ownerSide)) then
         {

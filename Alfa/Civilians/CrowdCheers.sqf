@@ -24,10 +24,61 @@ private _protestMoves = [
 ] select {
     isClass (configFile >> "CfgMovesMaleSdr" >> "States" >> _x)
 };
-private _calmMoves = [];
+private _calmMoves = [
+    "ALFA_CrowdClap",
+    "ALFA_CrowdCheer"
+] select {
+    isClass (configFile >> "CfgMovesMaleSdr" >> "States" >> _x)
+};
+
+private _expectedCrowdMoves = [
+    "ALFA_CrowdClap",
+    "ALFA_CrowdCheer",
+    "ALFA_CrowdExcited1",
+    "ALFA_CrowdExcited3"
+];
+private _missingCrowdMoves = _expectedCrowdMoves select {
+    !(isClass (configFile >> "CfgMovesMaleSdr" >> "States" >> _x))
+};
+
+private _expectedCrowdSounds = [
+    "ALFA_CrowdAngry",
+    "ALFA_CrowdAngryLarge",
+    "ALFA_CrowdAngryLarge2",
+    "ALFA_CrowdAngrySmall",
+    "ALFA_CrowdChill",
+    "ALFA_CrowdChillLarge",
+    "ALFA_CrowdHappy"
+];
+private _missingCrowdSounds = _expectedCrowdSounds select {
+    !(isClass (configFile >> "CfgSounds" >> _x))
+};
+private _availableCrowdSounds = _expectedCrowdSounds - _missingCrowdSounds;
+
+diag_log format ["[ALFA_CIV] Crowd addon probe on this machine. Animations available: %1/%2. Sounds available: %3/%4. Available sounds: %5", (count _expectedCrowdMoves) - (count _missingCrowdMoves), count _expectedCrowdMoves, count _availableCrowdSounds, count _expectedCrowdSounds, _availableCrowdSounds];
+
 if (!_clapAvailable) then {
     diag_log "[ALFA_CIV] ALFA crowd reactions addon is not loaded. Crowd applause is disabled.";
 };
+if !(_missingCrowdMoves isEqualTo []) then {
+    diag_log format ["[ALFA_CIV] Missing crowd animation classes on this machine: %1", _missingCrowdMoves];
+};
+if !(_missingCrowdSounds isEqualTo []) then {
+    diag_log format ["[ALFA_CIV] Missing crowd sound classes on this machine: %1. On dedicated server/HC, load the addon with -mod, not only -clientmod.", _missingCrowdSounds];
+};
+
+ALFA_fnc_playCrowdSay3DLocal = {
+    params ["_speaker", "_soundPool"];
+
+    if (isNull _speaker) exitWith {};
+    private _localSoundPool = _soundPool select {
+        isClass (configFile >> "CfgSounds" >> _x)
+    };
+    if (_localSoundPool isEqualTo []) exitWith {};
+
+    _speaker say3D (selectRandom _localSoundPool);
+};
+publicVariable "ALFA_fnc_playCrowdSay3DLocal";
 
 while { true } do {
     private _players = allPlayers select {
@@ -82,8 +133,8 @@ while { true } do {
                     };
                     private _selectedMoves = switch (_role) do {
                         case "hostile": { _protestMoves };
-                        case "cautious": { [] };
-                        case "neutral": { [] };
+                        case "cautious": { _calmMoves };
+                        case "neutral": { _calmMoves };
                         default { _happyMoves };
                     };
                     private _useAnimation = !(_selectedMoves isEqualTo []);

@@ -20,6 +20,7 @@ call DZ_fnc_initAbandonedVehicleCleanup;
 call DZ_fnc_initZeusCleanupHook;
 call DZ_fnc_initPylonRestrictions;
 call DZ_fnc_initEnemyAirSupport;
+call compile preprocessFileLineNumbers "functions\fn_initWeatherSystem.sqf";
 
 // ── Side relations: 3-way hostility triangle ──────────────────────────
 // APD (west) vs MEF (east): hostile.
@@ -50,3 +51,6 @@ call DZ_fnc_initSquadFunds;
 call DZ_fnc_initFortifyEconomy;
 call DZ_fnc_initTrophyVehicleStorage;
 call DZ_fnc_initResourceNodes;
+
+
+

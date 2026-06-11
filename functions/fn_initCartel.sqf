@@ -70,10 +70,7 @@ private _catalog = [
     ["cartel_made",   "cm_crate_ak47",         "Ящик с АК-47",                                            500, ["UK3CB_AK47_Equipbox_Indfor"]],
     ["cartel_made",   "cm_crate_m16a3",        "Ящик с М16A3",                                            800, ["UK3CB_M16A3_Equipbox_Blufor"]],
     ["cartel_made",   "cm_crate_svd",          "Ящик с СВД",                                              800, ["UK3CB_SVD_OLD_Equipbox_Opfor"]],
-    ["cartel_made",   "cm_crate_m60",          "Ящик с M60",                                              800, ["UK3CB_M60_Equipbox_Opfor"]],
-    ["cartel_made",   "cm_crate_mp5",          "Ящик с MP5",                                              800, ["UK3CB_MP5_Equipbox_Opfor"]],
     ["cartel_made",   "cm_crate_launchers",    "Ящик с пусковыми установками",                           5000, ["rhs_launcher_crate"]],
-    ["cartel_made",   "cm_crate_cartel_cache", "Тайник с оружием Картеля",                               1000, ["SFIA_Box_Wps_lxWS"]],
     // ── Трофеи AAF (captured / smuggled stock) ─────────────────────
     ["aaf_captured",  "aaf_landrover_armed",   "Land Rover (вооруженный)",                               1400, ["UK3CB_AAF_I_LR_SF_WMIK_M240_M240"]],
     ["aaf_captured",  "aaf_dingo",             "Динго (МРАП)",                                           1600, ["UK3CB_AAF_B_Dingo"]],
@@ -82,8 +79,7 @@ private _catalog = [
     ["aaf_captured",  "aaf_aw159",             "AW159 (ударный)",                                        5000, ["I_Heli_light_03_dynamicLoadout_Globe"]],
     ["aaf_captured",  "aaf_crate_wps",         "Ящик с основным оружием AAF",                            1000, ["Box_IND_Wps_F"]],
     ["aaf_captured",  "aaf_crate_demo",        "Ящик со взрывчаткой AAF",                                1000, ["Box_IND_AmmoOrd_F"]],
-    ["aaf_captured",  "aaf_crate_ammo",        "Ящик с основными боеприпасами AAF",                       100, ["Box_IND_Ammo_F"]],
-    ["aaf_captured",  "aaf_crate_support",     "Ящик поддержки AAF",                                     1000, ["Box_IND_Support_F"]]
+    ["aaf_captured",  "aaf_crate_ammo",        "Ящик с основными боеприпасами AAF",                       100, ["Box_IND_Ammo_F"]]
 ];
 
 private _resolveClass = {
