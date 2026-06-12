@@ -105,16 +105,25 @@ private _fnc_setSavedOwner =
 {
     params ["_sectorId", "_side"];
 
+    private _key = [_side] call _fnc_sideToKey;
+    private _newKey = if (_key != "" && { !(_side isEqualTo _sideEnemy) }) then { _key } else { "" };
+
     private _entryIdx = _savedOwners findIf { (_x param [0, -1]) isEqualTo _sectorId };
+    private _oldKey = if (_entryIdx >= 0) then { (_savedOwners select _entryIdx) param [1, ""] } else { "" };
+
+    // No real change → leave the dirty flag alone. Without this guard
+    // seedBaseSectors (runs every tick) re-stamps stable base sectors and
+    // forces a saveProfileNamespace every second.
+    if (_oldKey isEqualTo _newKey) exitWith {};
+
     if (_entryIdx >= 0) then
     {
         _savedOwners deleteAt _entryIdx;
     };
 
-    private _key = [_side] call _fnc_sideToKey;
-    if (_key != "" && { !(_side isEqualTo _sideEnemy) }) then
+    if (_newKey != "") then
     {
-        _savedOwners pushBack [_sectorId, _key];
+        _savedOwners pushBack [_sectorId, _newKey];
     };
 
     // Dirty flag lives in missionNamespace so the periodic saver still
