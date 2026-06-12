@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Upload a mission PBO over FTP using a checked temporary file."""
+"""Upload a mission PBO over FTP using a checked temporary file.
+
+If the active mission PBO is locked by the running Arma 3 server and
+DEPLOY_RCON_PASSWORD/DEPLOY_RCON_PORT are configured, the script asks the
+server to restart itself over BattlEye RCon (DEPLOY_RCON_COMMAND, default
+"#restartserver"), waits for the file lock to disappear and finishes the
+publish — no hosting-panel interaction needed.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +15,7 @@ import ftplib
 import os
 import posixpath
 import ssl
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -113,6 +121,67 @@ def locked_pbo_error(
     )
 
 
+def rcon_configured() -> bool:
+    return bool(
+        os.environ.get("DEPLOY_RCON_PASSWORD", "").strip()
+        and os.environ.get("DEPLOY_RCON_PORT", "").strip()
+    )
+
+
+def request_server_restart() -> bool:
+    """Ask the running server to restart itself over BattlEye RCon."""
+    from rcon_bercon import BERCon, RConError
+
+    host = os.environ.get("DEPLOY_RCON_HOST", "").strip() or required_env("DEPLOY_HOST")
+    port = int(required_env("DEPLOY_RCON_PORT"))
+    password = required_env("DEPLOY_RCON_PASSWORD")
+    command = os.environ.get("DEPLOY_RCON_COMMAND", "#restartserver").strip()
+
+    rcon = BERCon(host, port, password)
+    try:
+        rcon.login()
+        rcon.command(command)
+        print(f"Sent RCon {command} to {host}:{port}; waiting for the PBO lock to clear")
+        return True
+    except (OSError, RConError) as error:
+        print(f"::warning title=RCon restart failed::{error}")
+        return False
+    finally:
+        rcon.close()
+
+
+def publish(ftp: ftplib.FTP, target_name: str, temporary_name: str, backup_name: str) -> None:
+    """Swap the staged PBO into place. Raises ftplib.error_perm while the
+    active PBO is locked; safe to retry (the backup step is skipped once
+    it has succeeded)."""
+    if remote_exists(ftp, target_name):
+        if env_bool("DEPLOY_BACKUP_EXISTING", True):
+            ftp.rename(target_name, backup_name)
+            print(f"Backed up previous mission PBO as {backup_name}")
+        else:
+            delete_existing(ftp, target_name)
+
+    ftp.rename(temporary_name, target_name)
+
+
+def prune_backups(ftp: ftplib.FTP, target_name: str) -> None:
+    """Best-effort cleanup: keep only the newest DEPLOY_BACKUP_KEEP backups."""
+    keep = int(os.environ.get("DEPLOY_BACKUP_KEEP", "5"))
+    if keep <= 0:
+        return
+    try:
+        backups = sorted(
+            name
+            for name in ftp.nlst()
+            if name.startswith(f"{target_name}.") and name.endswith(".bak")
+        )
+        for stale in backups[:-keep]:
+            ftp.delete(stale)
+            print(f"Pruned old backup {stale}")
+    except ftplib.Error as error:
+        print(f"Backup pruning skipped: {error}")
+
+
 def main() -> int:
     load_env(ROOT / ".env")
 
@@ -143,28 +212,51 @@ def main() -> int:
         print(f"Would upload {pbo.name} ({pbo.stat().st_size} bytes) to {target}")
         return 0
 
+    poll_seconds = float(os.environ.get("DEPLOY_LOCK_POLL_SECONDS", "3"))
+    lock_timeout = float(os.environ.get("DEPLOY_LOCK_TIMEOUT_SECONDS", "180"))
+
     ftp = connect()
     try:
         ftp.cwd(remote_dir)
         remote_size = stage_upload(ftp, pbo, temporary_name)
 
-        if remote_exists(ftp, target_name):
+        restart_sent = False
+        deadline = time.monotonic()  # first locked attempt decides the real deadline
+        while True:
             try:
-                if env_bool("DEPLOY_BACKUP_EXISTING", True):
-                    ftp.rename(target_name, backup_name)
-                    print(f"Backed up previous mission PBO as {backup_name}")
-                else:
-                    delete_existing(ftp, target_name)
+                publish(ftp, target_name, temporary_name, backup_name)
+                break
             except ftplib.error_perm as error:
-                raise locked_pbo_error(
-                    target_name, temporary_name, error
-                ) from error
+                if not str(error).startswith("550"):
+                    raise
 
-        try:
-            ftp.rename(temporary_name, target_name)
-        except ftplib.error_perm as error:
-            raise locked_pbo_error(target_name, temporary_name, error) from error
+                if not restart_sent:
+                    if not (rcon_configured() and request_server_restart()):
+                        raise locked_pbo_error(
+                            target_name, temporary_name, error
+                        ) from error
+                    restart_sent = True
+                    deadline = time.monotonic() + lock_timeout
+
+                if time.monotonic() >= deadline:
+                    raise locked_pbo_error(
+                        target_name, temporary_name, error
+                    ) from error
+
+                time.sleep(poll_seconds)
+                try:
+                    ftp.voidcmd("NOOP")
+                except (OSError, ftplib.Error):
+                    print("FTP connection dropped while waiting; reconnecting")
+                    try:
+                        ftp.close()
+                    except OSError:
+                        pass
+                    ftp = connect()
+                    ftp.cwd(remote_dir)
+
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
+        prune_backups(ftp, target_name)
     finally:
         try:
             ftp.quit()
