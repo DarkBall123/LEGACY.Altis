@@ -11,6 +11,7 @@ missionNamespace setVariable ["DZ_clientInitDone", true];
 [] call DZ_fnc_startAmbientSound;
 [] call DZ_fnc_initSideBaseMarkers;
 [] call DZ_fnc_initTrophyVehicleStorage;
+[] call DZ_fnc_initInventoryPersistMarking;
 
 [
     {

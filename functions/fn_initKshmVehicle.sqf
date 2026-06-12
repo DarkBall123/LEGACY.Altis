@@ -18,7 +18,7 @@ if (isServer) then
     };
 
     _vehicle setVariable ["DZ_noCleanup", true, true];
-    _vehicle setVariable ["DZ_persist", true, true];
+    [_vehicle] call DZ_fnc_markPersistent;
 
     if !(_vehicle getVariable ["kshm_killedEh", false]) then
     {

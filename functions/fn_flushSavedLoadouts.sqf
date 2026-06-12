@@ -20,8 +20,8 @@ private _serialized = [];
     };
 } forEach (keys _cache);
 
-profileNamespace setVariable ["DZ_savedPlayerLoadouts", _serialized];
-saveProfileNamespace;
+["DZ_savedPlayerLoadouts", _serialized] call DZ_fnc_storeSet;
+call DZ_fnc_storeFlush;
 
 missionNamespace setVariable ["DZ_loadoutsDirty", false];
 

@@ -101,7 +101,7 @@ ALFA_fnc_repRecomputeGlobal = {
 // ── Load persisted per-side starting values ──────────────────────────
 {
     private _key   = [_x] call ALFA_fnc_repKeyForSide;
-    private _saved = profileNamespace getVariable [_key, _initialRep];
+    private _saved = [_key, _initialRep] call DZ_fnc_storeGet;
     missionNamespace setVariable [_key, _saved, true];
 } forEach _playerSides;
 
@@ -199,8 +199,8 @@ ALFA_fnc_repAdjust = {
     private _newValue = ((_oldValue + _amount) max 0) min 100;
 
     missionNamespace setVariable [_key, _newValue, true];
-    profileNamespace setVariable [_key, _newValue];
-    saveProfileNamespace;
+    [_key, _newValue] call DZ_fnc_storeSet;
+    call DZ_fnc_storeFlush;
 
     diag_log format ["[ALFA_REP:%1] %2 -> %3 (%4, %5)",
         [_side] call ALFA_fnc_repSideLabel, _oldValue, _newValue, _amount, _reason];

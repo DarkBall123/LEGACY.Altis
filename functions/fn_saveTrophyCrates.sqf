@@ -4,10 +4,10 @@
  * (weapons, magazines, items, backpacks) to profileNamespace.
  *
  * Called by:
- *   - Periodic PFH (every DZ_trophyCrateSaveInterval seconds, default 300)
- *   - HandleDisconnect event (catches state from a player who just
- *     dropped trophies before leaving)
- *   - Admin "save now" hook if you want, via fn_manualSaveProgress
+ *   - Periodic asset-save loop in fn_initServer (DZ_assetSaveInterval)
+ *   - HandleDisconnect event in fn_initServer (catches state from a
+ *     player who just dropped trophies before leaving)
+ *   - fn_manualSaveProgress (admin "save now")
  *
  * Known limitation: this saves TOP-LEVEL cargo only. If a player puts
  * a backpack into the crate that contains weapons, those nested items
@@ -47,7 +47,7 @@ private _kept       = [];
         getBackpackCargo _crate
     ];
 
-    profileNamespace setVariable [format ["DZ_trophyCrate_%1", _crateId], _snapshot];
+    [format ["DZ_trophyCrate_%1", _crateId], _snapshot] call DZ_fnc_storeSet;
 
     _kept pushBack _crate;
     _saved = _saved + 1;
@@ -56,7 +56,7 @@ private _kept       = [];
 missionNamespace setVariable ["DZ_trophyCrateRegistry", _kept];
 
 if (_saved > 0) then {
-    saveProfileNamespace;
+    call DZ_fnc_storeFlush;
 };
 
 diag_log format ["[DZ_TROPHY_CRATE] Save pass: %1 crates saved, %2 orphaned (deregistered).", _saved, _orphaned];

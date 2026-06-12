@@ -75,9 +75,8 @@ _vehicle setVariable ["DZ_trophyVehicleOwnerSide", _callerSide, true];
 _vehicle setVariable ["DZ_trophyVehicleSavedBy", name _caller, true];
 _vehicle setVariable ["DZ_trophyVehicleSavedAt", time, true];
 _vehicle setVariable ["DZ_trophyVehicleSaveInProgress", false, true];
-_vehicle setVariable ["DZ_persist", true, true];
+[_vehicle] call DZ_fnc_markPersistent;
 
-missionNamespace setVariable ["DZ_assetsDirty", true];
 [true] call DZ_fnc_saveAssets;
 
 diag_log format [

@@ -36,7 +36,7 @@ if !(_cache isEqualType createHashMap) then
         {
             _cache set [_entryUid, _entryLoadout];
         };
-    } forEach (profileNamespace getVariable ["DZ_savedPlayerLoadouts", []]);
+    } forEach (["DZ_savedPlayerLoadouts", []] call DZ_fnc_storeGet);
 
     missionNamespace setVariable ["DZ_savedLoadoutsCache", _cache];
 };

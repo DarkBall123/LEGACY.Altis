@@ -71,8 +71,7 @@ _vehicle setDamage 0;
 _vehicle setVariable ["DZ_trackAbandoned", true, true];
 _vehicle setVariable ["DZ_lastUsed", time, true];
 
-_vehicle setVariable ["DZ_persist", true, true];
-missionNamespace setVariable ["DZ_assetsDirty", true];
+[_vehicle] call DZ_fnc_markPersistent;
 [true] call DZ_fnc_saveAssets;
 
 missionNamespace setVariable ["DZ_transportLastRequest", time, true];

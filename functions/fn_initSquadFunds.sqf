@@ -52,7 +52,7 @@ DZ_fnc_squadFundsGetBalance = {
 // ── Per-side starting balances (load persisted, broadcast to clients) ──
 {
     private _key   = [_x] call DZ_fnc_squadFundsKeyForSide;
-    private _saved = profileNamespace getVariable [_key, _initialBalance];
+    private _saved = [_key, _initialBalance] call DZ_fnc_storeGet;
     missionNamespace setVariable [_key, _saved, true];
 } forEach _playerSides;
 
@@ -150,8 +150,8 @@ DZ_fnc_squadFundsAdjust = {
     private _newValue = (_oldValue + _amount) max 0;
 
     missionNamespace setVariable [_key, _newValue, true];
-    profileNamespace setVariable [_key, _newValue];
-    saveProfileNamespace;
+    [_key, _newValue] call DZ_fnc_storeSet;
+    call DZ_fnc_storeFlush;
 
     diag_log format ["[DZ_FUNDS:%1] %2 -> %3 (%4, %5)",
         [_side] call DZ_fnc_squadFundsSideLabel, _oldValue, _newValue, _amount, _reason];

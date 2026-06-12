@@ -332,6 +332,13 @@ missionNamespace setVariable ["DZ_enableCorpseCleanup", true];
 // next sweep once players have moved on.
 missionNamespace setVariable ["DZ_corpseCleanupPlayerProximity", 50];
 missionNamespace setVariable ["DZ_loadoutSaveInterval", 60];
+missionNamespace setVariable ["DZ_sectorSaveInterval", 60];
+// Auto-mark containers/vehicles whose inventory a player opened as
+// persistent (saved across restarts).
+missionNamespace setVariable ["DZ_invPersistEnabled", true];
+// Hard cap on the persistent-object registry so "everything players
+// touched" persistence cannot grow the asset snapshot without bound.
+missionNamespace setVariable ["DZ_persistMaxAssets", 400];
 missionNamespace setVariable ["DZ_respawnPoints", _respawnPoints];
 missionNamespace setVariable ["DZ_scriptRespawnMarkersEnabled", false];
 
@@ -350,7 +357,11 @@ missionNamespace setVariable ["DZ_captureHold", 60];
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
 missionNamespace setVariable ["DZ_frontierSeedBaseSectors", true];
 missionNamespace setVariable ["DZ_frontierBaseRadius", _gridSize * 1.25];
-missionNamespace setVariable ["DZ_frontierPruneDisconnectedSaves", true];
+// Opt-in: when true, sectors disconnected from a friendly base (through
+// same-side neighbours) are reverted to enemy on server start. Off by
+// default — with two player factions / island sectors it silently wipes
+// legitimately saved captures.
+missionNamespace setVariable ["DZ_frontierPruneDisconnectedSaves", false];
 missionNamespace setVariable ["DZ_frontierAllowDisconnectedLandings", true];
 missionNamespace setVariable ["DZ_recaptureSpawnCooldown", 360];
 missionNamespace setVariable ["DZ_spawnRetryCooldown", 60];
