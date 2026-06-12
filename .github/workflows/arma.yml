@@ -115,15 +115,6 @@ jobs:
       DEPLOY_FTP_TLS: ${{ vars.DEPLOY_FTP_TLS || 'off' }}
       DEPLOY_REMOTE_MISSIONS_DIR: ${{ vars.DEPLOY_REMOTE_MISSIONS_DIR || '/MPMissions' }}
       DEPLOY_BACKUP_EXISTING: ${{ vars.DEPLOY_BACKUP_EXISTING || 'true' }}
-      DEPLOY_BACKUP_KEEP: ${{ vars.DEPLOY_BACKUP_KEEP || '5' }}
-      # BattlEye RCON fallback: when the running server locks the PBO, the
-      # deploy script sends #restartserver and retries until the lock clears.
-      # Leave the secrets unset to disable (old stop-the-server-manually flow).
-      DEPLOY_RCON_HOST: ${{ secrets.DEPLOY_RCON_HOST }}
-      DEPLOY_RCON_PORT: ${{ secrets.DEPLOY_RCON_PORT }}
-      DEPLOY_RCON_PASSWORD: ${{ secrets.DEPLOY_RCON_PASSWORD }}
-      DEPLOY_RCON_COMMAND: ${{ vars.DEPLOY_RCON_COMMAND || '#restartserver' }}
-      DEPLOY_LOCK_TIMEOUT_SECONDS: ${{ vars.DEPLOY_LOCK_TIMEOUT_SECONDS || '180' }}
     steps:
       - name: Checkout deployment tools
         uses: actions/checkout@v4
