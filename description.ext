@@ -139,6 +139,7 @@ class CfgFunctions
             class requestPersistMark       {};
             class initInventoryPersistMarking {};
             class restoreContainerContents {};
+            class initBaseContainerPersist {};
             class initTrophyVehicleStorage  {};
             class isTrophyVehicleStorable   {};
             class saveTrophyVehicle         {};

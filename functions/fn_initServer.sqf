@@ -214,6 +214,7 @@ missionNamespace setVariable ["DZ_persistRegistry", []];
 
 call DZ_fnc_restoreAssets;
 call DZ_fnc_restoreContainerContents;
+call DZ_fnc_initBaseContainerPersist;
 
 addMissionEventHandler
 [

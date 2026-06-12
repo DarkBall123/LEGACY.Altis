@@ -339,6 +339,9 @@ missionNamespace setVariable ["DZ_invPersistEnabled", true];
 // Hard cap on the persistent-object registry so "everything players
 // touched" persistence cannot grow the asset snapshot without bound.
 missionNamespace setVariable ["DZ_persistMaxAssets", 400];
+// Radius around each base/respawn point in which editor-placed storage
+// containers are auto-persisted (their contents saved across restarts).
+missionNamespace setVariable ["DZ_baseContainerRadius", 300];
 missionNamespace setVariable ["DZ_respawnPoints", _respawnPoints];
 missionNamespace setVariable ["DZ_scriptRespawnMarkersEnabled", false];
 
