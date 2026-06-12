@@ -55,13 +55,13 @@ private _styleWestOwned = missionNamespace getVariable ["DZ_styleWestOwned", 0];
 private _styleEastOwned = missionNamespace getVariable ["DZ_styleEastOwned", _styleEnemyDormant];
 private _styleResistanceOwned = missionNamespace getVariable ["DZ_styleResistanceOwned", 2];
 
-private _saved = missionNamespace getVariable ["DZ_savedCapturesCache", profileNamespace getVariable ["DZ_savedCaptures", []]];
+private _saved = missionNamespace getVariable ["DZ_savedCapturesCache", ["DZ_savedCaptures", []] call DZ_fnc_storeGet];
 if !(_saved isEqualType []) then
 {
     _saved = [];
 };
 
-private _savedOwners = missionNamespace getVariable ["DZ_savedSectorOwners", profileNamespace getVariable ["DZ_savedSectorOwners", []]];
+private _savedOwners = missionNamespace getVariable ["DZ_savedSectorOwners", ["DZ_savedSectorOwners", []] call DZ_fnc_storeGet];
 if !(_savedOwners isEqualType []) then
 {
     _savedOwners = [];
@@ -116,6 +116,11 @@ private _fnc_setSavedOwner =
     {
         _savedOwners pushBack [_sectorId, _key];
     };
+
+    // Dirty flag lives in missionNamespace so the periodic saver still
+    // persists this change even if the current tick aborts on an error
+    // before reaching the end-of-tick save.
+    missionNamespace setVariable ["DZ_capturesDirty", true];
 };
 
 private _fnc_ownerStyle =
@@ -308,20 +313,14 @@ private _fnc_seedBaseSectors =
                 {
                     _sectorOwner set [_x, _side];
                     _sectorDominance set [_x, [sideUnknown, -1]];
-                    _capturesDirty = true;
+                    missionNamespace setVariable ["DZ_capturesDirty", true];
                 };
 
                 if (_side in _playerSides) then
                 {
-                    private _wasSaved = _x in _saved;
                     _captHash set [_x, true];
                     _saved pushBackUnique _x;
                     [_x, _side] call _fnc_setSavedOwner;
-
-                    if (!_wasSaved) then
-                    {
-                        _capturesDirty = true;
-                    };
                 };
             };
         } forEach _seedIds;
@@ -374,8 +373,6 @@ _spawnBlockedUntil = [_spawnBlockedUntil, _sectorCount, 0] call _fnc_resizeArray
 _firstCounterDone = [_firstCounterDone, _sectorCount, false] call _fnc_resizeArray;
 _nextCounterAt = [_nextCounterAt, _sectorCount, 0] call _fnc_resizeArray;
 
-private _capturesDirty = false;
-
 _savedOwners = _savedOwners select
 {
     (_x isEqualType []) &&
@@ -420,6 +417,14 @@ if (_frontierCaptureOnly && { _frontierPruneDisconnectedSaves } && { !(missionNa
         {
             if (!([_sectorId, _ownerSide] call _fnc_isConnectedToBase)) then
             {
+                diag_log format
+                [
+                    "[DZ_SECTORS] PRUNE: sector %1 (%2) owned by %3 is disconnected from base - reverting to enemy",
+                    _sectorId,
+                    [_sectorId] call DZ_fnc_sectorName,
+                    _ownerSide
+                ];
+
                 _sectorOwner set [_sectorId, _sideEnemy];
                 _sectorDominance set [_sectorId, [sideUnknown, -1]];
                 _captHash deleteAt _sectorId;
@@ -431,7 +436,6 @@ if (_frontierCaptureOnly && { _frontierPruneDisconnectedSaves } && { !(missionNa
                 };
 
                 [_sectorId, _sideEnemy] call _fnc_setSavedOwner;
-                _capturesDirty = true;
             };
         };
     };
@@ -814,7 +818,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
             _sectorOwner set [_idx, _ownerSide];
             _firstCounterDone set [_idx, false];
             _nextCounterAt set [_idx, 0];
-            _capturesDirty = true;
+            missionNamespace setVariable ["DZ_capturesDirty", true];
 
             if (_captured) then
             {
@@ -1392,11 +1396,9 @@ missionNamespace setVariable ["DZ_savedCapturesCache", _saved];
 missionNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 missionNamespace setVariable ["DZ_capturedHash", _captHash];
 
-if (_capturesDirty) then
+if (missionNamespace getVariable ["DZ_capturesDirty", false]) then
 {
-    profileNamespace setVariable ["DZ_savedCaptures", _saved];
-    profileNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
-    saveProfileNamespace;
+    call DZ_fnc_saveSectors;
 };
 
 call DZ_fnc_publishSectorState;

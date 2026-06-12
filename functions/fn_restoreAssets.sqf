@@ -5,7 +5,7 @@
 
 if (!isServer) exitWith { 0 };
 
-private _saved = profileNamespace getVariable ["DZ_savedAssets", []];
+private _saved = ["DZ_savedAssets", []] call DZ_fnc_storeGet;
 if !(_saved isEqualType []) exitWith {
     diag_log "[DZ_ASSETS] No saved-asset list (or wrong type) — nothing to restore.";
     0
@@ -97,7 +97,7 @@ private _restored = 0;
 
                 _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false], ["_trophyOwnerKey", ""], ["_kshmDeployed", false]];
 
-                _veh setVariable ["DZ_persist", true, true];
+                [_veh] call DZ_fnc_markPersistent;
                 if (_purchased) then {
                     _veh setVariable ["DZ_purchasedItem", true, true];
                     _veh setVariable ["DZ_noCleanup",     true, true];

@@ -47,34 +47,15 @@ if (_sectorCount > 0 && { _zoneData isEqualType [] } && { (count _zoneData) >= _
 }
 else
 {
-    _savedCaptures = missionNamespace getVariable ["DZ_savedCapturesCache", profileNamespace getVariable ["DZ_savedCaptures", []]];
-    _savedOwners = missionNamespace getVariable ["DZ_savedSectorOwners", profileNamespace getVariable ["DZ_savedSectorOwners", []]];
+    _savedCaptures = missionNamespace getVariable ["DZ_savedCapturesCache", ["DZ_savedCaptures", []] call DZ_fnc_storeGet];
+    _savedOwners = missionNamespace getVariable ["DZ_savedSectorOwners", ["DZ_savedSectorOwners", []] call DZ_fnc_storeGet];
 };
 
-if !(_savedCaptures isEqualType []) then
-{
-    _savedCaptures = [];
-};
-
-_savedCaptures = _savedCaptures select { _x isEqualType 0 };
-_savedCaptures = _savedCaptures arrayIntersect _savedCaptures;
-
-if !(_savedOwners isEqualType []) then
-{
-    _savedOwners = [];
-};
-
-_savedOwners = _savedOwners select
-{
-    (_x isEqualType []) &&
-    { (_x param [0, -1]) isEqualType 0 } &&
-    { (_x param [1, ""]) isEqualType "" }
-};
-
-profileNamespace setVariable ["DZ_savedCaptures", _savedCaptures];
-profileNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 missionNamespace setVariable ["DZ_savedCapturesCache", _savedCaptures];
 missionNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
+
+// Sanitizes the caches set above and persists them with a timestamp.
+call DZ_fnc_saveSectors;
 
 {
     [_x] call DZ_fnc_savePlayerLoadout;
@@ -83,9 +64,10 @@ missionNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 private _loadoutsSaved = call DZ_fnc_flushSavedLoadouts;
 
 private _assetsSaved = [true] call DZ_fnc_saveAssets;
+call DZ_fnc_saveTrophyCrates;
 
-saveProfileNamespace;
+call DZ_fnc_storeFlush;
 
-diag_log format ["[DZ] Manual save completed: captures=%1 loadoutsSaved=%2 assetsSaved=%3", count _savedCaptures, _loadoutsSaved, _assetsSaved];
+diag_log format ["[DZ] Manual save completed: captures=%1 loadoutsSaved=%2 assetsSaved=%3", count (missionNamespace getVariable ["DZ_savedCapturesCache", []]), _loadoutsSaved, _assetsSaved];
 
 true

@@ -74,6 +74,17 @@ class CfgFunctions
     class DZ
     {
 
+        class store
+        {
+            file = "functions";
+
+            class storeInit    {};
+            class storeGet     {};
+            class storeSet     {};
+            class storeFlush   {};
+            class storeMigrate {};
+        };
+
         class grid
         {
             file = "functions";
@@ -123,9 +134,18 @@ class CfgFunctions
             class squadFundsRequestBalance {};
             class saveAssets               {};
             class restoreAssets            {};
+            class saveSectors              {};
+            class markPersistent           {};
+            class requestPersistMark       {};
+            class initInventoryPersistMarking {};
+            class restoreContainerContents {};
             class initTrophyVehicleStorage  {};
             class isTrophyVehicleStorable   {};
             class saveTrophyVehicle         {};
+            class sellTrophyVehicle         {};
+            class initTrophyCrate           {};
+            class saveTrophyCrates          {};
+            class restoreTrophyCrateContents {};
             class initResourceNodes         {};
             class resourceTick              {};
             class initFortifyEconomy        {};
@@ -254,6 +274,7 @@ class CfgRemoteExec
         class DZ_fnc_showHint              { allowedTargets = 1; jip = 0; };
         class DZ_fnc_sideMessage           { allowedTargets = 0; jip = 0; };
         class DZ_fnc_manualSaveProgress  { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestPersistMark  { allowedTargets = 2; jip = 0; };
     };
 
     class Commands

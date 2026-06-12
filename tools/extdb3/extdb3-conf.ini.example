@@ -1,0 +1,22 @@
+;; extDB3 connection config for the LEGACY.Altis key-value store.
+;; Copy to the Arma 3 server root as `extdb3-conf.ini` (next to
+;; @extDB3) and adjust. The mission expects the database section name
+;; `legacy_altis` (see fn_storeInit.sqf: 9:ADD_DATABASE:legacy_altis).
+
+[Main]
+Version = 1
+;; Set to a random string in production if you use extDB3 ADD_DATABASE
+;; lock features; not required for this mission.
+
+[legacy_altis]
+;; --- Recommended: SQLite (no database server needed on the host) ---
+Type = SQLite
+Name = legacy_altis.sqlite3
+
+;; --- Alternative: MySQL / MariaDB ---
+;Type = MySQL
+;IP = 127.0.0.1
+;Port = 3306
+;Username = legacy
+;Password = CHANGE_ME
+;Database = legacy_altis

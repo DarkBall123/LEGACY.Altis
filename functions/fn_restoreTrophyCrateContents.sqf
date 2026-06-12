@@ -22,7 +22,7 @@ params [
 
 if (isNull _crate || { _crateId == "" }) exitWith { false };
 
-private _snapshot = profileNamespace getVariable [format ["DZ_trophyCrate_%1", _crateId], []];
+private _snapshot = [format ["DZ_trophyCrate_%1", _crateId], []] call DZ_fnc_storeGet;
 if (_snapshot isEqualTo []) exitWith {
     diag_log format ["[DZ_TROPHY_CRATE] '%1' first run — keeping Eden default cargo.", _crateId];
     false

@@ -31,7 +31,7 @@ if (isServer) then {
             private _key = [_x] call DZ_fnc_squadFundsKeyForSide;
             if (_key != "" && { isNil { missionNamespace getVariable _key } }) then {
                 private _initialBalance = missionNamespace getVariable ["DZ_squadFundsInitialBalance", 500];
-                private _saved = profileNamespace getVariable [_key, _initialBalance];
+                private _saved = [_key, _initialBalance] call DZ_fnc_storeGet;
                 missionNamespace setVariable [_key, _saved, true];
             };
 
@@ -74,10 +74,9 @@ if (isServer) then {
                 ] call DZ_fnc_squadFundsAdjust;
 
                 _object setVariable ["DZ_noCleanup", true, true];
-                _object setVariable ["DZ_persist", true, true];
                 _object setVariable ["DZ_fortifyBuilt", true, true];
                 _object setVariable ["DZ_fortifyCost", _cost, true];
-                missionNamespace setVariable ["DZ_assetsDirty", true];
+                [_object] call DZ_fnc_markPersistent;
                 [true] call DZ_fnc_saveAssets;
 
             }] call CBA_fnc_addEventHandler;

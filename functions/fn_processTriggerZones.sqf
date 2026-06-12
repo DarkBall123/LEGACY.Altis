@@ -13,9 +13,9 @@ private _styleEastOwned = missionNamespace getVariable ["DZ_styleEastOwned", _st
 private _maxSectorId = (count _sectorGrid) - 1;
 private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", east];
 private _sectorOwner = missionNamespace getVariable ["DZ_sectorOwner", []];
-private _savedOwners = profileNamespace getVariable ["DZ_savedSectorOwners", []];
+private _savedOwners = ["DZ_savedSectorOwners", []] call DZ_fnc_storeGet;
 
-private _saved = profileNamespace getVariable ["DZ_savedCaptures", []];
+private _saved = ["DZ_savedCaptures", []] call DZ_fnc_storeGet;
 private _forbiddenSpawnAreas = [];
 private _playerAreaTriggers = 0;
 private _enemyAreaTriggers = 0;
@@ -240,10 +240,6 @@ else
     } forEach _sectorGrid;
 } forEach (allMissionObjects "EmptyDetector" select { !isNull _x });
 
-profileNamespace setVariable ["DZ_savedCaptures", _saved];
-profileNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
-saveProfileNamespace;
-
 missionNamespace setVariable ["DZ_zoneData", _zoneData];
 missionNamespace setVariable ["DZ_sectorOwner", _sectorOwner];
 missionNamespace setVariable ["DZ_urbanHash", _urbanHash];
@@ -251,6 +247,8 @@ missionNamespace setVariable ["DZ_savedCapturesCache", _saved];
 missionNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 missionNamespace setVariable ["DZ_capturedHash", _captHash];
 missionNamespace setVariable ["DZ_forbiddenSpawnAreas", _forbiddenSpawnAreas];
+
+call DZ_fnc_saveSectors;
 
 call DZ_fnc_publishSectorState;
 diag_log format

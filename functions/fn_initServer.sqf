@@ -5,6 +5,9 @@
 
 diag_log "[DZ] === Dynamic Zones INIT ===";
 
+// Storage layer must exist before any persisted state is read.
+call DZ_fnc_storeInit;
+
 private _gridSize    = missionNamespace getVariable ["DZ_gridSize", 350];
 private _sectorBuild = [_gridSize, worldSize] call DZ_fnc_buildSectorGrid;
 private _sectorGrid   = _sectorBuild # 0;
@@ -159,9 +162,21 @@ missionNamespace setVariable ["DZ_sectorOwner", _sectorOwner];
 missionNamespace setVariable ["DZ_spawnBlockedUntil", _spawnBlockedUntil];
 missionNamespace setVariable ["DZ_firstCounterDone", _firstCounterDone];
 missionNamespace setVariable ["DZ_nextCounterAt", _nextCounterAt];
-missionNamespace setVariable ["DZ_savedCapturesCache", profileNamespace getVariable ["DZ_savedCaptures", []]];
-missionNamespace setVariable ["DZ_savedSectorOwners", profileNamespace getVariable ["DZ_savedSectorOwners", []]];
+missionNamespace setVariable ["DZ_savedCapturesCache", ["DZ_savedCaptures", []] call DZ_fnc_storeGet];
+missionNamespace setVariable ["DZ_savedSectorOwners", ["DZ_savedSectorOwners", []] call DZ_fnc_storeGet];
+missionNamespace setVariable ["DZ_capturesDirty", false];
 missionNamespace setVariable ["DZ_capturedHash", createHashMap];
+
+// Startup diagnostic: proves in the RPT whether persisted sector state
+// survived the restart (count mismatch or "<never>" points at the host
+// wiping the server profile rather than at mission code).
+diag_log format
+[
+    "[DZ] Loaded %1 captures, %2 owners, savedAt=%3",
+    count (missionNamespace getVariable ["DZ_savedCapturesCache", []]),
+    count (missionNamespace getVariable ["DZ_savedSectorOwners", []]),
+    ["DZ_sectorsSavedAt", "<never>"] call DZ_fnc_storeGet
+];
 missionNamespace setVariable ["DZ_lastSectorVisualState", []];
 missionNamespace setVariable ["DZ_loadoutsDirty", false];
 
@@ -180,7 +195,7 @@ private _savedLoadoutsCache = createHashMap;
     {
         _savedLoadoutsCache set [_entryUid, _entryLoadout];
     };
-} forEach (profileNamespace getVariable ["DZ_savedPlayerLoadouts", []]);
+} forEach (["DZ_savedPlayerLoadouts", []] call DZ_fnc_storeGet);
 missionNamespace setVariable ["DZ_savedLoadoutsCache", _savedLoadoutsCache];
 
 call DZ_fnc_initRespawnMarkers;
@@ -189,7 +204,16 @@ call DZ_fnc_processTriggerZones;
 call DZ_fnc_publishSectorState;
 
 missionNamespace setVariable ["DZ_assetsDirty", false];
+missionNamespace setVariable ["DZ_persistRegistry", []];
+
+// Tag editor-placed objects BEFORE restoreAssets so dynamically recreated
+// assets never count as Eden-placed (drives "contents-only" persistence).
+{
+    _x setVariable ["DZ_edenPlaced", true];
+} forEach (vehicles + (allMissionObjects "B_Respawn_TentA_F") + (allMissionObjects "ReammoBox_F"));
+
 call DZ_fnc_restoreAssets;
+call DZ_fnc_restoreContainerContents;
 
 addMissionEventHandler
 [
@@ -208,8 +232,7 @@ addMissionEventHandler
             sleep 1;
             if (isNull _entity) exitWith {};
             _entity setVariable ["DZ_noCleanup", true, true];
-            _entity setVariable ["DZ_persist", true, true];
-            missionNamespace setVariable ["DZ_assetsDirty", true];
+            [_entity] call DZ_fnc_markPersistent;
             call DZ_fnc_saveAssets;
         };
     }
@@ -238,9 +261,37 @@ addMissionEventHandler
 
         [_unit, true, _uid] call DZ_fnc_savePlayerLoadout;
         [true] call DZ_fnc_saveAssets;
+        call DZ_fnc_saveTrophyCrates;
+
+        if (missionNamespace getVariable ["DZ_capturesDirty", false]) then
+        {
+            call DZ_fnc_saveSectors;
+        };
+
         false
     }
 ];
+
+if !(missionNamespace getVariable ["DZ_sectorSaveStarted", false]) then
+{
+    missionNamespace setVariable ["DZ_sectorSaveStarted", true];
+
+    // Safety net: a capture marks DZ_capturesDirty at mutation time, so
+    // even if the zone tick later aborts on a script error before its
+    // end-of-tick save, this loop persists the change within the interval.
+    [] spawn
+    {
+        while { true } do
+        {
+            sleep (missionNamespace getVariable ["DZ_sectorSaveInterval", 60]);
+
+            if (missionNamespace getVariable ["DZ_capturesDirty", false]) then
+            {
+                call DZ_fnc_saveSectors;
+            };
+        };
+    };
+};
 
 if !(missionNamespace getVariable ["DZ_loadoutSaveStarted", false]) then
 {
@@ -275,6 +326,7 @@ if !(missionNamespace getVariable ["DZ_assetSaveStarted", false]) then
             sleep (missionNamespace getVariable ["DZ_assetSaveInterval", 300]);
             missionNamespace setVariable ["DZ_assetsDirty", true];
             call DZ_fnc_saveAssets;
+            call DZ_fnc_saveTrophyCrates;
         };
     };
 };

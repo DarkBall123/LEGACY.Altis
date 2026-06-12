@@ -9,11 +9,20 @@ if (!isServer) exitWith { 0 };
 private _force = param [0, false, [false]];
 
 if (!_force && { !(missionNamespace getVariable ["DZ_assetsDirty", false]) }) exitWith {
-    count (profileNamespace getVariable ["DZ_savedAssets", []])
+    count (["DZ_savedAssets", []] call DZ_fnc_storeGet)
 };
 
 private _snapshot = [];
-private _saveTargets = vehicles + (allMissionObjects "B_Respawn_TentA_F");
+
+// Registry first: it covers ammo boxes (ReammoBox_F) and static
+// fortifications, which the `vehicles` command does not return. The
+// legacy scans stay as a defensive union for objects flagged before the
+// registry existed.
+private _registry = missionNamespace getVariable ["DZ_persistRegistry", []];
+_registry = _registry select { !isNull _x && { alive _x } };
+missionNamespace setVariable ["DZ_persistRegistry", _registry];
+
+private _saveTargets = _registry + vehicles + (allMissionObjects "B_Respawn_TentA_F") + (allMissionObjects "ReammoBox_F");
 _saveTargets = _saveTargets arrayIntersect _saveTargets;
 
 {
@@ -22,7 +31,11 @@ _saveTargets = _saveTargets arrayIntersect _saveTargets;
     if (
         !isNull _veh &&
         { alive _veh } &&
-        { _veh getVariable ["DZ_persist", false] }
+        { _veh getVariable ["DZ_persist", false] } &&
+        // "contents" objects are editor-placed: only their inventory is
+        // persisted (trophy-crate path); recreating them would duplicate.
+        { (_veh getVariable ["DZ_persistMode", "recreate"]) isEqualTo "recreate" } &&
+        { (_veh getVariable ["DZ_trophyCrateId", ""]) isEqualTo "" }
     ) then {
         private _class    = typeOf _veh;
         private _posATL   = getPosATL _veh;
@@ -69,8 +82,8 @@ _saveTargets = _saveTargets arrayIntersect _saveTargets;
     };
 } forEach _saveTargets;
 
-profileNamespace setVariable ["DZ_savedAssets", _snapshot];
-saveProfileNamespace;
+["DZ_savedAssets", _snapshot] call DZ_fnc_storeSet;
+call DZ_fnc_storeFlush;
 
 missionNamespace setVariable ["DZ_assetsDirty", false];
 

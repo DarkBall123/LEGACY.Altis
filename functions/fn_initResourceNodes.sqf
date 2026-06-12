@@ -124,7 +124,7 @@ missionNamespace setVariable ["DZ_resourceNodeLastOwners", _nodeLastOwners];
 // First tick uses the persisted timestamp so restarts don't reset the
 // clock. If we've been past the interval already, the next tick fires
 // immediately on PFH start.
-private _lastTick = profileNamespace getVariable ["DZ_resourceLastTick", -1e9];
+private _lastTick = ["DZ_resourceLastTick", -1e9] call DZ_fnc_storeGet;
 missionNamespace setVariable ["DZ_resourceLastTick", _lastTick];
 
 private _tickHandle = [
@@ -139,8 +139,8 @@ private _tickHandle = [
 
         private _now = time;
         missionNamespace setVariable ["DZ_resourceLastTick", _now];
-        profileNamespace setVariable ["DZ_resourceLastTick", _now];
-        saveProfileNamespace;
+        ["DZ_resourceLastTick", _now] call DZ_fnc_storeSet;
+        call DZ_fnc_storeFlush;
     },
     60,   // check every minute; the gate inside enforces the 30-min cadence
     [_tickInterval]

@@ -75,8 +75,7 @@ _item setVariable ["DZ_purchasedItem", true, true];
 _item setVariable ["DZ_purchasedBy", name _buyer, true];
 _item setVariable ["DZ_purchasedSide", _buyerSide, true];
 
-_item setVariable ["DZ_persist", true, true];
-missionNamespace setVariable ["DZ_assetsDirty", true];
+[_item] call DZ_fnc_markPersistent;
 [true] call DZ_fnc_saveAssets;
 
 diag_log format ["[DZ_PURCHASE] %1 bought by %2 (%3) for %4₽. Spawned at %5. New balance: %6₽.",
