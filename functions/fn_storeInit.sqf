@@ -60,11 +60,14 @@ DZ_fnc_storeUnescape =
 
 // Run one synchronous SQL_CUSTOM call. Returns the parsed response
 // array ([1, rows] / [0, error]), or [] on a malformed response.
+// extDB3 message format: "0:" = sync (result returned immediately),
+// "1:" = async fire-and-forget — reads AND write-success checks both
+// need the sync form.
 DZ_fnc_storeDbCall =
 {
     params ["_request"];
 
-    private _raw = "extDB3" callExtension format ["1:STORE:%1", _request];
+    private _raw = "extDB3" callExtension format ["0:STORE:%1", _request];
     if (_raw isEqualTo "") exitWith { [] };
 
     private _parsed = parseSimpleArray _raw;
