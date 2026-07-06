@@ -109,7 +109,7 @@ private _abortParent = [
     {
         params ["_target", "_player"];
         (side _player == east) &&
-        { missionNamespace getVariable ["DZ_missionActive_WEST", false] }
+        { missionNamespace getVariable ["DZ_missionActive_EAST", false] }
     },
     {},
     [],
@@ -132,7 +132,7 @@ private _abortConfirm = [
     {
         params ["_target", "_player"];
         (side _player == east) &&
-        { missionNamespace getVariable ["DZ_missionActive_WEST", false] }
+        { missionNamespace getVariable ["DZ_missionActive_EAST", false] }
     },
     {},
     [],

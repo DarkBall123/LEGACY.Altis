@@ -128,9 +128,9 @@ if (!isNull _pad) then
 else
 {
     diag_log "[HUMANITARIAN] vehicle_delivery_pad not found — falling back to APD respawn.";
-    if ((markerType "respawn_west") != "") then
+    if ((markerType "respawn_east") != "") then
     {
-        _basePos = getMarkerPos "respawn_west";
+        _basePos = getMarkerPos "respawn_east";
     }
     else
     {

@@ -51,8 +51,7 @@ missionNamespace setVariable ["DZ_missionIntelLeakLines", _intelLines];
     private _template      = _intelLines getOrDefault [_missionId, "%1 что-то затевают. Подробностей нет."];
 
     private _leakerLabel = switch (true) do {
-        case (_starterSide isEqualTo west):       { "APD" };
-        case (_starterSide isEqualTo resistance): { "силы Свободного Алтиса" };
+        case (_starterSide isEqualTo east):       { "APD" };
         default { str _starterSide };
     };
 

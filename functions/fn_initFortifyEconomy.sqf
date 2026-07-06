@@ -57,8 +57,10 @@ if (isServer) then {
                 };
             } forEach vehicles;
 
-            ace_fortify_locations = _locations;
-            publicVariable "ace_fortify_locations";
+            if (isNil "ace_fortify_locations" || { !(_locations isEqualTo ace_fortify_locations) }) then {
+                ace_fortify_locations = _locations;
+                publicVariable "ace_fortify_locations";
+            };
         };
 
         call DZ_fnc_fortifyRebuildAnchors;

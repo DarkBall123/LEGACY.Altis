@@ -28,7 +28,7 @@ if (_side isEqualTo sideUnknown) then {
     _side = [_caller] call DZ_fnc_missionSideOfPlayer;
 };
 if (_side isEqualTo sideUnknown) then {
-    _side = west;
+    _side = missionNamespace getVariable ["CH_sidePlayers", east];
 };
 
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];

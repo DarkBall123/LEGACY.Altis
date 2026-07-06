@@ -29,8 +29,7 @@ private _replyTarget = owner _caller;
 private _callerSide  = side _caller;
 
 private _factionLabel = switch (true) do {
-    case (_callerSide isEqualTo west):       { "APD" };
-    case (_callerSide isEqualTo resistance): { "Free Altis" };
+    case (_callerSide isEqualTo east):       { "APD" };
     default { str _callerSide };
 };
 
