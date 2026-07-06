@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -36,7 +33,6 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -47,10 +43,6 @@ private _playerHeldPositions = [];
     };
 } forEach _cells;
 
-// ── Village picker: use Arma 3's real named locations (Stratis/Altis
-// has these baked in as map metadata: NameVillage / NameCity / etc.)
-// instead of "any cluster of buildings near a sector centre", which
-// on Altis ends up pointing at random fields with a barn.
 private _villageCandidates = [];
 private _allVillages = nearestLocations [
     [worldSize * 0.5, worldSize * 0.5, 0],
@@ -86,7 +78,6 @@ if ((count _villageCandidates) < 3) exitWith
     ["Подходящих деревень не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
-
 
 private _chosenVillages = [];
 private _shuffled = +_villageCandidates;
@@ -128,10 +119,6 @@ diag_log format ["[HUMANITARIAN] Chosen villages: %1", _chosenVillages];
     diag_log format ["[HUMANITARIAN] Village %1: %2", _forEachIndex + 1, _x];
 } forEach _chosenVillages;
 
-
-// Crates spawn at the IDAP quartermaster delivery pad — shared by
-// both player factions (IDAP is humanitarian, both APD and Free Altis
-// can take this contract and pick up the crates from the same place).
 private _basePos = [];
 private _pad = missionNamespace getVariable ["vehicle_delivery_pad", objNull];
 if (!isNull _pad) then
@@ -141,9 +128,9 @@ if (!isNull _pad) then
 else
 {
     diag_log "[HUMANITARIAN] vehicle_delivery_pad not found — falling back to APD respawn.";
-    if ((markerType "respawn_west") != "") then
+    if ((markerType "respawn_east") != "") then
     {
-        _basePos = getMarkerPos "respawn_west";
+        _basePos = getMarkerPos "respawn_east";
     }
     else
     {
@@ -209,7 +196,6 @@ for "_i" from 0 to 2 do
 
 diag_log format ["[HUMANITARIAN] Spawned %1 crates near base", count _crates];
 
-
 private _villageMarkers = [];
 {
     private _markerName = format ["marker_aid_village_%1", _forEachIndex + 1];
@@ -246,7 +232,6 @@ missionNamespace setVariable ["DZ_aidAmbushTriggered",   [false, false, false]];
 ["Гуманитарная миссия активна. Возьмите ящики на базе и доставьте в деревни.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-
 private _fnc_crateOnGround = {
     params ["_crate"];
 
@@ -267,7 +252,6 @@ private _fnc_crateOnGround = {
 
     _onGround
 };
-
 
 private _spawnAmbush = {
     params ["_anchorPos", "_missionSide"];
@@ -324,7 +308,6 @@ private _spawnAmbush = {
     _ambushGroup
 };
 
-
 private _stateHandle = [
     {
         params ["_args", "_handle"];
@@ -346,7 +329,6 @@ private _stateHandle = [
         private _deliveredCount = missionNamespace getVariable ["DZ_aidDeliveredCount", 0];
         private _ambushTriggered = missionNamespace getVariable ["DZ_aidAmbushTriggered", [false, false, false]];
 
-
         {
             private _crate = _x;
             private _markerName = _crateMarkers param [_forEachIndex, ""];
@@ -355,7 +337,6 @@ private _stateHandle = [
                 _markerName setMarkerPos (getPosATL _crate);
             };
         } forEach _crates;
-
 
         {
             private _crate = _x;
@@ -385,7 +366,6 @@ private _stateHandle = [
                                 missionNamespace setVariable ["DZ_aidVillageDelivered", _delivered];
                                 missionNamespace setVariable ["DZ_aidDeliveredCount", _deliveredCount];
 
-
                                 private _vMarker = _villageMarkers param [_villageIdx, ""];
                                 if (_vMarker != "") then
                                 {
@@ -411,7 +391,6 @@ private _stateHandle = [
                 };
             };
         } forEach _crates;
-
 
         {
             private _villagePos = _x;
@@ -461,7 +440,6 @@ private _stateHandle = [
             };
         } forEach _villages;
 
-
         if (_deliveredCount >= count _villages) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
@@ -469,7 +447,6 @@ private _stateHandle = [
             ["Гуманитарная помощь доставлена во все деревни. Отличная работа.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
-
 
         private _useableCrates = _crates select {
             !isNull _x &&

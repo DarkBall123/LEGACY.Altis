@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -22,7 +19,6 @@ if !((_sideState get "active")) then
     private _definition = ["downed_pilot"] call DZ_fnc_getMissionDefinition;
     ["downed_pilot", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
-
 
 private _extractMarker = missionNamespace getVariable ["DZ_pilotExtractionMarker", ""];
 private _extractPos   = missionNamespace getVariable ["DZ_pilotExtractionPos",    []];
@@ -46,7 +42,6 @@ if (_extractPos isEqualTo [] || { _extractPos isEqualTo [0,0,0] }) exitWith
     false
 };
 
-
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
 private _zoneData  = missionNamespace getVariable ["DZ_zoneData",          []];
 private _zoneTpl   = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
@@ -60,7 +55,6 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -70,7 +64,6 @@ private _playerHeldPositions = [];
         _playerHeldPositions pushBack _x;
     };
 } forEach _cells;
-
 
 private _candidates = [];
 {
@@ -95,7 +88,6 @@ private _candidates = [];
         };
     };
 } forEach _cells;
-
 
 if (_candidates isEqualTo []) then
 {
@@ -127,7 +119,6 @@ private _sectorCenter = _cells select _sectorIdx;
 diag_log format ["[DOWNED_PILOT] Crash sector: %1 at %2 (%3m from player territory, %4m from extract)",
     _sectorIdx, _sectorCenter, round (_selected # 1), round (_sectorCenter distance2D _extractPos)];
 
-
 private _crashPos = _sectorCenter;
 private _nearbyBuildings = nearestObjects [_sectorCenter, ["House"], 80] select
 {
@@ -144,7 +135,6 @@ if (_nearbyBuildings isNotEqualTo []) then
     };
 };
 
-
 private _spawnResult = [_sectorCenter, 6] call DZ_fnc_spawnForZone;
 _spawnResult params [["_defenderGroups", []], ["_defenderVehicles", []], ["_defenderUnitCount", 0]];
 
@@ -152,7 +142,6 @@ private _defenderUnits = [];
 {
     _defenderUnits append (units _x);
 } forEach _defenderGroups;
-
 
 private _guardGroup = createGroup [_sideEnemy, true];
 private _guardClasses = [
@@ -177,11 +166,8 @@ _guardGroup setBehaviour "AWARE";
 
 diag_log format ["[DOWNED_PILOT] Spawned %1 guards at crash site %2", count _guards, _crashPos];
 
-
 private _pilotGroup = createGroup [civilian, true];
-// AAF jet pilot — surviving holdout from Stratis still flying sorties
-// against MEF. His jet was shot down over Altis; both APD and Free Altis
-// see him as a symbol of the pre-occupation resistance worth rescuing.
+
 private _pilotClass = "";
 {
     if (isClass (configFile >> "CfgVehicles" >> _x)) exitWith { _pilotClass = _x; };
@@ -201,7 +187,6 @@ if (!isNil "DZ_fnc_prepareSpawnedUnit") then
 };
 
 diag_log format ["[DOWNED_PILOT] Pilot spawned: %1 at %2", _pilot, getPosATL _pilot];
-
 
 ["create", "marker_pilot",   _sectorCenter, "mil_pickup", "Сбитый пилот"] call DZ_fnc_missionUi;
 ["create", "marker_extract", _extractPos,   "mil_end",    "Эвакуация"]    call DZ_fnc_missionUi;
@@ -226,7 +211,6 @@ missionNamespace setVariable ["DZ_pilotMissionGuards",  _guards];
         round (_sectorCenter distance2D _extractPos)
     ]
 ] call DZ_fnc_missionUi;
-
 
 private _stateHandle = [
     {
@@ -288,17 +272,14 @@ private _stateHandle = [
 
                     missionNamespace setVariable ["DZ_pilotMissionRescued", true];
 
-
                     _pilot enableAI "MOVE";
                     _pilot enableAI "AUTOTARGET";
                     _pilot enableAI "TARGET";
                     _pilot setCaptive false;
                     _pilot setUnitPos "AUTO";
 
-
                     private _rescuerGroup = group _rescuer;
                     [_pilot] joinSilent _rescuerGroup;
-
 
                     diag_log format ["[DOWNED_PILOT] Pilot joined group %1 (side: %2)",
                         _rescuerGroup, side _rescuerGroup];
@@ -318,7 +299,6 @@ private _stateHandle = [
                 }
                 else
                 {
-
 
                     private _lastLog = missionNamespace getVariable ["DZ_pilotProxLogTime", 0];
                     if (time - _lastLog > 10) then
@@ -340,13 +320,8 @@ private _stateHandle = [
             };
         };
 
-        // Re-read the secured flag — the block above may have set it this frame.
         _rescued = missionNamespace getVariable ["DZ_pilotMissionRescued", false];
 
-        // Fallback secure: players physically moved the pilot away from the
-        // crash site (ACE handcuff + drag/carry, or vehicle load) even if the
-        // scripted rescue trigger never fired. Treat him as secured so the
-        // extraction can complete.
         if (!_rescued && { alive _pilot } && { (_pilot distance2D _crashPos) > 100 }) then
         {
             missionNamespace setVariable ["DZ_pilotMissionRescued", true];
@@ -371,8 +346,6 @@ private _stateHandle = [
                     round (_pilot distance2D _extractPos), _extractRadius, alive _pilot, captive _pilot, _extractPos];
             };
 
-            // Delivery succeeds on the pilot's own position, regardless of
-            // whether he is following on foot, cuffed (captive) or carried.
             if (alive _pilot && { (_pilot distance2D _extractPos) < _extractRadius }) exitWith
             {
                 [_handle] call CBA_fnc_removePerFrameHandler;

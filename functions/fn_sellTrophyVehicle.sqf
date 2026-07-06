@@ -36,7 +36,6 @@ private _knownPads   = [];
     };
 } forEach _padNames;
 
-// Find nearest pad if not supplied
 if (isNull _pad) then {
     private _nearestDistance = 1e9;
     {
@@ -65,7 +64,6 @@ if !(_callerSide in _playerSides) exitWith {
 
 private _factionLabel = [_callerSide] call DZ_fnc_squadFundsSideLabel;
 
-// Find sellable trophy vehicles in range
 private _radius     = missionNamespace getVariable ["DZ_trophyVehicleStorageRadius", 20];
 private _sellPrice  = missionNamespace getVariable ["DZ_trophyVehicleSellPrice", 300];
 private _candidates = nearestObjects [_pad, ["LandVehicle", "Air"], _radius];
@@ -91,16 +89,11 @@ private _className   = typeOf _vehicle;
 private _vehicleName = getText (configOf _vehicle >> "displayName");
 if (_vehicleName == "") then { _vehicleName = _className; };
 
-// Mark to skip any racing cleanup pass before we delete.
 _vehicle setVariable ["DZ_trophyVehicleSaveInProgress", true, true];
-_vehicle setVariable ["DZ_persist", false, true];   // un-flag so saveAssets stops tracking it
+_vehicle setVariable ["DZ_persist", false, true];
 
-// Credit the wallet first, THEN delete — if the deletion fails for some
-// engine reason, the player still gets the money rather than losing
-// both vehicle and price.
 private _newBalance = [_sellPrice, format ["Trophy sale: %1 by %2 (%3)", _className, name _caller, _factionLabel], _callerSide] call DZ_fnc_squadFundsAdjust;
 
-// Delete crew (shouldn't be any, but defensive) then the vehicle.
 {
     if (!isNull _x) then { deleteVehicle _x; };
 } forEach (crew _vehicle);

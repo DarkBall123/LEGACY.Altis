@@ -20,7 +20,6 @@ ENGIMA_CIVILIANS_GetParamValue = {
 	_value
 };
 
-
 ENGIMA_CIVILIANS_GetAllPlayersPositions = {
 	private ["_playerPositions"];
 
@@ -38,7 +37,6 @@ ENGIMA_CIVILIANS_GetAllPlayersPositions = {
 			_playerPositions = [position vehicle player];
 		};
 	};
-
 
 	_playerPositions
 };
@@ -83,7 +81,6 @@ ENGIMA_CIVILIANS_FindSpawnPosition = {
 		_playerBuilding = _playerBuildings select floor random count _playerBuildings;
 		_building = _playerBuilding select 0;
 		_buildingPosCount = _playerBuilding select 1;
-
 
 		if (_buildingPosCount > 0) then {
 			_buildingPosNo = floor random _buildingPosCount;
@@ -200,7 +197,6 @@ ENGIMA_CIVILIANS_GetPlayerBuildings = {
 		sleep 0.01;
 	} foreach _allPlayerPositions;
 
-
 	_playerBuildingsTemp = [];
 	{
 		_buildingPosCount = [_x] call ENGIMA_CIVILIANS_CountPositionsInBuilding;
@@ -212,10 +208,8 @@ ENGIMA_CIVILIANS_GetPlayerBuildings = {
 		}
 	} foreach _playerBuildings;
 
-
 	_playerBuildingsTemp
 };
-
 
 ENGIMA_CIVILIANS_StartCivilians = {
 	private ["_unit", "_maxUnitsCount"];
@@ -225,7 +219,7 @@ ENGIMA_CIVILIANS_StartCivilians = {
 	private _side = [_this, "SIDE", civilian] call ENGIMA_CIVILIANS_GetParamValue;
 	private _minSkill = [_this, "MIN_SKILL", 0.4] call ENGIMA_CIVILIANS_GetParamValue;
 	private _maxSkill = [_this, "MAX_SKILL", 0.6] call ENGIMA_CIVILIANS_GetParamValue;
-	private _unitClasses = [_this, "UNIT_CLASSES", ["c_civil_cloth_01", "c_civil_cloth_02", "c_civil_cloth_03", "c_civil_cloth_04", "c_civil_cloth_05", "c_civil_cloth_06", "c_civil_cloth_07", "c_civil_cloth_08", "c_civil_cloth_09", "c_civil_cloth_10", "c_civil_cloth_11", "c_civil_cloth_12"]] call ENGIMA_CIVILIANS_GetParamValue;
+	private _unitClasses = [_this, "UNIT_CLASSES", ["LOP_CHR_Civ_Worker_02", "LOP_CHR_Civ_Worker_01", "LOP_CHR_Civ_Worker_04", "LOP_CHR_Civ_Worker_03", "LOP_CHR_Civ_Woodlander_04", "LOP_CHR_Civ_Woodlander_03", "LOP_CHR_Civ_Villager_02", "LOP_CHR_Civ_Villager_03", "LOP_CHR_Civ_Villager_04", "LOP_CHR_Civ_Villager_01", "LOP_CHR_Civ_SchoolTeacher", "LOP_CHR_Civ_Rocker_04", "LOP_CHR_Civ_Rocker_01", "LOP_CHR_Civ_Profiteer_04", "LOP_CHR_Civ_Random", "LOP_CHR_Civ_Priest_01", "LOP_CHR_Civ_Policeman_01", "LOP_CHR_Civ_Functionary_02", "LOP_CHR_Civ_Functionary_01", "LOP_CHR_Civ_Doctor_01", "LOP_CHR_Civ_Citizen_02", "LOP_CHR_Civ_Citizen_01", "LOP_CHR_Civ_Citizen_04", "LOP_CHR_Civ_Assistant"]] call ENGIMA_CIVILIANS_GetParamValue;
 	private _unitsPerBuilding = [_this, "UNITS_PER_BUILDING", 0.1] call ENGIMA_CIVILIANS_GetParamValue;
 	private _maxGroupsCount = [_this, "MAX_GROUPS_COUNT", 100] call ENGIMA_CIVILIANS_GetParamValue;
 	private _minSpawnDistance = [_this, "MIN_SPAWN_DISTANCE", 100] call ENGIMA_CIVILIANS_GetParamValue;
@@ -243,7 +237,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 			_x setMarkerAlpha 0;
 		} foreach _blackListMarkers;
 	};
-
 
 	_spawnUnit = {
 		params ["_side", "_minSpawnDistance", "_unitClasses", "_playerBuildings", "_blackListMarkers", "_fnc_OnSpawningCallback" , "_fnc_OnSpawnedCallback", "_currentCivilianCount", "_calculatedCivilianCount"];
@@ -279,7 +272,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 		_unit
 	};
 
-
 	sleep 0.5;
 
 	_civilianItems = [];
@@ -291,7 +283,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 		_allPlayerPositions = _allPlayers apply { position vehicle _x };
 		_playerBuildings = [_allPlayerPositions, _maxSpawnDistance, _blackListMarkers] call ENGIMA_CIVILIANS_GetPlayerBuildings;
 		_maxUnitsCount = ceil (_unitsPerBuilding * count _playerBuildings);
-
 
 		if (_maxUnitsCount > _maxGroupsCount) then {
 			_maxUnitsCount = _maxGroupsCount;
@@ -486,7 +477,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 			_nextActionTime = _x select 5;
 			_isRunning = _x select 6;
 
-
 			if (_isMoving && _lastPos distance getPos _unit < 1) then {
 				_isMoving = false;
 				_nextActionTime = time + random ENGIMA_CIVILIANS_MAXWAITINGTIME;
@@ -496,7 +486,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 
 				(group _unit) setFormDir random 360;
 			};
-
 
 			if (!_isMoving && time > _nextActionTime) then {
 

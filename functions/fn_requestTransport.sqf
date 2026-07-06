@@ -13,8 +13,7 @@ if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 
 private _replyTarget = owner _caller;
 
-// Motorcycle request is Free Altis-exclusive (resistance/INDFOR).
-if !((side _caller) isEqualTo resistance) exitWith {
+if !((side _caller) isEqualTo east) exitWith {
     ["Транспорт", "Запрос Мотоцикла доступен только бойцам «Свободный Алтис»."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
@@ -67,7 +66,6 @@ _vehicle setPosATL _freePos;
 _vehicle setFuel 1;
 _vehicle setDamage 0;
 
-
 _vehicle setVariable ["DZ_trackAbandoned", true, true];
 _vehicle setVariable ["DZ_lastUsed", time, true];
 
@@ -77,4 +75,4 @@ _vehicle setVariable ["DZ_lastUsed", time, true];
 missionNamespace setVariable ["DZ_transportLastRequest", time, true];
 
 ["Транспорт", "Мотоцикл готов на точке логистики."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
-["Мотоцикл выдан на базе.", resistance] remoteExecCall ["DZ_fnc_sideMessage", 0];
+["Мотоцикл выдан на базе.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];

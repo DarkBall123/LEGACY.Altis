@@ -4,14 +4,13 @@
  * Alfa ambience, and squad funds for the LEGACY.Altis campaign.
  *
  * Side layout:
- *   west       (BLUFOR) — Altis Police Department (APD), player faction A
- *   resistance (IND)    — "Free Altis" insurgents, player faction B
- *   east       (OPFOR)  — Malden Expeditionary Force (MEF), AI antagonist
- *   civilian            — AEGIS International, Pyrgos Cartel, locals (neutral)
+ *   east       (OPFOR)  — the single player faction
+ *   west       (BLUFOR) — AI enemy
+ *   resistance (IND)    — AI enemy, allied with west
+ *   civilian            — neutral to everyone
  *
- * Three-way hostility: APD <-> MEF, APD <-> Free Altis, MEF <-> Free Altis
- * are all hostile. Civilians (AEGIS / Cartel) stay neutral to everyone;
- * safety inside the trading hubs is enforced by setCaptive on those NPCs.
+ * Players (east) are hostile to both west and resistance; the two enemy
+ * sides are friendly to each other. Civilians stay neutral.
  */
 
 call DZ_fnc_controlParams;
@@ -22,16 +21,12 @@ call DZ_fnc_initPylonRestrictions;
 call DZ_fnc_initEnemyAirSupport;
 call compile preprocessFileLineNumbers "functions\fn_initWeatherSystem.sqf";
 
-// ── Side relations: 3-way hostility triangle ──────────────────────────
-// APD (west) vs MEF (east): hostile.
-west       setFriend [east,       0];
 east       setFriend [west,       0];
-// APD (west) vs Free Altis (resistance): hostile.
-west       setFriend [resistance, 0];
-resistance setFriend [west,       0];
-// MEF (east) vs Free Altis (resistance): hostile.
+west       setFriend [east,       0];
 east       setFriend [resistance, 0];
 resistance setFriend [east,       0];
+west       setFriend [resistance, 1];
+resistance setFriend [west,       1];
 
 DZ_RadioTracks =
 [
@@ -51,6 +46,4 @@ call DZ_fnc_initSquadFunds;
 call DZ_fnc_initFortifyEconomy;
 call DZ_fnc_initTrophyVehicleStorage;
 call DZ_fnc_initResourceNodes;
-
-
 

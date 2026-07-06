@@ -22,7 +22,6 @@ _radio setVariable ["radio_actions_added", true, false];
             [_id, _label, "", _code, _condition] call ace_interact_menu_fnc_createAction
         };
 
-
         private _aRoot = [
             "radio_root",
             "Радио",
@@ -59,7 +58,6 @@ _radio setVariable ["radio_actions_added", true, false];
             },
             { (_target getVariable ['radio_playing', false]) }
         ] call _fnc_makeAction;
-
 
         [_radio, 0, ["ACE_MainActions"], _aRoot] call ace_interact_menu_fnc_addActionToObject;
         [_radio, 0, ["ACE_MainActions", "radio_root"], _aPlay] call ace_interact_menu_fnc_addActionToObject;

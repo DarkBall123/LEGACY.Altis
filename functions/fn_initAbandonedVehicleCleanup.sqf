@@ -27,7 +27,6 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
         private _now = time;
         private _proximityRadius = 30;
 
-
         private _allVehicles = vehicles select {
             !isNull _x &&
             { _x getVariable ["DZ_trackAbandoned", false] } &&
@@ -43,7 +42,6 @@ diag_log format ["[ABANDONED_VEHICLE] System enabled. Timeout: %1s, Check interv
                     false
                 } forEach (crew _veh)
             };
-
 
             private _playerNearby = false;
             if (!_hasOccupant) then

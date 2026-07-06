@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -106,7 +103,6 @@ private _defenderUnits = [];
     _defenderUnits append (units _x);
 } forEach _defenderGroups;
 
-
 private _cacheCount = floor (3 + (random 3));
 
 private _cachePositions = [];
@@ -127,7 +123,6 @@ while { (count _cachePositions) < _cacheCount && _attempts < _maxAttempts } do
     } forEach _cachePositions;
 
     if (_tooClose) then { continue };
-
 
     private _flatCheck = _candidatePos isFlatEmpty [
         5,
@@ -185,7 +180,6 @@ private _propClasses = [
     "Land_Sleeping_bag_F"
 ];
 
-
 private _missionStartTime = time;
 missionNamespace setVariable ["DZ_destroyCacheStartTime", _missionStartTime, true];
 
@@ -206,7 +200,6 @@ private _propsToTrack = [];
     } else
     {
 
-
         _crate setDamage 0;
 
         private _baselineDamage = damage _crate;
@@ -219,13 +212,11 @@ private _propsToTrack = [];
         _crate addEventHandler ["HandleDamage", {
             params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex", "_instigator", "_hitPoint"];
 
-
             private _spawnTime = _unit getVariable ["DZ_cacheSpawnTime", 0];
             if (time - _spawnTime < 15) exitWith
             {
                 damage _unit
             };
-
 
             private _hasRealSource =
                 !isNull _source ||
@@ -233,7 +224,6 @@ private _propsToTrack = [];
                 { !isNull _instigator };
 
             if (!_hasRealSource) exitWith { damage _unit };
-
 
             private _scaled = _damage * 5;
             if (_scaled > 1) then { _scaled = 1; };
@@ -307,7 +297,6 @@ missionNamespace setVariable ["DZ_destroyCacheKilledCount", 0];
     ]
 ] call DZ_fnc_missionUi;
 
-
 private _stateHandle = [
     {
         params ["_args", "_handle"];
@@ -317,7 +306,6 @@ private _stateHandle = [
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
-
 
         if (time - _startTime < 15) exitWith {};
 
@@ -350,7 +338,6 @@ private _stateHandle = [
                     if (_delta >= 0.5) then
                     {
 
-
                         private _missionTime = time - _startTime;
                         private _suspicious = _missionTime < 30;
 
@@ -358,7 +345,6 @@ private _stateHandle = [
                         {
                             diag_log format ["[DESTROY_CACHE] SUSPICIOUS KILL on cache %1 at t=%2s (delta=%3, baseline=%4, current=%5). NOT counting. Resetting damage.",
                                 _idx + 1, _missionTime, _delta, _baseline, _current];
-
 
                             _crate setDamage _baseline;
                         }
@@ -380,7 +366,6 @@ private _stateHandle = [
                 };
             };
         } forEach _caches;
-
 
         private _stillAlive = ({
             !isNull _x && { !(_x getVariable ["DZ_cacheKilled", false]) }

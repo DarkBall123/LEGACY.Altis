@@ -55,7 +55,7 @@ diag_log "[ZEUS_CLEANUP] Initializing mission integrity watcher.";
 
                 case "interdiction":
                 {
-                    // Check THIS side's tracked convoy vehicles, not the global view.
+
                     private _vehicles = _state get "vehicles";
                     private _aliveCount = ({ !isNull _x && { alive _x } } count _vehicles);
 
@@ -102,8 +102,6 @@ diag_log "[ZEUS_CLEANUP] Initializing mission integrity watcher.";
     []
 ] call CBA_fnc_addPerFrameHandler;
 
-// Stale-marker sweep: collect the union of every side's mission
-// markers and delete any "marker_*" that isn't claimed.
 {
     if ((markerType _x) != "" && { _x find "marker_" == 0 }) then
     {

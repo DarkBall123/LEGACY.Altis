@@ -23,7 +23,7 @@ if (_callerSide in _playerSides) then {
     private _label   = [_callerSide] call DZ_fnc_squadFundsSideLabel;
     _hintBody = format ["Текущий баланс %1: %2₽.", _label, _balance];
 } else {
-    // Roll up all player-side balances on one card.
+
     private _lines = [];
     {
         private _balance = [_x] call DZ_fnc_squadFundsGetBalance;

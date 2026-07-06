@@ -18,9 +18,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -114,9 +111,6 @@ for "_i" from (count _shuffled - 1) to 1 step -1 do
     _shuffled set [_j, _tmp];
 };
 
-// Anchor placement on a named settlement so the "town name only" briefing
-// is meaningful: pick the first candidate sector that has a named location
-// within 1200 m.
 private _locPos = [];
 private _locName = "";
 {
@@ -140,7 +134,6 @@ if (_locPos isEqualTo []) exitWith
 
 if (_locName == "") then { _locName = "неизвестный район"; };
 
-// Radar: 150-400 m off the settlement centre, on dry ground.
 private _radarPos = [];
 for "_i" from 0 to 12 do
 {
@@ -167,7 +160,6 @@ private _sam = createVehicle [_samClass, _samPos, [], 0, "NONE"];
 _sam setDir (random 360);
 private _samCrewGrp = createVehicleCrew _sam;
 
-// Keep the system crews stationary but free to engage aircraft/players.
 {
     private _grp = _x;
     if (!isNull _grp) then
@@ -181,7 +173,6 @@ private _samCrewGrp = createVehicleCrew _sam;
     };
 } forEach [_radarCrewGrp, _aaaCrewGrp, _samCrewGrp];
 
-// MEF (east) garrison around the AD site.
 private _garrisonGroup = createGroup [_sideEnemy, true];
 private _garrisonClasses = [
     "UK3CB_MDF_O_TL",
@@ -211,7 +202,6 @@ _garrisonWp setWaypointCombatMode  "RED";
 _garrisonGroup setBehaviour "AWARE";
 _garrisonGroup setCombatMode "RED";
 
-// One technical for ground defence.
 private _vehicles = [];
 private _technicalClass = selectRandom ["UK3CB_MDF_O_Offroad_HMG", "UK3CB_MDF_O_MB4WD_LMG"];
 if (isClass (configFile >> "CfgVehicles" >> _technicalClass)) then
@@ -282,7 +272,6 @@ private _stateHandle = [
         private _aaaDead   = (isNull _aaa)   || { !alive _aaa };
         private _samDead   = (isNull _sam)   || { !alive _sam };
 
-        // Announce each kill once.
         if (_radarDead && { !(missionNamespace getVariable ["DZ_airDefenseRadarReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseRadarReported", true];

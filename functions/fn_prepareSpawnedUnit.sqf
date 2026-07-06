@@ -19,13 +19,11 @@ params [["_unit", objNull]];
 
 if (isNull _unit) exitWith { false };
 
-// ── Per-class skill (Option 3 from AI-difficulty discussion) ─────────
 private _classSkills = missionNamespace getVariable ["DZ_aiSkillByClass", createHashMap];
 private _baseSkill   = missionNamespace getVariable ["DZ_aiBaseSkill", 0.55];
 private _skill       = _classSkills getOrDefault [typeOf _unit, _baseSkill];
 _unit setSkill _skill;
 
-// ── UAV-operator backpack (existing logic) ───────────────────────────
 private _uavOperatorClasses = missionNamespace getVariable ["DZ_uavOperatorClasses", []];
 if !((typeOf _unit) in _uavOperatorClasses) exitWith { true };
 

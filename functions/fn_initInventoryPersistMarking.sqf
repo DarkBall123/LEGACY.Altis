@@ -25,11 +25,10 @@ DZ_fnc_invPersistOnInventoryOpened =
             isNull _container ||
             { _container isKindOf "CAManBase" } ||
             { !alive _container } ||
-            // Dropped-item piles on the ground are engine-managed litter,
-            // not player stashes — never persist them.
+
             { (typeOf _container) in ["GroundWeaponHolder", "GroundWeaponHolder_Scripted", "WeaponHolder", "WeaponHolderSimulated", "WeaponHolderSimulated_Scripted", "Weapon_Empty"] } ||
             { _container getVariable ["DZ_persist", false] } ||
-            // Local debounce: one request per container per client session.
+
             { _container getVariable ["DZ_invMarkSent", false] };
 
         if (!_skip) then

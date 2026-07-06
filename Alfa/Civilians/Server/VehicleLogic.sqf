@@ -20,7 +20,6 @@ ENGIMA_CIVILIANS_SpawnCivilianVehicle = {
         private _driver = createAgent [selectRandom ENGIMA_CIVILIANS_UNIT_CLASSES, getPos _vehicle, [], 0, "NONE"];
         _driver moveInDriver _vehicle;
 
-
         private _group = group _driver;
         [_group, getPos _vehicle, 500] call BIS_fnc_taskPatrol;
     };

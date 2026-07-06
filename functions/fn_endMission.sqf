@@ -18,7 +18,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// ── Resolve which side's mission we are ending ───────────────────────
 if (_side isEqualTo sideUnknown) then {
     _side = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 };
@@ -43,17 +42,14 @@ private _missionId     = _state get "id";
 private _missionTitle  = _state get "title";
 private _missionSource = _state get "source";
 
-// ── Remove PFH handlers for THIS side only ────────────────────────────
 {
     [_x] call CBA_fnc_removePerFrameHandler;
 } forEach (_state get "pfhHandles");
 
-// ── Snapshot side-bucket assets for delayed cleanup ───────────────────
 private _unitsToClean    = +(_state get "units");
 private _vehiclesToClean = +(_state get "vehicles");
 private _markersToClean  = +(_state get "markers");
 
-// ── Cooldown is global (same mission can't run on both sides back-to-back) ──
 if (_missionId != "") then
 {
     private _cooldowns = missionNamespace getVariable ["DZ_missionCooldowns", createHashMap];
@@ -61,18 +57,8 @@ if (_missionId != "") then
     missionNamespace setVariable ["DZ_missionCooldowns", _cooldowns];
 };
 
-// ── Fire missionEnded BEFORE wiping state so listeners see truth ──────
-//   Signature kept as (id, result, source, title, side): first four
-//   fields are back-compatible, side lets listeners attribute rewards
-//   correctly when both player factions have concurrent missions.
 ["DZ_missionEnded", [_missionId, _result, _missionSource, _missionTitle, _side]] call CBA_fnc_localEvent;
 
-// ── Clear side-bucket state ──────────────────────────────────────────
-//   Mutate the existing reference AND explicitly re-anchor a fresh
-//   empty state into the outer DZ_missionStates hashmap. Belt + braces:
-//   if anything (network broadcast / serialisation / engine quirk) ever
-//   orphaned the inner reference, the re-anchor guarantees the next
-//   missionStateOf lookup sees the cleared values.
 _state set ["active",     false];
 _state set ["id",         ""];
 _state set ["title",      ""];
@@ -90,15 +76,12 @@ missionNamespace setVariable ["DZ_missionStates", _outerStates];
 diag_log format ["[DZ_END:trace] side=%1 cleared. activeAfter=%2",
     _side, (_outerStates getOrDefault [str _side, createHashMap]) get "active"];
 
-// Mission-started-by-side cleared if no other side is still mid-mission.
 if !(call DZ_fnc_missionAnySideActive) then {
     missionNamespace setVariable ["DZ_missionStartedBySide", sideUnknown, true];
 };
 
-// Update legacy globals (point at remaining active side, or blank).
 [] call DZ_fnc_missionSyncLegacyGlobals;
 
-// ── Player-facing notification (own side only) ───────────────────────
 private _message = switch (_result) do
 {
     case "success":   { "Миссия выполнена успешно. Хорошая работа." };
@@ -112,10 +95,8 @@ private _message = switch (_result) do
     _side
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-// ── Cleanup schedule ─────────────────────────────────────────────────
 private _cleanupDelay = missionNamespace getVariable ["DZ_missionCleanupDelay", 300];
 
-// Cancelled missions: wipe markers now so re-pick of same mission doesn't stack.
 if (_result == "cancelled") then
 {
     {

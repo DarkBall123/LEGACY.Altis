@@ -42,8 +42,6 @@ private _types =
     "CityCenter"
 ];
 
-// Default radii by location type. Can be overridden per-type via
-// DZ_zoneRadiiOverride (a HashMap) set in fn_controlParams.sqf.
 private _defaultRadii = createHashMapFromArray
 [
     ["NameCityCapital", 1000],
@@ -72,13 +70,6 @@ private _zoneNames  = [];
 private _zoneTypes  = [];
 private _sectorId   = 0;
 
-// Pass 1: enumerate land-only locations with radii.
-//
-// We do NOT do overlap-merging here on purpose: Altis has multiple
-// distinct named locations within walking distance (e.g. Pyrgos has
-// NameCity "Pyrgos" plus CityCenter "Pyrgos centre"); each of them
-// gets its own zone, and the adjacency pass downstream stitches
-// them into a connected graph.
 {
     private _loc      = _x;
     private _locType  = type _loc;
@@ -106,8 +97,6 @@ diag_log format
     _gridSize
 ];
 
-// _sectorLookup kept as empty hashmap for back-compat. Adjacency is
-// computed in fn_initServer.sqf via proximity now, not grid lookup.
 private _sectorLookup = createHashMap;
 
 [_sectorGrid, _sectorLookup, _zoneRadii, _zoneNames, _zoneTypes]

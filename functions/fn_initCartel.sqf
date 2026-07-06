@@ -21,14 +21,6 @@ params [["_npc", objNull, [objNull]]];
 
 if (isNull _npc) exitWith { false };
 
-// ── Server-side: auto-register a synthetic delivery pad if mission.sqm
-// doesn't already provide one named `cartel_delivery_pad`. Drops an
-// invisible helipad 12m in front of the broker so vehicles bought from
-// the Cartel have somewhere to spawn. Broadcast so clients see it.
-//
-// If the mission designer places an explicit `cartel_delivery_pad` in
-// Eden, that one wins (it'll already be set in missionNamespace by
-// engine init before this function runs).
 if (isServer && { isNull (missionNamespace getVariable ["cartel_delivery_pad", objNull]) }) then {
     private _brokerPos = getPosATL _npc;
     private _brokerDir = getDir _npc;
@@ -59,7 +51,7 @@ _npc allowDamage false;
 _npc setCaptive true;
 
 private _catalog = [
-    // ── Изделия Синдиката (Cartel-made) ────────────────────────────
+
     ["cartel_made",   "cm_hilux",              "Toyota Hilux",                                            800, ["UK3CB_FIA_I_Offroad"]],
     ["cartel_made",   "cm_hilux_armor",        "Toyota Hilux (с усиленной броней)",                      1400, ["I_Tura_Offroad_armor_lxWS"]],
     ["cartel_made",   "cm_hilux_armor_armed",  "Toyota Hilux (с усиленной броней, вооруженный)",         2000, ["I_Tura_Offroad_armor_armed_lxWS"]],
@@ -71,7 +63,7 @@ private _catalog = [
     ["cartel_made",   "cm_crate_m16a3",        "Ящик с М16A3",                                            800, ["UK3CB_M16A3_Equipbox_Blufor"]],
     ["cartel_made",   "cm_crate_svd",          "Ящик с СВД",                                              800, ["UK3CB_SVD_OLD_Equipbox_Opfor"]],
     ["cartel_made",   "cm_crate_launchers",    "Ящик с пусковыми установками",                           5000, ["rhs_launcher_crate"]],
-    // ── Трофеи AAF (captured / smuggled stock) ─────────────────────
+
     ["aaf_captured",  "aaf_landrover_armed",   "Land Rover (вооруженный)",                               1400, ["UK3CB_AAF_I_LR_SF_WMIK_M240_M240"]],
     ["aaf_captured",  "aaf_dingo",             "Динго (МРАП)",                                           1600, ["UK3CB_AAF_B_Dingo"]],
     ["aaf_captured",  "aaf_warrior",           "Вориор (БМП)",                                           5000, ["I_APC_tracked_03_cannon_F"]],
@@ -170,7 +162,7 @@ private _catalogLen = count _catalog;
                 _args params ["_id", "_class", "_cost"];
 
                 private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
-                // Route delivery to the cartel pad and show the "Чёрный рынок" hint title.
+
                 [_id, _class, _cost, _actualPlayer, "cartel_delivery_pad", "Чёрный рынок"]
                     remoteExecCall ["DZ_fnc_purchaseItem", 2];
             },

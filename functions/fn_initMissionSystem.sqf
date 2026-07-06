@@ -79,8 +79,6 @@ if (isNil "DZ_missionExtractLz") then
     ];
 };
 
-// ── Per-side state store ──────────────────────────────────────────────
-
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 private _states      = missionNamespace getVariable ["DZ_missionStates", createHashMap];
 
@@ -107,23 +105,7 @@ DZ_fnc_missionEmptyState = {
     };
 } forEach _playerSides;
 
-// IMPORTANT: server-local store, NO broadcast. Hashmap-broadcast on
-// Arma 3 serialises across the network and (on dedicated servers with
-// connected clients) replaces the server's local reference with the
-// deserialised copy on every setVariable call. That breaks in-place
-// mutations of inner per-side state hashmaps: endMission would set
-// `state.active = false` on an orphaned reference, then the next
-// initMissionSystem call would rebroadcast a fresh copy where active
-// is still true. State never cleared, abort/end appeared to silently
-// fail — which is exactly the bug players hit on the dedi.
-//
-// Clients don't need this hashmap directly; they read the broadcast
-// bools (DZ_missionActive_WEST, _GUER, …) which ARE published via
-// DZ_fnc_missionSyncLegacyGlobals below as scalar setVariables, where
-// serialisation is harmless.
 missionNamespace setVariable ["DZ_missionStates", _states];
-
-// ── Helpers ──────────────────────────────────────────────────────────
 
 DZ_fnc_missionStateOf = {
     params [["_side", sideUnknown]];
@@ -156,8 +138,7 @@ DZ_fnc_missionActiveSides = {
 };
 
 DZ_fnc_missionSideOfPlayer = {
-    // Side of a player as a player-side, or sideUnknown if the unit
-    // isn't on west/resistance/etc.
+
     params [["_unit", objNull, [objNull]]];
     if (isNull _unit) exitWith { sideUnknown };
     private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
@@ -169,24 +150,14 @@ DZ_fnc_missionSideOfPlayer = {
 DZ_fnc_missionSideLabel = {
     params [["_side", sideUnknown]];
     switch (true) do {
-        case (_side isEqualTo west):       { "APD" };
-        case (_side isEqualTo resistance): { "Free Altis" };
+        case (_side isEqualTo east):       { "APD" };
         default { str _side };
     }
 };
 
-// Refresh legacy globals so older code sees the chosen side, AND
-// broadcast simple per-side booleans / titles that clients can
-// read directly (server-only helpers like missionActiveForSide are
-// not visible from client action-conditions).
-//
-// _resolveSide: sideUnknown → use DZ_missionContextSide; if still
-// unknown, pick the first active side, or blank everything.
 DZ_fnc_missionSyncLegacyGlobals = {
     params [["_resolveSide", sideUnknown]];
 
-    // Always re-broadcast every player side's active/title bools so
-    // every client laptop knows the current world state.
     private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     {
         private _s        = [_x] call DZ_fnc_missionStateOf;
@@ -223,8 +194,6 @@ DZ_fnc_missionSyncLegacyGlobals = {
     missionNamespace setVariable ["DZ_missionPfhHandles",   _state get "pfhHandles"];
 };
 
-// Initial proxy: pick whichever side already has a mission (none on
-// first init), or blank.
 [] call DZ_fnc_missionSyncLegacyGlobals;
 
 true

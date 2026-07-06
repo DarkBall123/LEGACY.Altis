@@ -6,13 +6,11 @@
 ENGIMA_TRAFFIC_CalculatePlayerMarkerCoverage = {
 	params ["_playerPos", "_maxSpawnDistance", "_marker"];
 
-
 	private _sumCoveredShare = 0;
 
 	private _distanceToMarker = _playerPos distance2D (getMarkerPos _marker);
 	private _avgMarkerRadius = (((getMarkerSize _marker) select 0) + ((getMarkerSize _marker) select 1)) / 2;
 	private _coveredShare = 0;
-
 
 	if (_distanceToMarker < _maxSpawnDistance + _avgMarkerRadius) then
 	{
@@ -23,7 +21,6 @@ ENGIMA_TRAFFIC_CalculatePlayerMarkerCoverage = {
 		else {
 			_coveredShare = (_maxSpawnDistance + _avgMarkerRadius - _distanceToMarker) / (2 * _maxSpawnDistance);
 
-
 			if (_coveredShare > 1) then {
 				_coveredShare = 1;
 			};
@@ -32,10 +29,8 @@ ENGIMA_TRAFFIC_CalculatePlayerMarkerCoverage = {
 
 	_sumCoveredShare = _sumCoveredShare + _coveredShare;
 
-
 	_sumCoveredShare
 };
-
 
 ENGIMA_TRAFFIC_CalculateRoadWidth = {
 	params ["_roadSegment"];
@@ -53,15 +48,12 @@ ENGIMA_TRAFFIC_CalculateRoadWidth = {
 
 	private _step = 0;
 
-
 	while { isOnRoad ([ _roadSegment, _step, _dir ] call BIS_fnc_relPos) } do {
 		_step = _step + 0.1;
 	};
 
-
 	_step * 2
 };
-
 
 ENGIMA_TRAFFIC_DeleteAllWaypointsFromGroup = {
 	params ["_group"];
@@ -133,7 +125,6 @@ ENGIMA_TRAFFIC_FindEdgeRoads = {
 	sleep 0.01;
 	_segmentsCount = count ENGIMA_TRAFFIC_allRoadSegments;
 
-
 	_i = 0;
 	_nextStartPos = 1;
 	while { _i < _segmentsCount } do {
@@ -143,7 +134,6 @@ ENGIMA_TRAFFIC_FindEdgeRoads = {
 		_roadPos = getPos _road;
 
 		_instanceIndex = 0;
-
 
 			while { _instanceIndex <= ENGIMA_TRAFFIC_instanceIndex } do {
 				_markerName = ENGIMA_TRAFFIC_areaMarkerNames select _instanceIndex;
@@ -159,24 +149,20 @@ ENGIMA_TRAFFIC_FindEdgeRoads = {
 					if (isOnRoad getPos _road) then {
 						_roads pushBack _road;
 
-
 						if (_roadPos distance _mapTopLeftPos < (_minTopLeftDistances select _instanceIndex)) then {
 							_minTopLeftDistances set [_instanceIndex, _roadPos distance _mapTopLeftPos];
 							ENGIMA_TRAFFIC_edgeTopLeftRoads set [_instanceIndex, _road];
 						};
-
 
 						if (_roadPos distance _mapTopRightPos < (_minTopRightDistances select _instanceIndex)) then {
 							_minTopRightDistances set [_instanceIndex, _roadPos distance _mapTopRightPos];
 							ENGIMA_TRAFFIC_edgeTopRightRoads set [_instanceIndex, _road];
 						};
 
-
 						if (_roadPos distance _mapBottomRightPos < (_minBottomRightDistances select _instanceIndex)) then {
 							_minBottomRightDistances set [_instanceIndex, _roadPos distance _mapBottomRightPos];
 							ENGIMA_TRAFFIC_edgeBottomRightRoads set [_instanceIndex, _road];
 						};
-
 
 						if (_roadPos distance _mapBottomLeftPos < (_minBottomLeftDistances select _instanceIndex)) then {
 							_minBottomLeftDistances set [_instanceIndex, _roadPos distance _mapBottomLeftPos];
@@ -315,7 +301,6 @@ ENGIMA_TRAFFIC_FindSpawnSegment = {
 		if (isNil "ENGIMA_TRAFFIC_MarkerNo") then {
 			ENGIMA_TRAFFIC_MarkerNo = 1;
 		};
-
 
 		if (_thisSegment == _targetSegment) then {
 			true

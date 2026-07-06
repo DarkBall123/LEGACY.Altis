@@ -24,12 +24,11 @@ private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
 call DZ_fnc_initMissionSystem;
 
-// Resolve side.
 if (_side isEqualTo sideUnknown) then {
     _side = [_caller] call DZ_fnc_missionSideOfPlayer;
 };
 if (_side isEqualTo sideUnknown) then {
-    _side = west;   // legacy default for un-attributed callers
+    _side = missionNamespace getVariable ["CH_sidePlayers", east];
 };
 
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
@@ -47,7 +46,6 @@ if ((count _definition) == 0) exitWith {
     ["Штаб", "Неизвестный тип миссии."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-// This side's slot: only blocked by this side's own mission.
 if ([_side] call DZ_fnc_missionActiveForSide) exitWith {
     diag_log format ["[DZ_START:%1] EXIT: side already has an active mission", _factionLabel];
     [
@@ -56,8 +54,6 @@ if ([_side] call DZ_fnc_missionActiveForSide) exitWith {
     ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
-// Block double-booking the SAME mission across sides while it's
-// already running on the other side.
 private _activeSides = call DZ_fnc_missionActiveSides;
 private _crossBooked = _activeSides findIf {
     ([_x] call DZ_fnc_missionStateOf) get "id" == _missionId
@@ -105,14 +101,10 @@ if !(_startCode isEqualType {}) exitWith
     false
 };
 
-// Ensure DZ_missionContextSide is set for the synchronous start so
-// any zero-arg addMissionAssets call hits THIS side's bucket.
 missionNamespace setVariable ["DZ_missionContextSide", _side, true];
 
 private _started = call _startCode;
 
-// Clear context once synchronous startup is over. PFH callbacks
-// scheduled by the mission script will pass _side via their args.
 missionNamespace setVariable ["DZ_missionContextSide", sideUnknown, true];
 
 if !(_started isEqualTo true) then

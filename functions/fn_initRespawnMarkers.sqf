@@ -13,15 +13,12 @@
 
 if (!isServer) exitWith { false };
 
-// Marker-name / colour lookup keyed by str(side) — sides aren't valid
-// hashmap keys directly so we stringify them.
 private _sideMarkerInfo = createHashMap;
 _sideMarkerInfo set [str west,       ["respawn_west",     "ColorBlue"]];
 _sideMarkerInfo set [str east,       ["respawn_east",     "ColorRed"]];
 _sideMarkerInfo set [str resistance, ["respawn_guerrila", "ColorGreen"]];
 _sideMarkerInfo set [str civilian,   ["respawn_civilian", "ColorCivilian"]];
 
-// Clean up any markers we placed previously (so re-init is safe).
 {
     if (_x isEqualType "" && { _x != "" }) then
     {
@@ -33,8 +30,6 @@ private _rawPoints      = +(missionNamespace getVariable ["DZ_respawnPoints", []
 private _playerSides    = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 private _resolvedPoints = [];
 
-// Each input row is one of: [label, position, side] (preferred) /
-// [label, position] (side defaults to first player side) / raw position.
 {
     private _entry      = _x;
     private _label      = format ["База %1", _forEachIndex + 1];
@@ -46,7 +41,7 @@ private _resolvedPoints = [];
         if ((count _entry) >= 3 &&
             { (_entry # 0) isEqualType "" } &&
             { (_entry # 1) isEqualType [] } &&
-            { (_entry # 2) isEqualType west }) then     // any side typeof check
+            { (_entry # 2) isEqualType west }) then
         {
             _label     = _entry # 0;
             _position  = +(_entry # 1);
@@ -79,8 +74,6 @@ private _resolvedPoints = [];
     };
 } forEach _rawPoints;
 
-// Fallback: if controlParams supplied no usable points, drop one
-// generic "База" at the centre of the map for each player side.
 if (_resolvedPoints isEqualTo []) then
 {
     {
@@ -96,7 +89,6 @@ if !(missionNamespace getVariable ["DZ_scriptRespawnMarkersEnabled", false]) exi
     true
 };
 
-// Per-side index so duplicate entries get suffixed marker names.
 private _sideIndex     = createHashMap;
 private _createdMarkers = [];
 

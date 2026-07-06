@@ -72,8 +72,6 @@ private _attachCuratorHandler =
                         _entity setVariable ["DZ_createdByZeus", true, true];
                         _entity setVariable ["DZ_noPylonRestrictions", true, true];
 
-                        // Persist Zeus-placed vehicles/containers across restarts.
-                        // The server-side handler ignores units (CAManBase).
                         if (_entity isKindOf "AllVehicles" || { _entity isKindOf "ReammoBox_F" } || { _entity isKindOf "ThingX" }) then
                         {
                             [_entity] remoteExecCall ["DZ_fnc_requestPersistMark", 2];

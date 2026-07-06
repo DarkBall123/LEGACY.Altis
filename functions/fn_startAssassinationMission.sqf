@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -22,7 +19,6 @@ if !((_sideState get "active")) then
     private _definition = ["assassination"] call DZ_fnc_getMissionDefinition;
     ["assassination", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
-
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
 private _zoneData  = missionNamespace getVariable ["DZ_zoneData",          []];
@@ -37,7 +33,6 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-
 private _playerHeldPositions = [];
 {
     private _state = _zoneData param [_forEachIndex, _zoneTpl];
@@ -47,7 +42,6 @@ private _playerHeldPositions = [];
         _playerHeldPositions pushBack _x;
     };
 } forEach _cells;
-
 
 private _enemyCandidates = [];
 {
@@ -63,7 +57,6 @@ private _enemyCandidates = [];
             if (_d < _minDist) then { _minDist = _d; };
         } forEach _playerHeldPositions;
 
-
         if (_playerHeldPositions isEqualTo [] ||
             { _minDist >= 1500 && _minDist <= 2500 }) then
         {
@@ -71,7 +64,6 @@ private _enemyCandidates = [];
         };
     };
 } forEach _cells;
-
 
 if (_enemyCandidates isEqualTo []) then
 {
@@ -102,7 +94,6 @@ private _sectorCenter = _cells select _sectorIdx;
 diag_log format ["[ASSASSINATION] Target sector: %1 at %2 (%3m from nearest player territory)",
     _sectorIdx, _sectorCenter, round (_selected # 1)];
 
-
 private _spawnResult = [_sectorCenter, 8] call DZ_fnc_spawnForZone;
 _spawnResult params [["_defenderGroups", []], ["_defenderVehicles", []], ["_defenderUnitCount", 0]];
 
@@ -110,7 +101,6 @@ private _defenderUnits = [];
 {
     _defenderUnits append (units _x);
 } forEach _defenderGroups;
-
 
 private _targetPos = _sectorCenter;
 private _nearbyBuildings = nearestObjects [_sectorCenter, ["House"], 80] select
@@ -159,7 +149,6 @@ missionNamespace setVariable ["DZ_assassinationKilled",     false];
     "Командир местной ячейки захватчиков замечен в районе. Ликвидируйте полевого командира. Любой боец нашей стороны может забрать документы с тела (подойдите вплотную). Местоположение отмечено на карте."
 ] call DZ_fnc_missionUi;
 
-
 _target setVariable ["DZ_assassinationSide", _missionSide, true];
 _target addEventHandler [
     "Killed",
@@ -179,7 +168,6 @@ _target addEventHandler [
     }
 ];
 
-
 private _stateHandle = [
     {
         params ["_args", "_handle"];
@@ -190,20 +178,17 @@ private _stateHandle = [
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
 
-
         if (missionNamespace getVariable ["DZ_assassinationIntelTaken", false]) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["success", _missionSide] call DZ_fnc_endMission;
         };
 
-
         if (isNull _target) exitWith
         {
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["failure", _missionSide] call DZ_fnc_endMission;
         };
-
 
         if ((time - _startTime) > 4200) exitWith
         {
@@ -213,12 +198,9 @@ private _stateHandle = [
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
-
         if (alive _target) exitWith {};
 
-
         "marker_assassination" setMarkerPos (getPosATL _target);
-
 
         private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
         private _picker = objNull;

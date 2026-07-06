@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -22,7 +19,6 @@ if !((_sideState get "active")) then
     private _definition = ["interdiction"] call DZ_fnc_getMissionDefinition;
     ["interdiction", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
-
 
 private _cells     = missionNamespace getVariable ["DZ_cells",             []];
 private _zoneData  = missionNamespace getVariable ["DZ_zoneData",          []];
@@ -54,7 +50,6 @@ if (count _enemySectors < 2) exitWith
     false
 };
 
-
 private _startPos = [];
 private _endPos = [];
 private _spawnPos = [];
@@ -72,7 +67,6 @@ for "_attempt" from 1 to 5 do
     private _candStart = _cells select _startIdx;
     private _candEnd   = _cells select _endIdx;
 
-
     private _startRoad = [_candStart, 250] call BIS_fnc_nearestRoad;
     private _endRoad   = [_candEnd,   250] call BIS_fnc_nearestRoad;
 
@@ -82,7 +76,6 @@ for "_attempt" from 1 to 5 do
         _endPos   = getPosATL _endRoad;
         _spawnPos = getPosATL _startRoad;
     };
-
 
     if (_attempt == 5) then
     {
@@ -104,14 +97,12 @@ private _convoyDir = _spawnPos getDir _endPos;
 diag_log format ["[INTERDICTION] Convoy route: %1m, spawn at %2 -> dest at %3",
     round (_spawnPos distance2D _endPos), _spawnPos, _endPos];
 
-
 private _vehicleDefs =
 [
     ["UK3CB_MDF_O_M1151_OGPK_M2", 0],
     ["UK3CB_MDF_O_MTVR_Open",     18],
     ["UK3CB_MDF_O_M60A3",         36]
 ];
-
 
 private _convoyGroup    = createGroup [_sideEnemy, true];
 private _convoyVehicles = [];

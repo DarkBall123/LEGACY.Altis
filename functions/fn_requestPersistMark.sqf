@@ -19,7 +19,6 @@ params [["_obj", objNull, [objNull]]];
 if (!isServer) exitWith { false };
 if (!(missionNamespace getVariable ["DZ_invPersistEnabled", true])) exitWith { false };
 
-// Never trust client input — re-run the client-side exclusions.
 if (isNull _obj) exitWith { false };
 if (_obj isKindOf "CAManBase") exitWith { false };
 if (!alive _obj) exitWith { false };
@@ -31,8 +30,7 @@ private _result = false;
 
 if (_obj getVariable ["DZ_edenPlaced", false]) then
 {
-    // Stable persistence id: Eden variable name when present, otherwise
-    // position-derived (same scheme as fn_initTrophyCrate).
+
     private _containerId = vehicleVarName _obj;
     if (_containerId == "") then
     {
@@ -49,8 +47,6 @@ if (_obj getVariable ["DZ_edenPlaced", false]) then
     _registry pushBackUnique _obj;
     missionNamespace setVariable ["DZ_trophyCrateRegistry", _registry];
 
-    // Persist the id→object mapping so the container can be re-linked
-    // after a restart.
     private _pos = getPosWorld _obj;
     private _autoIds = ["DZ_autoContainerIds", []] call DZ_fnc_storeGet;
     if ((_autoIds findIf { (_x param [0, ""]) isEqualTo _containerId }) < 0) then

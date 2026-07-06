@@ -28,7 +28,6 @@ params [["_crate", objNull, [objNull]]];
 if (isNull _crate) exitWith { false };
 if (!isServer) exitWith { true };
 
-// Resolve persistence ID
 private _crateId = vehicleVarName _crate;
 if (_crateId == "") then {
     private _pos = getPosWorld _crate;
@@ -38,17 +37,12 @@ if (_crateId == "") then {
 };
 _crate setVariable ["DZ_trophyCrateId", _crateId, true];
 
-// Mark it so other persistence systems leave its inventory alone.
-// (The DZ_persist flag drives saveAssets / abandoned-vehicle cleanup;
-// crates aren't vehicles, but the noCleanup flag is cheap insurance.)
 _crate setVariable ["DZ_noCleanup", true, true];
 
-// Register in the global list the save PFH walks.
 private _registry = missionNamespace getVariable ["DZ_trophyCrateRegistry", []];
 _registry pushBackUnique _crate;
 missionNamespace setVariable ["DZ_trophyCrateRegistry", _registry];
 
-// Restore saved contents.
 [_crate, _crateId] call DZ_fnc_restoreTrophyCrateContents;
 
 diag_log format ["[DZ_TROPHY_CRATE] Registered '%1' (%2) at %3", _crateId, typeOf _crate, getPosATL _crate];

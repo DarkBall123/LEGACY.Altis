@@ -18,7 +18,6 @@ if (_tracks isEqualTo []) exitWith
     diag_log "[RADIO] DZ_RadioTracks not defined. Set it in initServer.sqf.";
 };
 
-
 DZ_fnc_radioControl_playTrack =
 {
     params ["_radio", "_trackIdx", "_session"];
@@ -34,9 +33,7 @@ DZ_fnc_radioControl_playTrack =
     private _trackData = _tracks # _trackIdx;
     _trackData params ["_path", "_title", "_duration"];
 
-
     [_radio, _path, _title, false] remoteExecCall ["DZ_fnc_radioPlayLocal", 0];
-
 
     [
         {
@@ -50,7 +47,6 @@ DZ_fnc_radioControl_playTrack =
 
             private _next = ((_radio getVariable ["radio_track", 0]) + 1) mod (count _tracks);
 
-
             private _newSession = (_radio getVariable ["radio_session", 0]) + 1;
             _radio setVariable ["radio_session", _newSession, true];
             _radio setVariable ["radio_track",   _next,       true];
@@ -61,7 +57,6 @@ DZ_fnc_radioControl_playTrack =
         _duration + 1
     ] call CBA_fnc_waitAndExecute;
 };
-
 
 switch (_action) do
 {

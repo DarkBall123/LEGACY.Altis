@@ -125,7 +125,7 @@ private _restored = 0;
                 };
 
                 if (_kshmDeployed) then {
-                    private _respawnId = [west, _veh, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
+                    private _respawnId = [east, _veh, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
                     _veh setVariable ["respawn_id", _respawnId, true];
                     _veh setVariable ["kshm_deployed", true, true];
                 };

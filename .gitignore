@@ -14,3 +14,6 @@ CLAUDE.md
 CLAUDE.MD
 claude.md
 .vs/
+
+__pycache__/
+*.pyc

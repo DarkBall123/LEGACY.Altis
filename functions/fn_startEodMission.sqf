@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -35,7 +32,6 @@ if (_cells isEqualTo []) exitWith
     ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
-
 
 private _playerHeldPositions = [];
 {
@@ -77,7 +73,6 @@ if ((count _enemyCandidates) < 2) exitWith
     ["Подходящих участков не найдено. Миссия отменена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     false
 };
-
 
 private _routeStart = [0, 0, 0];
 private _routeEnd = [0, 0, 0];
@@ -170,7 +165,6 @@ private _routeMidpoint = [
 
 private _routeLength = _routeStart distance2D _routeEnd;
 
-
 private _iedClasses = [
     "IEDLandSmall_F",
     "IEDLandBig_F",
@@ -253,7 +247,6 @@ for "_i" from 0 to (_iedCount - 1) do
         _i + 1, _placePos, _hidden, _iedClass];
 };
 
-
 private _watchers = [];
 private _watcherGroup = createGroup [_sideEnemy, true];
 _watcherGroup setBehaviour "SAFE";
@@ -294,7 +287,6 @@ _watcherGroup setCombatMode "YELLOW";
 } forEach _ieds;
 
 diag_log format ["[EOD] Spawned %1 watchers", count _watchers];
-
 
 private _ambushGroup = createGroup [_sideEnemy, true];
 _ambushGroup setBehaviour "AWARE";
@@ -347,7 +339,6 @@ _wp setWaypointCombatMode "RED";
 diag_log format ["[EOD] Ambush spawned at midpoint %1 (%2 units)",
     _routeMidpoint, count (units _ambushGroup)];
 
-
 private _allUnits = (units _watcherGroup) + (units _ambushGroup);
 
 ["create", "marker_eod_start", _routeStart, "loc_Bunker", "Маршрут: начало"] call DZ_fnc_missionUi;
@@ -377,7 +368,6 @@ missionNamespace setVariable ["DZ_eodIedMarkersRevealed", []];
 ["Разминирование маршрута. Двигайтесь медленно. Подозрительные предметы - возможные СВУ.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-
 private _stateHandle = [
     {
         params ["_args", "_handle"];
@@ -389,7 +379,6 @@ private _stateHandle = [
         };
 
         private _revealed = missionNamespace getVariable ["DZ_eodIedMarkersRevealed", []];
-
 
         {
             private _ied = _x;
@@ -434,7 +423,6 @@ private _stateHandle = [
             };
         } forEach _ieds;
 
-
         {
             private _watcher = _x;
             if (!alive _watcher) then { continue };
@@ -475,7 +463,6 @@ private _stateHandle = [
                     remoteExecCall ["DZ_fnc_sideMessage", 0];
             };
         } forEach _watchers;
-
 
         private _liveIeds = _ieds select { !isNull _x && { alive _x } };
         if (_liveIeds isEqualTo []) exitWith

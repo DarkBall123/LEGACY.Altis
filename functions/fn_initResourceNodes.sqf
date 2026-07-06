@@ -42,7 +42,6 @@ private _tickInterval    = missionNamespace getVariable ["DZ_resourceTickInterva
 private _refreshInterval = missionNamespace getVariable ["DZ_resourceMarkerRefreshInterval", 15];
 private _playerSides     = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 
-// ── Build runtime state (parallel arrays keyed by node index) ────────
 private _nodeIds        = [];
 private _nodeNames      = [];
 private _nodePositions  = [];
@@ -63,10 +62,8 @@ private _nodeLastOwners = [];
 
     if (_nodeId == "") then { continue };
 
-    // Eden override of position (admins can patch without editing code).
     private _resolvedPos = _posOverride getOrDefault [_nodeId, _position];
 
-    // Find the sector that contains this node — closest DZ_cells centre.
     private _bestSector = -1;
     private _bestDist   = 1e12;
     {
@@ -82,13 +79,12 @@ private _nodeLastOwners = [];
         continue;
     };
 
-    // Create map marker.
     private _markerName = format ["DZ_resource_%1", _nodeId];
     private _markerType = _markerTypes getOrDefault [_type, "mil_dot"];
 
     createMarker [_markerName, _resolvedPos];
     _markerName setMarkerType  _markerType;
-    _markerName setMarkerColor "ColorBlack";   // will be updated by refresh PFH
+    _markerName setMarkerColor "ColorBlack";
     _markerName setMarkerText  _displayName;
     _markerName setMarkerSize  [1.0, 1.0];
     _markerName setMarkerAlpha 1;
@@ -120,10 +116,6 @@ missionNamespace setVariable ["DZ_resourceNodeSectorIds",  _nodeSectorIds];
 missionNamespace setVariable ["DZ_resourceNodeMarkers",    _nodeMarkers, true];
 missionNamespace setVariable ["DZ_resourceNodeLastOwners", _nodeLastOwners];
 
-// ── Tick PFH (income payout) ─────────────────────────────────────────
-// First tick uses the persisted timestamp so restarts don't reset the
-// clock. If we've been past the interval already, the next tick fires
-// immediately on PFH start.
 private _lastTick = ["DZ_resourceLastTick", -1e9] call DZ_fnc_storeGet;
 missionNamespace setVariable ["DZ_resourceLastTick", _lastTick];
 
@@ -142,14 +134,12 @@ private _tickHandle = [
         ["DZ_resourceLastTick", _now] call DZ_fnc_storeSet;
         call DZ_fnc_storeFlush;
     },
-    60,   // check every minute; the gate inside enforces the 30-min cadence
+    60,
     [_tickInterval]
 ] call CBA_fnc_addPerFrameHandler;
 
 missionNamespace setVariable ["DZ_resourceTickHandle", _tickHandle];
 
-// ── Marker refresh PFH (visual colour by owner) ──────────────────────
-// Lightweight tick — just re-colours markers. Doesn't pay money.
 private _refreshHandle = [
     {
         private _nodeMarkers   = missionNamespace getVariable ["DZ_resourceNodeMarkers", []];
@@ -168,21 +158,20 @@ private _refreshHandle = [
             private _prevOwner  = _nodeLastOwners param [_idx, sideUnknown];
 
             private _color = switch (true) do {
+                case (_owner isEqualTo east):       { "ColorRed" };
                 case (_owner isEqualTo west):       { "ColorBlue" };
                 case (_owner isEqualTo resistance): { "ColorGreen" };
-                default { "ColorBlack" };   // MEF / contested / unowned
+                default { "ColorBlack" };
             };
 
             _marker setMarkerColor _color;
 
-            // Capture flip — emit a one-shot announcement.
             if !(_owner isEqualTo _prevOwner) then {
                 _nodeLastOwners set [_idx, _owner];
 
                 if (_owner in _playerSides) then {
                     private _factionLabel = switch (true) do {
-                        case (_owner isEqualTo west):       { "APD" };
-                        case (_owner isEqualTo resistance): { "Free Altis" };
+                        case (_owner isEqualTo east):       { "APD" };
                         default { str _owner };
                     };
                     private _nodeName = _nodeNames param [_idx, "?"];

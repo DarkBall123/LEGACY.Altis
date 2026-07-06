@@ -33,11 +33,6 @@ missionNamespace setVariable ["DZ_storeDbDegraded", false];
 missionNamespace setVariable ["DZ_storeFlushPending", false];
 missionNamespace setVariable ["DZ_storeCache", createHashMap];
 
-// ── Helpers (defined here, used by fn_storeGet/Set and migration) ─────
-
-// Escape a serialized value for the extDB3 colon protocol and its input
-// sanitizer. After escaping, every "~" starts a two-char pair, which
-// makes sequential unescaping unambiguous.
 DZ_fnc_storeEscape =
 {
     params ["_txt"];
@@ -58,11 +53,6 @@ DZ_fnc_storeUnescape =
     _txt regexReplace ["~t/g", "~"]
 };
 
-// Run one synchronous SQL_CUSTOM call. Returns the parsed response
-// array ([1, rows] / [0, error]), or [] on a malformed response.
-// extDB3 message format: "0:" = sync (result returned immediately),
-// "1:" = async fire-and-forget — reads AND write-success checks both
-// need the sync form.
 DZ_fnc_storeDbCall =
 {
     params ["_request"];
@@ -76,7 +66,6 @@ DZ_fnc_storeDbCall =
     _parsed
 };
 
-// First cell of the first result row, coerced to string.
 DZ_fnc_storeDbCell =
 {
     params ["_response", ["_default", ""]];
@@ -87,12 +76,10 @@ DZ_fnc_storeDbCell =
     _cell
 };
 
-// Write one key (delete + chunked insert). Returns true on success.
 DZ_fnc_storeDbWrite =
 {
     params ["_key", "_value"];
 
-    // Wrapped in a one-element array so scalars/strings round-trip.
     private _txt = [str [_value]] call DZ_fnc_storeEscape;
 
     private _del = [format ["delKey:%1", _key]] call DZ_fnc_storeDbCall;
@@ -121,8 +108,6 @@ DZ_fnc_storeDbWrite =
     _ok
 };
 
-// Read and decode one key from the DB. Returns [value] on success or []
-// when the key is missing/corrupt (lets the caller distinguish "no key").
 DZ_fnc_storeDbReadKey =
 {
     params ["_key"];
@@ -158,8 +143,6 @@ DZ_fnc_storeDbReadKey =
     [_decoded # 0]
 };
 
-// ── Backend detection ─────────────────────────────────────────────────
-
 private _backend = "profile";
 private _version = "extDB3" callExtension "9:VERSION";
 
@@ -189,8 +172,6 @@ if (_version != "") then
 };
 
 missionNamespace setVariable ["DZ_storeBackend", _backend];
-
-// ── Cache preload + migration (extDB3 only) ───────────────────────────
 
 if (_backend isEqualTo "extdb3") then
 {
@@ -234,8 +215,6 @@ if (_backend isEqualTo "extdb3") then
 
     call DZ_fnc_storeMigrate;
 };
-
-// ── Backend-change watchdog ───────────────────────────────────────────
 
 private _lastBackend = profileNamespace getVariable ["DZ_meta_backend", ""];
 if (_lastBackend != "" && { _lastBackend != _backend }) then

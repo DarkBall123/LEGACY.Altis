@@ -35,13 +35,11 @@ _snapshot params [
     ["_backpackData", [[],[]]]
 ];
 
-// Wipe Eden default cargo before restoring.
 clearWeaponCargoGlobal   _crate;
 clearMagazineCargoGlobal _crate;
 clearItemCargoGlobal     _crate;
 clearBackpackCargoGlobal _crate;
 
-// getXCargo returns [[classes], [counts]] — addXCargoGlobal wants [class, count].
 private _fnc_restorePair = {
     params ["_crateRef", "_pairs", "_addCmd"];
     _pairs params [["_classes", []], ["_counts", []]];
@@ -54,7 +52,6 @@ private _fnc_restorePair = {
         private _n     = _counts param [_forEachIndex, 0];
         if (_n <= 0 || { _class == "" }) then { continue };
 
-        // Use a switch to call the right command (no first-class commands in SQF).
         switch (_addCmd) do {
             case "weapon"  : { _crateRef addWeaponCargoGlobal   [_class, _n] };
             case "magazine": { _crateRef addMagazineCargoGlobal [_class, _n] };

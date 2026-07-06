@@ -10,7 +10,6 @@ if (!hasInterface)   exitWith {};
 if (_laptop getVariable ["DZ_missionLaptopReady", false]) exitWith {};
 _laptop setVariable ["DZ_missionLaptopReady", true];
 
-
 [
     { !isNil "ace_interact_menu_fnc_createAction" },
     {
@@ -20,7 +19,6 @@ _laptop setVariable ["DZ_missionLaptopReady", true];
             params ["_id", "_label", "_code"];
             [_id, _label, "", _code, { true }] call ace_interact_menu_fnc_createAction
         };
-
 
         private _aInterdiction = [
             "mission_interdiction",
@@ -32,7 +30,6 @@ _laptop setVariable ["DZ_missionLaptopReady", true];
                 ["interdiction"] remoteExec ["DZ_fnc_missionStart", 2];
             }
         ] call _fnc_makeAction;
-
 
         private _aStatus = [
             "mission_status",

@@ -24,7 +24,7 @@ _object addAction
     false,
     false,
     "",
-    "(side _this == resistance) && {_this distance _target < 5}"
+    "(side _this == east) && {_this distance _target < 5}"
 ];
 
 true

@@ -5,16 +5,15 @@
 
 diag_log "[DZ] === Dynamic Zones INIT ===";
 
-// Storage layer must exist before any persisted state is read.
 call DZ_fnc_storeInit;
 
 private _gridSize    = missionNamespace getVariable ["DZ_gridSize", 350];
 private _sectorBuild = [_gridSize, worldSize] call DZ_fnc_buildSectorGrid;
 private _sectorGrid   = _sectorBuild # 0;
 private _sectorLookup = _sectorBuild # 1;
-private _zoneRadii    = _sectorBuild param [2, []];   // NEW (Option B refactor)
-private _zoneNames    = _sectorBuild param [3, []];   // NEW
-private _zoneTypes    = _sectorBuild param [4, []];   // NEW
+private _zoneRadii    = _sectorBuild param [2, []];
+private _zoneNames    = _sectorBuild param [3, []];
+private _zoneTypes    = _sectorBuild param [4, []];
 private _cells = _sectorGrid apply { [_x # 1, _x # 2, 0] };
 private _zoneTemplate = missionNamespace getVariable ["DZ_zoneStateTemplate", [false, [[], []], -1, 0, false, -1, false, false, -1, -1]];
 private _zoneData = [];
@@ -46,13 +45,6 @@ for "_idx" from 0 to ((count _sectorGrid) - 1) do
     _nextCounterAt set [_idx, 0];
 };
 
-// Proximity-based adjacency (Option B): two zones are neighbours if
-// their boundaries are close enough to walk between. Threshold is
-// (radius_A + radius_B + DZ_adjacencyBuffer). Default buffer 800 m.
-//
-// Each zone is also capped at DZ_adjacencyMaxNeighbours (default 8)
-// nearest neighbours so a capital surrounded by villages doesn't end
-// up with 20+ links bogging down the frontier graph.
 private _adjacencyBuffer  = missionNamespace getVariable ["DZ_adjacencyBuffer", 800];
 private _adjacencyMaxN    = missionNamespace getVariable ["DZ_adjacencyMaxNeighbours", 8];
 
@@ -78,7 +70,6 @@ private _adjacencyMaxN    = missionNamespace getVariable ["DZ_adjacencyMaxNeighb
         };
     } forEach _sectorGrid;
 
-    // Keep only the N closest, sorted ascending by distance.
     _candidates sort true;
     private _neighbors = (_candidates select [0, _adjacencyMaxN]) apply { _x # 1 };
 
@@ -134,14 +125,10 @@ missionNamespace setVariable ["DZ_sectorAdjacency",_sectorAdjacency];
 missionNamespace setVariable ["DZ_cells",          _cells];
 missionNamespace setVariable ["DZ_zoneData",       _zoneData];
 
-// NEW (Option B refactor): per-zone radius / display name / type.
 missionNamespace setVariable ["DZ_zoneRadii",      _zoneRadii, true];
 missionNamespace setVariable ["DZ_zoneNames",      _zoneNames, true];
 missionNamespace setVariable ["DZ_zoneTypes",      _zoneTypes, true];
 
-// Helper that resolves a sector's effective radius. Falls back to the
-// legacy DZ_sectorInfluenceRadius constant for safety so any caller
-// that misses the new array still gets a usable value.
 DZ_fnc_sectorRadius = {
     params [["_sectorId", -1, [0]]];
     private _radii    = missionNamespace getVariable ["DZ_zoneRadii", []];
@@ -150,7 +137,6 @@ DZ_fnc_sectorRadius = {
     _radii param [_sectorId, _fallback]
 };
 
-// Helper for human-readable name (side messages, hints, debug logs).
 DZ_fnc_sectorName = {
     params [["_sectorId", -1, [0]]];
     private _names = missionNamespace getVariable ["DZ_zoneNames", []];
@@ -167,9 +153,6 @@ missionNamespace setVariable ["DZ_savedSectorOwners", ["DZ_savedSectorOwners", [
 missionNamespace setVariable ["DZ_capturesDirty", false];
 missionNamespace setVariable ["DZ_capturedHash", createHashMap];
 
-// Startup diagnostic: proves in the RPT whether persisted sector state
-// survived the restart (count mismatch or "<never>" points at the host
-// wiping the server profile rather than at mission code).
 diag_log format
 [
     "[DZ] Loaded %1 captures, %2 owners, savedAt=%3",
@@ -206,8 +189,6 @@ call DZ_fnc_publishSectorState;
 missionNamespace setVariable ["DZ_assetsDirty", false];
 missionNamespace setVariable ["DZ_persistRegistry", []];
 
-// Tag editor-placed objects BEFORE restoreAssets so dynamically recreated
-// assets never count as Eden-placed (drives "contents-only" persistence).
 {
     _x setVariable ["DZ_edenPlaced", true];
 } forEach (vehicles + (allMissionObjects "B_Respawn_TentA_F") + (allMissionObjects "ReammoBox_F"));
@@ -238,7 +219,6 @@ addMissionEventHandler
         };
     }
 ];
-
 
 if !(missionNamespace getVariable ["DZ_zoneSchedulerStarted", false]) then
 {
@@ -277,9 +257,6 @@ if !(missionNamespace getVariable ["DZ_sectorSaveStarted", false]) then
 {
     missionNamespace setVariable ["DZ_sectorSaveStarted", true];
 
-    // Safety net: a capture marks DZ_capturesDirty at mutation time, so
-    // even if the zone tick later aborts on a script error before its
-    // end-of-tick save, this loop persists the change within the interval.
     [] spawn
     {
         while { true } do

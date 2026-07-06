@@ -20,7 +20,6 @@ ENGIMA_TRAFFIC_GetParamValue = {
 	_value
 };
 
-
 ENGIMA_TRAFFIC_MarkerExists = {
 	private ["_exists", "_marker"];
 

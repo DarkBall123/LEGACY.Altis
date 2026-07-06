@@ -36,7 +36,7 @@ if (isNil { missionNamespace getVariable "ALFA_fnc_prepareCivilianUnit" }) then 
 	};
 };
 _parameters = [
-	["UNIT_CLASSES", ["C_man_p_fugitive_F", "C_man_p_shorts_1_F", "C_man_1", "C_man_polo_1_F", "C_ManJacket_01_white", "C_Man_Fisherman_01_F", "C_Man_UtilityWorker_01_F", "C_man_p_beggar_F", "C_man_hunter_1_F", "C_Man_Messenger_01_F", "C_man_polo_6_F", "C_ManSweater_01_khaki"]],
+	["UNIT_CLASSES", ["LOP_CHR_Civ_Worker_02", "LOP_CHR_Civ_Worker_01", "LOP_CHR_Civ_Worker_04", "LOP_CHR_Civ_Worker_03", "LOP_CHR_Civ_Woodlander_04", "LOP_CHR_Civ_Woodlander_03", "LOP_CHR_Civ_Villager_02", "LOP_CHR_Civ_Villager_03", "LOP_CHR_Civ_Villager_04", "LOP_CHR_Civ_Villager_01", "LOP_CHR_Civ_SchoolTeacher", "LOP_CHR_Civ_Rocker_04", "LOP_CHR_Civ_Rocker_01", "LOP_CHR_Civ_Profiteer_04", "LOP_CHR_Civ_Random", "LOP_CHR_Civ_Priest_01", "LOP_CHR_Civ_Policeman_01", "LOP_CHR_Civ_Functionary_02", "LOP_CHR_Civ_Functionary_01", "LOP_CHR_Civ_Doctor_01", "LOP_CHR_Civ_Citizen_02", "LOP_CHR_Civ_Citizen_01", "LOP_CHR_Civ_Citizen_04", "LOP_CHR_Civ_Assistant"]],
 	["UNITS_PER_BUILDING", 0.2],
 	["MAX_GROUPS_COUNT", 25],
 	["MIN_SPAWN_DISTANCE", 50],
@@ -51,6 +51,5 @@ _parameters = [
 	["ON_UNIT_REMOVE_CALLBACK", { true }],
 	["DEBUG", false]
 ];
-
 
 _parameters spawn ENGIMA_CIVILIANS_StartCivilians;
