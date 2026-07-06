@@ -20,7 +20,6 @@ ENGIMA_CIVILIANS_GetParamValue = {
 	_value
 };
 
-
 ENGIMA_CIVILIANS_GetAllPlayersPositions = {
 	private ["_playerPositions"];
 
@@ -38,7 +37,6 @@ ENGIMA_CIVILIANS_GetAllPlayersPositions = {
 			_playerPositions = [position vehicle player];
 		};
 	};
-
 
 	_playerPositions
 };
@@ -83,7 +81,6 @@ ENGIMA_CIVILIANS_FindSpawnPosition = {
 		_playerBuilding = _playerBuildings select floor random count _playerBuildings;
 		_building = _playerBuilding select 0;
 		_buildingPosCount = _playerBuilding select 1;
-
 
 		if (_buildingPosCount > 0) then {
 			_buildingPosNo = floor random _buildingPosCount;
@@ -200,7 +197,6 @@ ENGIMA_CIVILIANS_GetPlayerBuildings = {
 		sleep 0.01;
 	} foreach _allPlayerPositions;
 
-
 	_playerBuildingsTemp = [];
 	{
 		_buildingPosCount = [_x] call ENGIMA_CIVILIANS_CountPositionsInBuilding;
@@ -212,10 +208,8 @@ ENGIMA_CIVILIANS_GetPlayerBuildings = {
 		}
 	} foreach _playerBuildings;
 
-
 	_playerBuildingsTemp
 };
-
 
 ENGIMA_CIVILIANS_StartCivilians = {
 	private ["_unit", "_maxUnitsCount"];
@@ -243,7 +237,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 			_x setMarkerAlpha 0;
 		} foreach _blackListMarkers;
 	};
-
 
 	_spawnUnit = {
 		params ["_side", "_minSpawnDistance", "_unitClasses", "_playerBuildings", "_blackListMarkers", "_fnc_OnSpawningCallback" , "_fnc_OnSpawnedCallback", "_currentCivilianCount", "_calculatedCivilianCount"];
@@ -279,7 +272,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 		_unit
 	};
 
-
 	sleep 0.5;
 
 	_civilianItems = [];
@@ -291,7 +283,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 		_allPlayerPositions = _allPlayers apply { position vehicle _x };
 		_playerBuildings = [_allPlayerPositions, _maxSpawnDistance, _blackListMarkers] call ENGIMA_CIVILIANS_GetPlayerBuildings;
 		_maxUnitsCount = ceil (_unitsPerBuilding * count _playerBuildings);
-
 
 		if (_maxUnitsCount > _maxGroupsCount) then {
 			_maxUnitsCount = _maxGroupsCount;
@@ -486,7 +477,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 			_nextActionTime = _x select 5;
 			_isRunning = _x select 6;
 
-
 			if (_isMoving && _lastPos distance getPos _unit < 1) then {
 				_isMoving = false;
 				_nextActionTime = time + random ENGIMA_CIVILIANS_MAXWAITINGTIME;
@@ -496,7 +486,6 @@ ENGIMA_CIVILIANS_StartCivilians = {
 
 				(group _unit) setFormDir random 360;
 			};
-
 
 			if (!_isMoving && time > _nextActionTime) then {
 

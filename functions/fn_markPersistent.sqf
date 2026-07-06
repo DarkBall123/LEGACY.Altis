@@ -46,9 +46,6 @@ if !(_obj in _registry) then
     missionNamespace setVariable ["DZ_persistRegistry", _registry];
 };
 
-// Cap refusal above leaves the object unregistered — do not flag it
-// either, or the legacy `vehicles` scan in fn_saveAssets would still
-// snapshot it past the cap.
 if !(_obj in _registry) exitWith { false };
 
 if !(_obj getVariable ["DZ_persist", false] && { (_obj getVariable ["DZ_persistMode", ""]) isEqualTo _mode }) then

@@ -39,7 +39,6 @@ private _kept       = [];
         continue;
     };
 
-    // Snapshot in the [class, count] pair format that addXCargoGlobal expects.
     private _snapshot = [
         getWeaponCargo   _crate,
         getMagazineCargo _crate,

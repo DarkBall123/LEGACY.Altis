@@ -28,7 +28,6 @@ publicVariable "DZ_missionStart";
 switch (_missionId) do {
     case "interdiction": { [] spawn DZ_fnc_m01Interdiction; };
 
-
     default {
         diag_log format ["[MISSION] Unknown mission id: %1", _missionId];
         missionNamespace setVariable ["DZ_missionActive", false];

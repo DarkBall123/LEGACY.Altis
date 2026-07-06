@@ -14,10 +14,6 @@ if (!_force && { !(missionNamespace getVariable ["DZ_assetsDirty", false]) }) ex
 
 private _snapshot = [];
 
-// Registry first: it covers ammo boxes (ReammoBox_F) and static
-// fortifications, which the `vehicles` command does not return. The
-// legacy scans stay as a defensive union for objects flagged before the
-// registry existed.
 private _registry = missionNamespace getVariable ["DZ_persistRegistry", []];
 _registry = _registry select { !isNull _x && { alive _x } };
 missionNamespace setVariable ["DZ_persistRegistry", _registry];
@@ -32,8 +28,7 @@ _saveTargets = _saveTargets arrayIntersect _saveTargets;
         !isNull _veh &&
         { alive _veh } &&
         { _veh getVariable ["DZ_persist", false] } &&
-        // "contents" objects are editor-placed: only their inventory is
-        // persisted (trophy-crate path); recreating them would duplicate.
+
         { (_veh getVariable ["DZ_persistMode", "recreate"]) isEqualTo "recreate" } &&
         { (_veh getVariable ["DZ_trophyCrateId", ""]) isEqualTo "" }
     ) then {

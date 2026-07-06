@@ -64,9 +64,6 @@ _state set ["vehicles",   _vehicles];
 _state set ["markers",    _markers];
 _state set ["pfhHandles", _pfhHandles];
 
-// Keep legacy globals in sync for any consumer that reads them
-// (Zeus cleanup hook etc.) when this is the side currently in
-// context. If a different side is in context, don't trample.
 private _ctx = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 if (_ctx isEqualTo sideUnknown || { _ctx isEqualTo _side }) then {
     [_side] call DZ_fnc_missionSyncLegacyGlobals;

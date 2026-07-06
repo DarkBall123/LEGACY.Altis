@@ -22,7 +22,7 @@ call DZ_fnc_initMissionSystem;
 private _side = [_caller] call DZ_fnc_missionSideOfPlayer;
 
 if (_side isEqualTo sideUnknown) exitWith {
-    // Off-side fallback: show all active sides.
+
     private _active = call DZ_fnc_missionActiveSides;
     if (_active isEqualTo []) exitWith {
         ["Штаб", "Нет активных миссий ни у одной фракции."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];

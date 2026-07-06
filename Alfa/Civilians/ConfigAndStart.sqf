@@ -52,5 +52,4 @@ _parameters = [
 	["DEBUG", false]
 ];
 
-
 _parameters spawn ENGIMA_CIVILIANS_StartCivilians;

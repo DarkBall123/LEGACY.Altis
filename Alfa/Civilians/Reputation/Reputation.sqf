@@ -28,7 +28,6 @@ missionNamespace setVariable ["ALFA_repInitialized", true];
 private _initialRep   = missionNamespace getVariable ["ALFA_repInitialValue", 50];
 private _playerSides  = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 
-// ── Static configuration (unchanged from Kunduz era) ─────────────────
 missionNamespace setVariable ["ALFA_repCivilianKilledPenalty", missionNamespace getVariable ["ALFA_repCivilianKilledPenalty", -0.5]];
 missionNamespace setVariable ["ALFA_repWaterReward",           missionNamespace getVariable ["ALFA_repWaterReward",            0.1]];
 
@@ -57,8 +56,6 @@ if (isNil { missionNamespace getVariable "ALFA_repMissionRewards" }) then {
     ]];
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
 ALFA_fnc_repKeyForSide = {
     params ["_side"];
     switch (true) do {
@@ -85,8 +82,6 @@ ALFA_fnc_repGet = {
     missionNamespace getVariable [_key, 50]
 };
 
-// Lowest per-side rep, broadcast under the legacy global for civilian-
-// reaction code that still reads ALFA_civilianReputation directly.
 ALFA_fnc_repRecomputeGlobal = {
     private _sides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _values = _sides apply { [_x] call ALFA_fnc_repGet };
@@ -97,7 +92,6 @@ ALFA_fnc_repRecomputeGlobal = {
     _lowest
 };
 
-// ── Load persisted per-side starting values ──────────────────────────
 {
     private _key   = [_x] call ALFA_fnc_repKeyForSide;
     private _saved = [_key, _initialRep] call DZ_fnc_storeGet;
@@ -105,8 +99,6 @@ ALFA_fnc_repRecomputeGlobal = {
 } forEach _playerSides;
 
 call ALFA_fnc_repRecomputeGlobal;
-
-// ── Marker rendering ─────────────────────────────────────────────────
 
 ALFA_fnc_repMarkerColor = {
     params [["_rep", 50, [0]]];
@@ -130,10 +122,7 @@ ALFA_fnc_repMarkerPos = {
 };
 
 ALFA_fnc_repUpdateMarker = {
-    // Render one rep marker per player side at the position returned by
-    // ALFA_fnc_repMarkerPos. Color follows ALFA_fnc_repMarkerColor based
-    // on the side's current reputation value. Triple-dot cluster gives
-    // a readable label on the strategic map.
+
     private _argSide       = if ((count _this) > 0) then { _this # 0 } else { sideUnknown };
     private _playerSides   = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _sidesToUpdate = if (_argSide isEqualTo sideUnknown) then { _playerSides } else { [_argSide] };
@@ -176,8 +165,6 @@ ALFA_fnc_repUpdateMarker = {
     } forEach _sidesToUpdate;
 };
 
-// ── Side-aware adjust ────────────────────────────────────────────────
-
 ALFA_fnc_repAdjust = {
     params [
         ["_amount", 0,             [0]],
@@ -207,8 +194,6 @@ ALFA_fnc_repAdjust = {
     call ALFA_fnc_repRecomputeGlobal;
     _newValue
 };
-
-// ── Item-handing helpers ─────────────────────────────────────────────
 
 ALFA_fnc_repTakeWaterItem = {
     params [["_player", objNull, [objNull]]];
@@ -253,8 +238,7 @@ ALFA_fnc_repTakeRationItem = {
 };
 
 ALFA_fnc_repPlayerSideOf = {
-    // Resolve the player-side responsible for an action, or sideUnknown
-    // if the actor isn't a player or isn't on a player side.
+
     params [["_unit", objNull, [objNull]]];
     if (isNull _unit) exitWith { sideUnknown };
 
@@ -312,8 +296,6 @@ ALFA_fnc_repGiveWater = {
     ] call ALFA_fnc_repAdjust;
 };
 
-// ── Civilian-death attribution ───────────────────────────────────────
-
 ALFA_fnc_repPlayerCausedDeath = {
     params [
         ["_killer",     objNull, [objNull]],
@@ -337,8 +319,7 @@ ALFA_fnc_repPlayerCausedDeath = {
 };
 
 ALFA_fnc_repResolveDeathSide = {
-    // Return the player-side that should be penalized for a civilian
-    // death, or sideUnknown if no player-side can be attributed.
+
     params [
         ["_killer",     objNull, [objNull]],
         ["_instigator", objNull, [objNull]]
@@ -346,7 +327,6 @@ ALFA_fnc_repResolveDeathSide = {
 
     private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 
-    // Prefer the direct trigger-puller (instigator), else the killer.
     {
         if (!isNull _x && { isPlayer _x } && { (side _x) in _playerSides }) exitWith { side _x };
         sideUnknown
@@ -369,8 +349,6 @@ ALFA_fnc_repResolveDeathSide = {
 
     _result
 };
-
-// ── Civilian registration / actions ──────────────────────────────────
 
 ALFA_fnc_repRegisterCivilian = {
     params [["_civilian", objNull, [objNull]]];
@@ -440,7 +418,6 @@ ALFA_fnc_repRegisterCivilian = {
     ] remoteExec ["addAction", 0, _civilian];
 };
 
-// ── Periodic civilian registration / marker tick ─────────────────────
 call ALFA_fnc_repUpdateMarker;
 
 [] spawn {
@@ -459,8 +436,6 @@ call ALFA_fnc_repUpdateMarker;
     };
 };
 
-// ── Mission reward hook ──────────────────────────────────────────────
-
 ["DZ_missionEnded", {
     params [
         ["_missionId", "", [""]],
@@ -476,7 +451,6 @@ call ALFA_fnc_repUpdateMarker;
     private _amount  = _rewards getOrDefault [_missionId, 0];
     if (_amount == 0) exitWith {};
 
-    // FOB contracts pay a multiplied reputation reward.
     if (_source == "fob") then {
         private _mult = missionNamespace getVariable ["DZ_fobRewardMultiplier", 2];
         _amount = _amount * _mult;

@@ -17,9 +17,6 @@ if (!isServer) exitWith {};
 if (missionNamespace getVariable ["DZ_missionIntelLeakInitDone", false]) exitWith {};
 missionNamespace setVariable ["DZ_missionIntelLeakInitDone", true];
 
-// ── Vague region tag lookup keyed by mission id ──────────────────────
-// Each entry is [vague-hint-template] where %1 will be filled with
-// the leaking faction's nickname (the "other guys").
 private _intelLines = createHashMapFromArray [
     ["interdiction",     "Радиоперехват: %1 разворачивают силы на одной из основных дорог. Возможно, охота на конвой."],
     ["assassination",    "Слухи в порту: %1 ищут одного из офицеров MEF. Кто-то умрёт сегодня."],
@@ -53,7 +50,6 @@ missionNamespace setVariable ["DZ_missionIntelLeakLines", _intelLines];
     private _intelLines    = missionNamespace getVariable ["DZ_missionIntelLeakLines", createHashMap];
     private _template      = _intelLines getOrDefault [_missionId, "%1 что-то затевают. Подробностей нет."];
 
-    // Nickname the LEAKING side from the OTHER side's perspective.
     private _leakerLabel = switch (true) do {
         case (_starterSide isEqualTo west):       { "APD" };
         case (_starterSide isEqualTo resistance): { "силы Свободного Алтиса" };

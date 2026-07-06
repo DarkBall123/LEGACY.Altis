@@ -23,7 +23,6 @@ private _civilianCarClasses =
 
 diag_log format ["[TRAFFIC] Civilian car pool size: %1", count _civilianCarClasses];
 
-
 _parameters = [
     ["SIDE", civilian],
     ["VEHICLES", _civilianCarClasses],
@@ -34,6 +33,5 @@ _parameters = [
     ["MAX_SKILL", 0.9],
     ["DEBUG", false]
 ];
-
 
 _parameters spawn ENGIMA_TRAFFIC_StartTraffic;

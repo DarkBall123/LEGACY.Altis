@@ -15,7 +15,6 @@ if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 
 private _replyTarget = owner _caller;
 
-// KSHM is APD-exclusive: only west-side callers may deploy/retract.
 if !((side _caller) isEqualTo east) exitWith {
     ["КШМ", "КШМ доступна только бойцам APD."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };

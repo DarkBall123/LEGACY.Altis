@@ -80,7 +80,7 @@ private _nightSkipAction = [
 ] call ace_interact_menu_fnc_createAction;
 
 [_laptop, 0, ["ACE_MainActions"], _nightSkipAction] call ace_interact_menu_fnc_addActionToObject;
-// Two-step abort for the resistance slot.
+
 private _abortParent = [
     "dz_fob_abort",
     "Прервать контракт",

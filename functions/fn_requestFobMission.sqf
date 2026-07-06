@@ -22,7 +22,6 @@ private _replyTarget = owner _caller;
 
 call DZ_fnc_initMissionSystem;
 
-// FOB belongs to Free Altis.
 private _side         = east;
 private _factionLabel = [_side] call DZ_fnc_missionSideLabel;
 

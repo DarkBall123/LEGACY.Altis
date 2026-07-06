@@ -26,7 +26,6 @@ private _tickInterval   = missionNamespace getVariable ["DZ_resourceTickInterval
 
 if (_nodeIds isEqualTo []) exitWith { false };
 
-// Per-side accumulators: side → [totalIncome, [nodeName, ...]]
 private _sideTotals = createHashMap;
 
 {
@@ -42,10 +41,8 @@ private _sideTotals = createHashMap;
 
     private _nodeName = _nodeNames param [_idx, "?"];
 
-    // Adjust the per-side wallet.
     private _newBalance = [_income, format ["Resource income: %1", _nodeName], _owner] call DZ_fnc_squadFundsAdjust;
 
-    // Accumulate for the consolidated side message.
     private _key = str _owner;
     private _bucket = _sideTotals getOrDefault [_key, [0, []]];
     _bucket params ["_runningTotal", "_runningNames"];
@@ -57,7 +54,6 @@ private _sideTotals = createHashMap;
         _nodeName, _income, _owner, _newBalance];
 } forEach _nodeIds;
 
-// Emit one consolidated side message per side that earned anything.
 private _minsToNext = floor (_tickInterval / 60);
 {
     private _sideKey = _x;

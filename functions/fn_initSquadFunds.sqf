@@ -29,8 +29,6 @@ missionNamespace setVariable ["DZ_squadFundsInitialized", true];
 private _initialBalance = missionNamespace getVariable ["DZ_squadFundsInitialBalance", 500];
 private _playerSides    = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 
-// ── Helpers ───────────────────────────────────────────────────────────
-
 DZ_fnc_squadFundsKeyForSide = {
     params ["_side"];
     switch (true) do {
@@ -49,14 +47,12 @@ DZ_fnc_squadFundsGetBalance = {
     missionNamespace getVariable [_key, 0]
 };
 
-// ── Per-side starting balances (load persisted, broadcast to clients) ──
 {
     private _key   = [_x] call DZ_fnc_squadFundsKeyForSide;
     private _saved = [_key, _initialBalance] call DZ_fnc_storeGet;
     missionNamespace setVariable [_key, _saved, true];
 } forEach _playerSides;
 
-// ── Mission reward table (unchanged content from Kunduz era) ──────────
 missionNamespace setVariable ["DZ_squadFundsMissionRewards", createHashMapFromArray [
     ["interdiction",     200],
     ["destroy_cache",    250],
@@ -71,15 +67,12 @@ missionNamespace setVariable ["DZ_squadFundsMissionRewards", createHashMapFromAr
     ["heli_intercept",   200]
 ]];
 
-// ── Marker position / colour / label per side ────────────────────────
-
 DZ_fnc_squadFundsMarkerPos = {
     params [["_side", west]];
     private _key      = format ["DZ_squadFundsMarkerPos_%1", str _side];
     private _override = missionNamespace getVariable [_key, []];
     if (_override isEqualType [] && { count _override >= 2 }) exitWith { _override };
 
-    // Defaults: 100m south of each respawn point.
     switch (true) do {
         case (_side isEqualTo east):       { [12295.449, 8772.090,  0] };
         default { [worldSize * 0.5, worldSize * 0.5, 0] };
@@ -104,8 +97,7 @@ DZ_fnc_squadFundsSideLabel = {
 };
 
 DZ_fnc_squadFundsUpdateMarker = {
-    // No map markers for funds. Keep the API as a cleanup hook so older
-    // sessions lose previously-created DZ_funds_* markers.
+
     private _argSide = if ((count _this) > 0) then { _this # 0 } else { sideUnknown };
     private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _sidesToUpdate = if (_argSide isEqualTo sideUnknown) then { _playerSides } else { [_argSide] };
@@ -126,8 +118,6 @@ DZ_fnc_squadFundsUpdateMarker = {
         } forEach _markers;
     } forEach _sidesToUpdate;
 };
-
-// ── Side-aware Adjust / HasEnough ────────────────────────────────────
 
 DZ_fnc_squadFundsAdjust = {
     params [
@@ -165,8 +155,6 @@ DZ_fnc_squadFundsHasEnough = {
     ([_side] call DZ_fnc_squadFundsGetBalance) >= _amount
 };
 
-// ── Mission reward hook ──────────────────────────────────────────────
-
 ["DZ_missionEnded", {
     params [
         ["_missionId", "", [""]],
@@ -185,7 +173,6 @@ DZ_fnc_squadFundsHasEnough = {
         diag_log format ["[DZ_FUNDS] No reward for mission %1", _missionId];
     };
 
-    // FOB contracts pay a multiplied reward.
     if (_source == "fob") then {
         private _mult = missionNamespace getVariable ["DZ_fobRewardMultiplier", 2];
         _reward = round (_reward * _mult);
@@ -213,7 +200,6 @@ DZ_fnc_squadFundsHasEnough = {
     } forEach _recipients;
 }] call CBA_fnc_addEventHandler;
 
-// ── Initial render ──────────────────────────────────────────────────
 call DZ_fnc_squadFundsUpdateMarker;
 
 diag_log format ["[DZ_FUNDS] Squad funds initialized. APD=%1", [east] call DZ_fnc_squadFundsGetBalance];

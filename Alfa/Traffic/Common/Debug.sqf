@@ -21,13 +21,11 @@ ENGIMA_TRAFFIC_DeleteDebugMarkerEventArgs = [];
     ENGIMA_TRAFFIC_DeleteDebugMarkerEventArgs call ENGIMA_TRAFFIC_DeleteDebugMarkerLocal;
 };
 
-
 ENGIMA_TRAFFIC_ShowDebugTextAllClients = {
     ENGIMA_TRAFFIC_DebugTextEventArgs = _this;
     publicVariable "ENGIMA_TRAFFIC_DebugTextEventArgs";
     ENGIMA_TRAFFIC_DebugTextEventArgs call ENGIMA_TRAFFIC_ShowDebugTextLocal;
 };
-
 
 ENGIMA_TRAFFIC_ShowDebugTextLocal = {
     private ["_minutes", "_seconds"];
@@ -42,7 +40,6 @@ ENGIMA_TRAFFIC_ShowDebugTextLocal = {
     _seconds = floor (time - (_minutes * 60));
     diag_log ((str _minutes + ":" + str _seconds) + " Debug: " + (_this select 0));
 };
-
 
 ENGIMA_TRAFFIC_SetDebugMarkerLocal = {
     private ["_markerName", "_position", "_size", "_direction", "_type", "_shape", "_markerColor", "_markerText"];
@@ -84,11 +81,9 @@ ENGIMA_TRAFFIC_SetDebugMarkerLocal = {
                 _markerText = _this select 4;
             };
 
-
             if ([_markerName] call ENGIMA_TRAFFIC_MarkerExists) then {
                 deleteMarkerLocal _markerName;
             };
-
 
             _marker = createMarkerLocal [_markerName, _position];
             _marker setMarkerShapeLocal _shape;
@@ -106,20 +101,17 @@ ENGIMA_TRAFFIC_SetDebugMarkerLocal = {
     };
 };
 
-
 ENGIMA_TRAFFIC_SetDebugMarkerAllClients = {
     ENGIMA_TRAFFIC_DebugMarkerEventArgs = _this;
     publicVariable "ENGIMA_TRAFFIC_DebugMarkerEventArgs";
     ENGIMA_TRAFFIC_DebugMarkerEventArgs call ENGIMA_TRAFFIC_SetDebugMarkerLocal;
 };
 
-
 ENGIMA_TRAFFIC_DeleteDebugMarkerLocal = {
     private ["_markerName"];
     _markerName = _this select 0;
     deleteMarkerLocal _markerName;
 };
-
 
 ENGIMA_TRAFFIC_DeleteDebugMarkerAllClients = {
     ENGIMA_TRAFFIC_DeleteDebugMarkerEventArgs = _this;

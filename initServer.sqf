@@ -47,5 +47,3 @@ call DZ_fnc_initFortifyEconomy;
 call DZ_fnc_initTrophyVehicleStorage;
 call DZ_fnc_initResourceNodes;
 
-
-

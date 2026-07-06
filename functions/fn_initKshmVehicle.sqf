@@ -47,7 +47,6 @@ if (_vehicle getVariable ["kshm_actions_added", false]) exitWith { true };
 
 _vehicle setVariable ["kshm_actions_added", true, false];
 
-// KSHM is an APD-exclusive (west) asset — Free Altis insurgents see no actions.
 _vehicle addAction
 [
     "Развернуть КШМ",

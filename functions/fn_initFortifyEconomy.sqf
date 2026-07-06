@@ -38,10 +38,6 @@ if (isServer) then {
             [_x, -1, _fortifyObjects] call ace_fortify_fnc_registerObjects;
         } forEach _fortifySides;
 
-        // Build anchors: fortifications can be built near the fortify Ural
-        // and near ANY vehicle whose display name contains "(Ammo)". A
-        // periodic rescan keeps the list current as such vehicles spawn or
-        // despawn (the old one-shot scan missed anything bought later).
         DZ_fnc_fortifyRebuildAnchors = {
             private _radius = missionNamespace getVariable ["DZ_fortifyAnchorRadius", 20];
             private _locations = [];

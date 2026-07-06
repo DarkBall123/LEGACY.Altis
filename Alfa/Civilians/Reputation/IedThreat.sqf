@@ -48,20 +48,16 @@ missionNamespace setVariable
     _iedClasses select { isClass (configFile >> "CfgVehicles" >> _x) }
 ];
 
-// Per-side active-IED pools. Each side keeps its own list so cleanup
-// limits and spawn counts don't trample each other.
 ALFA_fnc_repIedActiveKeyForSide = {
     params ["_side"];
     format ["ALFA_repActiveIeds_%1", str _side]
 };
 
-// Initialize one pool per player side.
 {
     private _key = [_x] call ALFA_fnc_repIedActiveKeyForSide;
     missionNamespace setVariable [_key, missionNamespace getVariable [_key, []]];
 } forEach (missionNamespace getVariable ["DZ_playerSides", [west, resistance]]);
 
-// Live, non-AFK players for a given side.
 ALFA_fnc_repIedPlayersForSide = {
     params ["_side"];
     allPlayers select { alive _x && { (side group _x) isEqualTo _side } }
@@ -100,7 +96,6 @@ ALFA_fnc_repIedInSafeZone =
 
     if (_inside) exitWith { true };
 
-    // Stay clear of every faction's respawn point.
     private _respawnMarkers = ["respawn_west", "respawn_east", "respawn_guerrila", "respawn_civilian"];
     private _resolved = missionNamespace getVariable ["DZ_respawnPointsResolved", []];
     {

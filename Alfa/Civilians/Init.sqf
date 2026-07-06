@@ -7,7 +7,6 @@ call compile preprocessFileLineNumbers "Alfa\Civilians\Common\Common.sqf";
 call compile preprocessFileLineNumbers "Alfa\Civilians\Common\Debug.sqf";
 call compile preprocessFileLineNumbers "Alfa\Civilians\HeadlessClient.sqf";
 
-
 private _headlessClientPresent =  !(isNil Engima_Civilians_HeadlessClientName);
 private _runOnThisMachine = false;
 

@@ -5,7 +5,7 @@
 
 private _eps = missionNamespace getVariable ["DZ_eps", 300];
 private _sectorInfluenceRadius = missionNamespace getVariable ["DZ_sectorInfluenceRadius", _eps];
-private _zoneRadii = missionNamespace getVariable ["DZ_zoneRadii", []];   // Option B: per-zone radii
+private _zoneRadii = missionNamespace getVariable ["DZ_zoneRadii", []];
 private _gridSize = missionNamespace getVariable ["DZ_gridSize", 350];
 private _preMul = missionNamespace getVariable ["DZ_preSpawnFactor", 1.5];
 private _preR = _eps * _preMul;
@@ -112,9 +112,6 @@ private _fnc_setSavedOwner =
     private _entryIdx = _savedOwners findIf { (_x param [0, -1]) isEqualTo _sectorId };
     private _oldKey = if (_entryIdx >= 0) then { (_savedOwners select _entryIdx) param [1, ""] } else { "" };
 
-    // No real change → leave the dirty flag alone. Without this guard
-    // seedBaseSectors (runs every tick) re-stamps stable base sectors and
-    // forces a saveProfileNamespace every second.
     if (_oldKey isEqualTo _newKey) exitWith {};
 
     if (_entryIdx >= 0) then
@@ -127,9 +124,6 @@ private _fnc_setSavedOwner =
         _savedOwners pushBack [_sectorId, _newKey];
     };
 
-    // Dirty flag lives in missionNamespace so the periodic saver still
-    // persists this change even if the current tick aborts on an error
-    // before reaching the end-of-tick save.
     missionNamespace setVariable ["DZ_capturesDirty", true];
 };
 
@@ -662,8 +656,6 @@ for "_idx" from 0 to (_sectorCount - 1) do
             continue;
         };
 
-        // Per-zone radius (Option B). Falls back to the legacy constant
-        // for any sectorId that doesn't have a registered radius.
         private _candidateRadius = _zoneRadii param [_candidateId, _sectorInfluenceRadius];
         if ((_pos distance2D _candidateCenter) > _candidateRadius) then
         {
@@ -755,7 +747,6 @@ for "_idx" from 0 to (_sectorCount - 1) do
             continue;
         };
 
-        // Per-zone radius (Option B).
         private _sectorRadius = _zoneRadii param [_idx, _sectorInfluenceRadius];
         if (((getPosATL _unitVehicle) distance2D _sectorCenter) > _sectorRadius) then
         {
@@ -905,7 +896,6 @@ for "_idx" from 0 to (_sectorCount - 1) do
 
     if (!_captured && { !_spawned } && { !_spawnBlocked }) then
     {
-
 
         private _inSafeZone = false;
         if ((markerType "base_safe_zone") != "") then
@@ -1069,7 +1059,6 @@ if (_counterEnabled && { _now >= _nextGlobalCounterAt }) then
             continue;
         };
 
-
         if ((markerType "base_safe_zone") != "") then
         {
             private _safeCenter = getMarkerPos "base_safe_zone";
@@ -1198,7 +1187,6 @@ _counterCandidates sort true;
     {
         continue;
     };
-
 
     if ((markerType "base_safe_zone") != "") then
     {
@@ -1346,7 +1334,6 @@ for "_idx" from 0 to (_sectorCount - 1) do
             continue;
         };
 
-        // Per-zone radius (Option B).
         private _sectorRadius = _zoneRadii param [_idx, _sectorInfluenceRadius];
         if (((getPosATL _unitVehicle) distance2D _sectorCenter) > _sectorRadius) then
         {

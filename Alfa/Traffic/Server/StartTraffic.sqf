@@ -123,12 +123,10 @@ ENGIMA_TRAFFIC_StartTraffic = {
 
 		_calculatedMaxVehicleCount = round (_vehicleCount * _highestCalculatedShare);
 
-
 		if (_calculatedMaxVehicleCount == 0 && _highestCalculatedShare > 0) then {
 			_calculatedMaxVehicleCount = 1;
 		};
 	    };
-
 
         _undamagedVehiclesCount = 0;
 	    _tempVehicles = [];
@@ -143,7 +141,6 @@ ENGIMA_TRAFFIC_StartTraffic = {
 	        _debugMarkerName = _x select 3;
 	        private _lastPos = _x select 4;
 	        private _lastMoveTime = _x select 5;
-
 
 	        private _vehiclesPos = getPos _vehicle;
 
@@ -180,7 +177,6 @@ ENGIMA_TRAFFIC_StartTraffic = {
 
 	        if (_keepVehicle) then {
 
-
 	            _tempVehicles pushBack _x;
 
 	            if (canMove _vehicle) then {
@@ -189,10 +185,8 @@ ENGIMA_TRAFFIC_StartTraffic = {
 	        }
 	        else {
 
-
 	            [_vehicle, _group, (count _activeVehicles) - _deletedVehiclesCount, _calculatedMaxVehicleCount] call _fnc_onUnitRemoving;
 	            _vehicle call _fnc_OnRemoveVehicleObsolete;
-
 
 	            {
 	                deleteVehicle _x;
@@ -210,12 +204,10 @@ ENGIMA_TRAFFIC_StartTraffic = {
 
 	    _activeVehicles = _tempVehicles;
 
-
 	    if (count _allPlayerPositions > 0) then
 	    {
 		    if (count _activeVehicles < _calculatedMaxVehicleCount || { _undamagedVehiclesCount < _calculatedMaxVehicleCount && count _activeVehicles < _maxGroupsCount}) then {
 				sleep 0.1;
-
 
 		        if (_firstIteration) then {
 		            _minDistance = 300;
@@ -230,9 +222,7 @@ ENGIMA_TRAFFIC_StartTraffic = {
 
 		        _spawnSegment = [_currentInstanceIndex, _allPlayerPositions, _minDistance, _maxSpawnDistance, _activeVehicles] call ENGIMA_TRAFFIC_FindSpawnSegment;
 
-
 		        if (str _spawnSegment != """NULL""") then {
-
 
 		            _trafficLocation = floor random 5;
 		            private _allRoadSegments = ENGIMA_TRAFFIC_roadSegments select _currentInstanceIndex;
@@ -254,7 +244,6 @@ ENGIMA_TRAFFIC_StartTraffic = {
 				_destinationSegment = selectRandom _segments;
 				_destinationPos = getPos _destinationSegment;
 			            };
-
 
 			        }
 			        else {
@@ -307,12 +296,10 @@ ENGIMA_TRAFFIC_StartTraffic = {
 		            _posY = _posY + 1.2 * cos (_direction + 90);
 		            _pos = [_posX, _posY, 0];
 
-
 		            _vehicleClassName = selectRandom _possibleVehicles;
 
 		            private _spawnArgs = [_pos, _vehicleClassName];
 		            private _goOnWithSpawn = [_spawnArgs, count _activeVehicles, _calculatedMaxVehicleCount] call _fnc_onUnitCreating;
-
 
 		            _pos = _spawnArgs select 0;
 		            _vehicleClassName = _spawnArgs select 1;
@@ -320,7 +307,6 @@ ENGIMA_TRAFFIC_StartTraffic = {
 	                if (isNil "_goOnWithSpawn") then {
 	                    _goOnWithSpawn = true;
 	                };
-
 
 	                private _userMessedUp = false;
 	                private _logMsg = "";
@@ -356,13 +342,11 @@ ENGIMA_TRAFFIC_StartTraffic = {
 				                _vehicle lockTurret [_x, false];
 				            } forEach (allTurrets [_vehicle, true]);
 
-
 				            private _i = 0;
 			            {
 				_vehicle setObjectTextureGlobal [_i, _x];
 				_i = _i + 1;
 			            } foreach getObjectTextures _vehicle;
-
 
 			            sleep random 0.1;
 			            if (isNil "ENGIMA_TRAFFIC_CurrentEntityNo") then {
@@ -376,7 +360,6 @@ ENGIMA_TRAFFIC_StartTraffic = {
 			            _vehicle setVehicleVarName _vehicleVarName;
 			            _vehicle call compile format ["%1=_this;", _vehicleVarName];
 			            sleep 0.01;
-
 
 			            {
 			                _skill = _minSkill + random (_maxSkill - _minSkill);
@@ -395,11 +378,9 @@ ENGIMA_TRAFFIC_StartTraffic = {
 
 			            _debugMarkerName = "ENGIMA_TRAFFIC_DebugMarker" + str _currentEntityNo;
 
-
 			            [_currentInstanceIndex, _vehicle, _areaMarkerName, _destinationPos, _debug] spawn ENGIMA_TRAFFIC_MoveVehicle;
 			            _activeVehicles pushBack [_vehicle, _vehiclesGroup, _vehiclesCrew, _debugMarkerName, [0,0,0], time];
 			            sleep 0.01;
-
 
 			            [_vehicle, _vehiclesGroup, count _activeVehicles, _calculatedMaxVehicleCount] call _fnc_OnUnitCreated;
 			            _result spawn _fnc_OnSpawnVehicleObsolete;
@@ -407,7 +388,6 @@ ENGIMA_TRAFFIC_StartTraffic = {
 				};
 		    };
 	    };
-
 
 	    _sleepSeconds = 5;
 	    if (_debug) then {

@@ -7,9 +7,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to. fn_startMission
-// sets DZ_missionContextSide before running this code; on direct
-// (debug) invocation we fall back to the first player side.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -35,7 +32,6 @@ if (_cells isEqualTo []) exitWith
     ["failure", _missionSide] call DZ_fnc_endMission;
     false
 };
-
 
 private _playerHeldPositions = [];
 {
@@ -98,7 +94,6 @@ private _searchRadius = 400;
 diag_log format ["[ARTILLERY_HUNT] Mortar sector: %1 at %2 (%3m from player territory)",
     _mortarSectorIdx, _mortarSectorCenter, round (_selected # 1)];
 
-
 private _villagePos = [];
 private _villageSearchAttempts = 0;
 private _maxVillageAttempts = 20;
@@ -138,7 +133,6 @@ if (_villagePos isEqualTo []) then
 diag_log format ["[ARTILLERY_HUNT] Village position: %1 (%2m from mortar)",
     _villagePos, round (_villagePos distance2D _mortarSectorCenter)];
 
-
 private _mortarPos = [];
 private _mortarAttempts = 0;
 while { _mortarPos isEqualTo [] && _mortarAttempts < 30 } do
@@ -166,7 +160,6 @@ if (_mortarPos isEqualTo []) exitWith
 
 diag_log format ["[ARTILLERY_HUNT] Mortar position: %1", _mortarPos];
 
-
 private _mortarClass = "";
 private _mortarCandidates = [
     "RHS_Podnos_MSV",
@@ -188,7 +181,6 @@ private _mortarObject = createVehicle [_mortarClass, _mortarPos, [], 0, "NONE"];
 _mortarObject setPosATL _mortarPos;
 _mortarObject setDir (_mortarPos getDir _villagePos);
 
-
 private _crewGroup = createGroup [_sideEnemy, true];
 _crewGroup setBehaviour "SAFE";
 _crewGroup setCombatMode "YELLOW";
@@ -202,7 +194,6 @@ _gunner moveInGunner _mortarObject;
 private _loader = _crewGroup createUnit ["UK3CB_MDF_O_RIF_1", _mortarPos getPos [2, random 360], [], 0, "NONE"];
 if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_loader] call DZ_fnc_prepareSpawnedUnit; };
 _loader allowFleeing 0;
-
 
 private _sentryCount = 1 + (round random 1);
 private _sentries = [];
@@ -221,7 +212,6 @@ for "_i" from 1 to _sentryCount do
     _sentries pushBack _u;
 };
 
-
 private _wp = _crewGroup addWaypoint [_mortarPos, 15];
 _wp setWaypointType        "GUARD";
 _wp setWaypointBehaviour   "SAFE";
@@ -230,7 +220,6 @@ _wp setWaypointCombatMode  "YELLOW";
 private _allCrewUnits = [_gunner, _loader] + _sentries;
 
 diag_log format ["[ARTILLERY_HUNT] Spawned %1 crew/sentries (gunner seated)", count _allCrewUnits];
-
 
 private _civilianClasses = [
     "UK3CB_MDF_O_RIF_1",
@@ -283,7 +272,6 @@ for "_i" from 1 to _victimCount do
 
 diag_log format ["[ARTILLERY_HUNT] Spawned %1 civilians in %1 separate groups", count _civilians];
 
-
 private _searchCircle = createMarker ["marker_arty_search", _mortarSectorCenter];
 _searchCircle setMarkerShape "ELLIPSE";
 _searchCircle setMarkerSize [_searchRadius, _searchRadius];
@@ -325,7 +313,6 @@ private _gracePeriod = 1200;
 [format ["Разведданные: миномёт устанавливают в обозначенной зоне. До открытия огня ~%1 минут.", round (_gracePeriod / 60)], _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-
 [
     {
         params ["_missionSide"];
@@ -352,7 +339,6 @@ private _gracePeriod = 1200;
     540
 ] call CBA_fnc_waitAndExecute;
 
-
 private _endDetectionHandle = [
     {
         params ["_args", "_handle"];
@@ -368,14 +354,12 @@ private _endDetectionHandle = [
             [_handle] call CBA_fnc_removePerFrameHandler;
         };
 
-
         private _liveCrew = _crew select { !isNull _x && { alive _x } };
         private _mortarDead = isNull _mortarObject || { !alive _mortarObject };
 
         if (_liveCrew isEqualTo [] || _mortarDead) then
         {
             missionNamespace setVariable ["DZ_artyMissionDone", true];
-
 
             {
                 if (alive _x) then
@@ -410,7 +394,6 @@ private _endDetectionHandle = [
     [_missionSide, _mortarObject, _allCrewUnits, _civilians, _villagePos]
 ] call CBA_fnc_addPerFrameHandler;
 
-
 [
     {
         params ["_missionSide", "_mortarObject", "_crew", "_civilians", "_villagePos"];
@@ -440,10 +423,8 @@ private _endDetectionHandle = [
                     [_handle] call CBA_fnc_removePerFrameHandler;
                 };
 
-
                 private _liveCrew = _crew select { !isNull _x && { alive _x } };
                 if (_liveCrew isEqualTo [] || isNull _mortarObject || { !alive _mortarObject }) exitWith {};
-
 
                 private _liveCivs = _civilians select { alive _x };
                 if (_liveCivs isEqualTo []) exitWith {};
@@ -454,11 +435,9 @@ private _endDetectionHandle = [
                 private _driftY = (random 10) - 5;
                 _impactPos = [(_impactPos # 0) + _driftX, (_impactPos # 1) + _driftY, 0];
 
-
                 if (!isNull _mortarObject && { alive _mortarObject }) then
                 {
                     private _muzzlePos = _mortarObject modelToWorld [0, 0, 1.5];
-
 
                     private _flash = "#particlesource" createVehicle _muzzlePos;
                     _flash setParticleParams [
@@ -474,7 +453,6 @@ private _endDetectionHandle = [
 
                     [{ deleteVehicle (_this # 0) }, [_flash], 0.3] call CBA_fnc_waitAndExecute;
 
-
                     private _smoke = "#particlesource" createVehicle _muzzlePos;
                     _smoke setParticleParams [
                         ["\A3\Data_F\ParticleEffects\Universal\Universal", 16, 7, 48, 1],
@@ -489,14 +467,9 @@ private _endDetectionHandle = [
 
                     [{ deleteVehicle (_this # 0) }, [_smoke], 2] call CBA_fnc_waitAndExecute;
 
-
-                    // playSound3D is local-only; the firing PFH runs on the
-                    // server, so broadcast it to every client or nobody hears
-                    // the muzzle blast on a dedicated server.
                     ["A3\Sounds_F\arsenal\weapons_static\Mortar\Mortar_01_shot.wss",
                         _mortarObject, false, getPosASL _mortarObject, 5, 1, 1500] remoteExec ["playSound3D", 0];
                 };
-
 
                 [
                     {
@@ -543,7 +516,6 @@ private _endDetectionHandle = [
     [_missionSide, _mortarObject, _allCrewUnits, _civilians, _villagePos],
     _gracePeriod
 ] call CBA_fnc_waitAndExecute;
-
 
 private _timeoutHandle = [
     {

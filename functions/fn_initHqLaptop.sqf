@@ -43,7 +43,6 @@ private _missionList = [
             diag_log format ["[DZ_LAPTOP_APD] Mission action: id=%1 player=%2",
                 _id, name _player];
 
-            // Force the APD (west) slot.
             [_id, _player, "manual", east] remoteExecCall ["DZ_fnc_startMission", 2];
         },
         {
@@ -101,10 +100,7 @@ private _nightSkipAction = [
 ] call ace_interact_menu_fnc_createAction;
 
 [_laptop, 0, ["ACE_MainActions"], _nightSkipAction] call ace_interact_menu_fnc_addActionToObject;
-// Abort menu: parent + confirmation child. Parent only shows when
-// west has an active mission; the second click on "Подтвердить
-// отмену" actually fires the abort. Two-step keeps misclicks from
-// killing the squad's mission.
+
 private _abortParent = [
     "dz_mission_abort",
     "Прервать миссию",

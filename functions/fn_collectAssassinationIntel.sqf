@@ -20,9 +20,6 @@ if (!alive _caller)                  exitWith {};
 if (_caller distance _target > 5)    exitWith {};
 if (_target getVariable ["intel_collected", false]) exitWith {};
 
-// Resolve the picking-up side and verify they have an active
-// assassination mission. Picking up intel during the OTHER side's
-// assassination contract should not advance theirs.
 private _callerSide = [_caller] call DZ_fnc_missionSideOfPlayer;
 if (_callerSide isEqualTo sideUnknown) exitWith {};
 

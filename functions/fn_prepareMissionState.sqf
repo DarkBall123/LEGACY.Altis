@@ -26,7 +26,6 @@ if !(_side in _playerSides) exitWith {
 
 private _title = _definition getOrDefault ["title", _missionId];
 
-// Write side-bucket state.
 private _state = [_side] call DZ_fnc_missionStateOf;
 _state set ["active",     true];
 _state set ["id",         _missionId];
@@ -39,15 +38,10 @@ _state set ["markers",    []];
 _state set ["pfhHandles", []];
 _state set ["side",       _side];
 
-// Establish the writing context for synchronous startup code.
 missionNamespace setVariable ["DZ_missionContextSide", _side, true];
 
-// Set DZ_missionStartedBySide so the funds/rep reward handlers
-// (Wave 2 / Wave 3) route the payout to this side, and also the
-// FOB-multiplier check.
 missionNamespace setVariable ["DZ_missionStartedBySide", _side, true];
 
-// Mirror to legacy globals for back-compat with any unrefactored caller.
 [_side] call DZ_fnc_missionSyncLegacyGlobals;
 
 ["DZ_missionStarted", [_missionId, _source, _title, _side]] call CBA_fnc_localEvent;

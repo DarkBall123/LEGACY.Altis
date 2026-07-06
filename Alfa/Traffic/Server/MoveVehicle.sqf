@@ -10,7 +10,6 @@ ENGIMA_TRAFFIC_MoveVehicle = {
     private ["_destinationPos"];
     private ["_waypoint", "_fuel"];
 
-
     _fuel = 0.3 + random (0.9 - 0.3);
     _vehicle setFuel _fuel;
     _vehicle limitSpeed 35;
@@ -38,7 +37,6 @@ ENGIMA_TRAFFIC_MoveVehicle = {
 		};
 	        };
         };
-
 
     };
 

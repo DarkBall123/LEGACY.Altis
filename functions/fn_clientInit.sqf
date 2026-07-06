@@ -72,8 +72,8 @@ addMissionEventHandler
 
         private _sectorGrid = missionNamespace getVariable ["DZ_sectorGrid", []];
         private _gridSize   = missionNamespace getVariable ["DZ_gridSize", 350];
-        private _zoneRadii  = missionNamespace getVariable ["DZ_zoneRadii", []];  // Option B
-        private _zoneNames  = missionNamespace getVariable ["DZ_zoneNames", []];  // Option B
+        private _zoneRadii  = missionNamespace getVariable ["DZ_zoneRadii", []];
+        private _zoneNames  = missionNamespace getVariable ["DZ_zoneNames", []];
         private _fallbackRadius = _gridSize * 0.5;
         private _sectorMarkers = [];
 
@@ -85,7 +85,6 @@ addMissionEventHandler
             private _label     = _zoneNames param [_sectorId, ""];
             private _marker    = createMarkerLocal [format ["DZ_zone_%1", _sectorId], _markerPos];
 
-            // Option B: circular zones anchored on named locations.
             _marker setMarkerShapeLocal "ELLIPSE";
             _marker setMarkerBrushLocal "DiagGrid";
             _marker setMarkerSizeLocal  [_radius, _radius];

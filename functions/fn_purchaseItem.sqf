@@ -14,8 +14,8 @@ params [
     ["_class",    "",                       [""]],
     ["_cost",     0,                        [0]],
     ["_buyer",    objNull,                  [objNull]],
-    ["_padName",  "vehicle_delivery_pad",   [""]],   // IDAP default; Cartel passes "cartel_delivery_pad"
-    ["_shopName", "Магазин",                [""]]    // hint title — "Магазин" / "Чёрный рынок"
+    ["_padName",  "vehicle_delivery_pad",   [""]],
+    ["_shopName", "Магазин",                [""]]
 ];
 
 private _replyTarget = [owner _buyer, 0] select (isNull _buyer);

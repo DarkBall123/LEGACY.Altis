@@ -10,7 +10,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -317,9 +316,7 @@ private _stateHandle = [
 
         if (!_ambushTriggered) then
         {
-            // Only spawn ambush against players from the side that took
-            // this contract — the OTHER faction wandering by doesn't
-            // count as the trigger.
+
             private _nearestPlayer = objNull;
             private _minDist = 99999;
             {
@@ -347,7 +344,6 @@ private _stateHandle = [
         private _fuelLvl = fuel _vehicle;
         private _fuelOk  = (_fuelLvl > 0.3);
 
-        // Once every ~15s log current state so server.rpt makes diagnosis easy
         private _lastLog = missionNamespace getVariable ["DZ_idapRepairLastStateLog", 0];
         if ((time - _lastLog) > 15) then
         {

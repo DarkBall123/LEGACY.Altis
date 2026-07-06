@@ -26,7 +26,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -53,7 +52,6 @@ if (_cells isEqualTo []) exitWith
     false
 };
 
-// Determine held sectors (by index + position).
 private _fnc_isHeld =
 {
     params ["_idx"];
@@ -77,7 +75,6 @@ if (_heldSectors isEqualTo []) exitWith
     false
 };
 
-// Prefer a frontline held sector (one bordering a non-held sector).
 private _frontline = _heldSectors select {
     private _idx = _x # 0;
     private _neighbors = _adjacency param [_idx, []];
@@ -89,7 +86,6 @@ _chosen params ["_sectorIdx", "_defendPos"];
 
 diag_log format ["[DEFEND] Defend sector idx=%1 at %2 (frontline=%3)", _sectorIdx, _defendPos, _frontline isNotEqualTo []];
 
-// Resolve the main-base evacuation point (mirror of the downed-pilot mission).
 private _extractMarker = missionNamespace getVariable ["DZ_pilotExtractionMarker", ""];
 private _extractPos    = missionNamespace getVariable ["DZ_pilotExtractionPos",    []];
 if (_extractMarker != "" && { getMarkerType _extractMarker != "" }) then
@@ -107,7 +103,6 @@ if (_extractPos isEqualTo [] || { _extractPos isEqualTo [0, 0, 0] }) then
     _extractPos = [1577.408, 8535.449, 0];
 };
 
-// Spawn the informant.
 private _informantGroup = createGroup [civilian, true];
 private _informantClass = "";
 private _informantCandidates = ["C_man_1", "C_Man_casual_1_F", "C_man_polo_1_F", "C_Man_casual_4_F"];
@@ -162,7 +157,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     _missionSide
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-// ── Wave director ─────────────────────────────────────────
 [_informant, _defendPos, _extractPos, _waveCount, _prepTime, _missionSide] spawn
 {
     params ["_inf", "_defendPos", "_extractPos", "_waveCount", "_prepTime", "_missionSide"];
@@ -170,7 +164,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     private _lull        = missionNamespace getVariable ["DZ_defendLull",        75];
     private _maxWaveTime = missionNamespace getVariable ["DZ_defendMaxWaveTime", 600];
 
-    // Interruptible wait: returns "ok" | "dead" | "ended".
     private _fnc_wait =
     {
         params ["_dur", "_unit"];
@@ -192,7 +185,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
         [_msg, _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
     };
 
-    // ── Preparation phase ─────────────────────────────────
     private _prepRemaining = _prepTime;
     {
         private _announceAt = _x;
@@ -216,7 +208,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
 
     ["Контратака началась! Защищайте перебежчика!", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-    // ── Wave phase ────────────────────────────────────────
     private _waveAborted = false;
 
     for "_wave" from 1 to _waveCount do
@@ -272,7 +263,7 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
 
         if (_waveStatus == "timeout") then
         {
-            // Force-advance: clear any stragglers so they don't pile up.
+
             { if (alive _x) then { deleteVehicle _x; }; } forEach _waveUnits;
             diag_log format ["[DEFEND] Wave %1 force-advanced (timeout).", _wave];
         };
@@ -291,7 +282,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     if (isNull _inf || { !alive _inf }) exitWith {};
     if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
-    // ── Extraction phase ──────────────────────────────────
     ["Все волны отбиты! Эвакуируйте перебежчика на главную базу.", _missionSide]
         remoteExecCall ["DZ_fnc_sideMessage", 0];
 
@@ -301,8 +291,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     ["create", "marker_defend_evac", _extractPos, "mil_end", "Эвакуация"] call DZ_fnc_missionUi;
     [[], [], ["marker_defend_evac"], [], _missionSide] call DZ_fnc_addMissionAssets;
 
-    // Wait for a player from THIS side to reach the informant; the
-    // other faction can't grab the defector.
     private _attached = false;
     while { !_attached } do
     {
@@ -340,7 +328,6 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     if (isNull _inf || { !alive _inf }) exitWith {};
     if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
-    // Escort to the evacuation point.
     while { true } do
     {
         if (isNull _inf || { !alive _inf }) exitWith { ["Перебежчик погиб. Миссия провалена."] call _fnc_fail; };

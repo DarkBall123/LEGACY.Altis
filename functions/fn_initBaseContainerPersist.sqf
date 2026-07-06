@@ -30,7 +30,6 @@ private _fnc_isContainer =
     if (_obj isKindOf "ReammoBox_F") exitWith { true };
     if (_obj isKindOf "CAManBase" || { _obj isKindOf "AllVehicles" }) exitWith { false };
 
-    // Editor props with real cargo space (crates, pallets, lockers).
     private _cfg = configOf _obj;
     (
         (getNumber (_cfg >> "transportMaxWeapons")   > 0) ||
@@ -53,7 +52,7 @@ private _registered = 0;
 
         if (isNull _obj) then { continue };
         if (_obj in _seen) then { continue };
-        if ((_obj getVariable ["DZ_trophyCrateId", ""]) != "") then { continue };  // already managed
+        if ((_obj getVariable ["DZ_trophyCrateId", ""]) != "") then { continue };
         if (!([_obj] call _fnc_isContainer)) then { continue };
 
         _seen pushBack _obj;
@@ -68,7 +67,6 @@ private _registered = 0;
 
         _registry pushBackUnique _obj;
 
-        // Reload anything saved for this box on a previous run.
         [_obj, _id] call DZ_fnc_restoreTrophyCrateContents;
 
         _registered = _registered + 1;
@@ -77,7 +75,6 @@ private _registered = 0;
 
 missionNamespace setVariable ["DZ_trophyCrateRegistry", _registry];
 
-// Persist immediately so a restart right after boot still has data.
 if (_registered > 0) then
 {
     call DZ_fnc_saveTrophyCrates;

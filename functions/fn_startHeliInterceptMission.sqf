@@ -14,7 +14,6 @@ if (!isServer) exitWith { false };
 
 call DZ_fnc_initMissionSystem;
 
-// Wave 4: resolve the side this mission belongs to.
 private _missionSide = missionNamespace getVariable ["DZ_missionContextSide", sideUnknown];
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 if !(_missionSide in _playerSides) then { _missionSide = _playerSides param [0, west] };
@@ -39,11 +38,8 @@ if (!isClass (configFile >> "CfgVehicles" >> _heliClass)) exitWith
 
 private _ws = worldSize;
 
-// Patrol bias point: map centre, used so the heli roams the playable
-// area rather than the extreme corners.
 private _center = [_ws * 0.5, _ws * 0.5, 0];
 
-// Spawn well away from base, airborne.
 private _spawnPos = [];
 for "_i" from 0 to 12 do
 {
@@ -69,7 +65,6 @@ _crewGrp setSpeedMode "NORMAL";
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_x] call DZ_fnc_prepareSpawnedUnit; };
 } forEach (units _crewGrp);
 
-// Cyclic patrol of random points across the AO.
 private _wpCount = 7;
 for "_i" from 1 to _wpCount do
 {

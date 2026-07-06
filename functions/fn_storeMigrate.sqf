@@ -20,8 +20,7 @@ private _dataKeys = (keys _cache) select
 };
 if (_dataKeys isNotEqualTo []) exitWith
 {
-    // DB already has data but no marker (e.g. marker key was cleaned up
-    // manually) — set the marker, do not re-import.
+
     ["DZ_meta_migratedAt", str systemTimeUTC] call DZ_fnc_storeSet;
     0
 };

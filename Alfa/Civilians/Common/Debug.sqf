@@ -21,7 +21,6 @@ ENGIMA_CIVILIANS_DeleteDebugMarkerEventArgs = [];
     ENGIMA_CIVILIANS_DeleteDebugMarkerEventArgs call ENGIMA_CIVILIANS_DeleteDebugMarkerLocal;
 };
 
-
 ENGIMA_CIVILIANS_MarkerExists = {
 	private ["_exists", "_marker"];
 
@@ -34,13 +33,11 @@ ENGIMA_CIVILIANS_MarkerExists = {
 	_exists
 };
 
-
 ENGIMA_CIVILIANS_ShowDebugTextAllClients = {
     ENGIMA_CIVILIANS_DebugTextEventArgs = _this;
     publicVariable "ENGIMA_CIVILIANS_DebugTextEventArgs";
     ENGIMA_CIVILIANS_DebugTextEventArgs call ENGIMA_CIVILIANS_ShowDebugTextLocal;
 };
-
 
 ENGIMA_CIVILIANS_ShowDebugTextLocal = {
     private ["_minutes", "_seconds"];
@@ -55,7 +52,6 @@ ENGIMA_CIVILIANS_ShowDebugTextLocal = {
     _seconds = floor (time - (_minutes * 60));
     diag_log ((str _minutes + ":" + str _seconds) + " Debug: " + (_this select 0));
 };
-
 
 ENGIMA_CIVILIANS_SetDebugMarkerLocal = {
     private ["_markerName", "_position", "_size", "_direction", "_type", "_shape", "_markerColor", "_markerText"];
@@ -97,11 +93,9 @@ ENGIMA_CIVILIANS_SetDebugMarkerLocal = {
                 _markerText = _this select 4;
             };
 
-
             if ([_markerName] call ENGIMA_CIVILIANS_MarkerExists) then {
                 deleteMarkerLocal _markerName;
             };
-
 
             _marker = createMarkerLocal [_markerName, _position];
             _marker setMarkerShapeLocal _shape;
@@ -119,20 +113,17 @@ ENGIMA_CIVILIANS_SetDebugMarkerLocal = {
     };
 };
 
-
 ENGIMA_CIVILIANS_SetDebugMarkerAllClients = {
     ENGIMA_CIVILIANS_DebugMarkerEventArgs = _this;
     publicVariable "ENGIMA_CIVILIANS_DebugMarkerEventArgs";
     ENGIMA_CIVILIANS_DebugMarkerEventArgs call ENGIMA_CIVILIANS_SetDebugMarkerLocal;
 };
 
-
 ENGIMA_CIVILIANS_DeleteDebugMarkerLocal = {
     private ["_markerName"];
     _markerName = _this select 0;
     deleteMarkerLocal _markerName;
 };
-
 
 ENGIMA_CIVILIANS_DeleteDebugMarkerAllClients = {
     ENGIMA_CIVILIANS_DeleteDebugMarkerEventArgs = _this;

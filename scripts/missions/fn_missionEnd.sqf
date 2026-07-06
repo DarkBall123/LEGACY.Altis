@@ -11,7 +11,6 @@ private _units    = missionNamespace getVariable ["DZ_missionUnits",    []];
 private _vehicles = missionNamespace getVariable ["DZ_missionVehicles", []];
 private _markers  = missionNamespace getVariable ["DZ_missionMarkers",  []];
 
-
 {
     if (!isNull _x && { alive _x }) then { deleteVehicle _x; };
 } forEach _units;

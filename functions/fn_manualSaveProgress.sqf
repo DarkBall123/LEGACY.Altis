@@ -54,7 +54,6 @@ else
 missionNamespace setVariable ["DZ_savedCapturesCache", _savedCaptures];
 missionNamespace setVariable ["DZ_savedSectorOwners", _savedOwners];
 
-// Sanitizes the caches set above and persists them with a timestamp.
 call DZ_fnc_saveSectors;
 
 {

@@ -25,11 +25,10 @@ call DZ_fnc_initMissionSystem;
 
 private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
 
-// Resolve side: explicit > round-robin idle side > first idle player side.
 if (_side isEqualTo sideUnknown) then {
     private _idle = _playerSides select { !([_x] call DZ_fnc_missionActiveForSide) };
     if (_idle isNotEqualTo []) then {
-        // Rotate: pick whichever idle side was started LEAST recently.
+
         private _lastStarts = missionNamespace getVariable ["DZ_missionLastAutoStartTime", createHashMap];
         private _picks = _idle apply {[ _lastStarts getOrDefault [str _x, -1], _x ]};
         _picks sort true;
@@ -57,7 +56,6 @@ if (_source == "") exitWith { false };
 private _missionId = call DZ_fnc_selectRandomMission;
 if (_missionId == "") exitWith { false };
 
-// Make sure THIS specific mission isn't running on the OTHER side already.
 private _otherSides = _playerSides - [_side];
 private _crossActive = _otherSides findIf {
     ([_x] call DZ_fnc_missionActiveForSide) &&
@@ -67,7 +65,6 @@ if (_crossActive >= 0) exitWith { false };
 
 private _started = [_missionId, objNull, _source, _side] call DZ_fnc_startMission;
 
-// Track last successful auto-start per side for round-robin.
 if (_started isEqualTo true) then {
     private _lastStarts = missionNamespace getVariable ["DZ_missionLastAutoStartTime", createHashMap];
     _lastStarts set [str _side, time];

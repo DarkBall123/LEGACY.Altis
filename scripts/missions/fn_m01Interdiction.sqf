@@ -15,7 +15,6 @@ if (count _cells == 0) exitWith {
     ["failure"] call DZ_fnc_missionEnd;
 };
 
-
 private _enemySectors = [];
 {
     private _state    = _zoneData param [_forEachIndex, _zoneTpl];
@@ -34,7 +33,6 @@ if (count _enemySectors < 2) exitWith {
     ["failure"] call DZ_fnc_missionEnd;
 };
 
-
 private _startIdx = selectRandom _enemySectors;
 private _startPos = _cells select _startIdx;
 private _candidates = (_enemySectors - [_startIdx]) select {
@@ -48,11 +46,9 @@ private _endPos = _cells select _endIdx;
 diag_log format ["[M01] Convoy route: sector %1 -> sector %2 (%3m)",
     _startIdx, _endIdx, round (_startPos distance2D _endPos)];
 
-
 private _roadObj  = [_startPos, 200] call BIS_fnc_nearestRoad;
 private _spawnPos = if (!isNull _roadObj) then { getPosATL _roadObj } else { _startPos };
 private _dir      = _spawnPos getDir _endPos;
-
 
 private _spec = [
     ["b_afougf_kozak5_turret_armored_full_F",  0],
@@ -90,7 +86,6 @@ private _missionVehs    = missionNamespace getVariable ["DZ_missionVehicles", []
     _missionVehs    pushBack _veh;
 } forEach _spec;
 
-
 private _wp = _convoyGroup addWaypoint [_endPos, 30];
 _wp setWaypointType        "MOVE";
 _wp setWaypointSpeed       "LIMITED";
@@ -98,7 +93,6 @@ _wp setWaypointBehaviour   "SAFE";
 _wp setWaypointCombatMode  "YELLOW";
 _wp setWaypointFormation   "COLUMN";
 _convoyGroup setCurrentWaypoint _wp;
-
 
 private _escortAssets = [_spawnPos, 6] call DZ_fnc_spawnForZone;
 private _escortGroups = _escortAssets param [0, []];
@@ -112,20 +106,17 @@ private _escortGroups = _escortAssets param [0, []];
     } forEach (units _x);
 } forEach _escortGroups;
 
-
 ["create", "m01_convoy", _spawnPos, "mil_destroy", "Convoy",      "ColorRed"]   call DZ_fnc_missionUI;
 ["create", "m01_dest",   _endPos,   "mil_flag",    "Destination", "ColorBlue"]  call DZ_fnc_missionUI;
 
 private _markers = missionNamespace getVariable ["DZ_missionMarkers", []];
 _markers append ["m01_convoy", "m01_dest"];
 
-
 [
     "hint",
     "Миссия 01: Перехват поставок",
     "Замечен конвой снабжения противника.<br/>Уничтожьте все машины конвоя до того, как они достигнут точки назначения.<br/>Позиция конвоя отмечена на карте."
 ] call DZ_fnc_missionUI;
-
 
 [_convoyVehicles, _endPos, _escortGroups] spawn {
     params ["_convoyVehicles", "_endPos", "_escortGroups"];
@@ -138,7 +129,6 @@ _markers append ["m01_convoy", "m01_dest"];
             "m01_convoy" setMarkerPos (getPos (_aliveVehicles # 0));
         };
 
-
         if (count _aliveVehicles == 0) exitWith {
 
             {
@@ -148,12 +138,10 @@ _markers append ["m01_convoy", "m01_dest"];
             ["success"] call DZ_fnc_missionEnd;
         };
 
-
         private _arrived = _aliveVehicles select { (_x distance2D _endPos) < 80 };
         if (count _arrived > 0) exitWith {
             ["failure"] call DZ_fnc_missionEnd;
         };
-
 
         private _started = missionNamespace getVariable ["DZ_missionStart", time];
         if ((time - _started) > 2700) exitWith {

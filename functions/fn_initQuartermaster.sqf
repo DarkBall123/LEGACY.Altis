@@ -29,7 +29,6 @@ _npc setCaptive true;
 
 private _catalog = [
 
-    // ── Транспорт (unarmed humanitarian) ──────────────────────────
     ["vehicles",  "veh_quad",          "Квадроцикл",                    500, ["C_Quadbike_01_F"]],
     ["vehicles",  "veh_hilux_med",     "Toyota Hilux (медицинский)",    800, ["UK3CB_C_Hilux_Ambulance"]],
     ["vehicles",  "veh_ural_repair",   "Урал-4320 (ремонтный)",         800, ["UK3CB_C_Ural_Repair"]],
@@ -39,10 +38,8 @@ private _catalog = [
     ["vehicles",  "veh_tahoe",         "Chevrolet Tahoe",              1400, ["UK3CB_C_SUV"]],
     ["vehicles",  "veh_uh1h",          "UH-1H (транспортный)",         3000, ["UK3CB_C_UH1H"]],
 
-    // ── Медицинские грузы ─────────────────────────────────────────
     ["crates",    "crate_medical",     "Ящик с медикаментами",          500, ["ACE_medicalSupplyCrate_advanced"]],
 
-    // ── Оборудование ──────────────────────────────────────────────
     ["equipment", "equip_searchlight", "Прожектор",                     200, ["UK3CB_UN_B_Searchlight"]],
     ["equipment", "equip_cargo_net",   "Грузовая сеть (коробка)",       250, ["CargoNet_01_box_F"]]
 ];
@@ -125,8 +122,7 @@ private _catalogLen = count _catalog;
         diag_log format ["[DZ_QM] Skipping item '%1' — no class found in: %2", _itemId, _classCandidates];
     } else {
         private _label = format ["%1 (%2₽)", _displayName, _price];
-        // Higher priority -> earlier in submenu. Decrement so catalog
-        // order is preserved exactly.
+
         private _itemPriority = (_catalogLen - _itemIndex);
 
         private _itemAction = [
