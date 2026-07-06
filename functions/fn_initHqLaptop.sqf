@@ -44,11 +44,11 @@ private _missionList = [
                 _id, name _player];
 
             // Force the APD (west) slot.
-            [_id, _player, "manual", west] remoteExecCall ["DZ_fnc_startMission", 2];
+            [_id, _player, "manual", east] remoteExecCall ["DZ_fnc_startMission", 2];
         },
         {
             params ["_target", "_player"];
-            side _player == west
+            side _player == east
         },
         {},
         [_missionId],
@@ -70,7 +70,7 @@ private _statusAction = [
     },
     {
         params ["_target", "_player"];
-        side _player == west
+        side _player == east
     },
     {},
     [],
@@ -91,7 +91,7 @@ private _nightSkipAction = [
     },
     {
         params ["_target", "_player"];
-        side _player == west
+        side _player == east
     },
     {},
     [],
@@ -112,7 +112,7 @@ private _abortParent = [
     {},
     {
         params ["_target", "_player"];
-        (side _player == west) &&
+        (side _player == east) &&
         { missionNamespace getVariable ["DZ_missionActive_WEST", false] }
     },
     {},
@@ -135,7 +135,7 @@ private _abortConfirm = [
     },
     {
         params ["_target", "_player"];
-        (side _player == west) &&
+        (side _player == east) &&
         { missionNamespace getVariable ["DZ_missionActive_WEST", false] }
     },
     {},

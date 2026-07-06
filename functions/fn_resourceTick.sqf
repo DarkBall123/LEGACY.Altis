@@ -65,16 +65,14 @@ private _minsToNext = floor (_tickInterval / 60);
     _data params ["_total", "_names"];
 
     private _side = switch (_sideKey) do {
-        case "WEST": { west };
-        case "GUER": { resistance };
+        case "EAST": { east };
         default { sideUnknown };
     };
 
     if (_side isEqualTo sideUnknown) then { continue };
 
     private _factionLabel = switch (true) do {
-        case (_side isEqualTo west):       { "APD" };
-        case (_side isEqualTo resistance): { "Free Altis" };
+        case (_side isEqualTo east):       { "APD" };
         default { str _side };
     };
 

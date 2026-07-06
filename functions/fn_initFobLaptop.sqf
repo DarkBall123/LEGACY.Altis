@@ -28,7 +28,7 @@ private _contractAction = [
     },
     {
         params ["_target", "_player"];
-        side _player == resistance
+        side _player == east
     },
     {},
     [],
@@ -49,7 +49,7 @@ private _statusAction = [
     },
     {
         params ["_target", "_player"];
-        side _player == resistance
+        side _player == east
     },
     {},
     [],
@@ -70,7 +70,7 @@ private _nightSkipAction = [
     },
     {
         params ["_target", "_player"];
-        side _player == resistance
+        side _player == east
     },
     {},
     [],
@@ -88,7 +88,7 @@ private _abortParent = [
     {},
     {
         params ["_target", "_player"];
-        (side _player == resistance) &&
+        (side _player == east) &&
         { missionNamespace getVariable ["DZ_missionActive_GUER", false] }
     },
     {},
@@ -111,7 +111,7 @@ private _abortConfirm = [
     },
     {
         params ["_target", "_player"];
-        (side _player == resistance) &&
+        (side _player == east) &&
         { missionNamespace getVariable ["DZ_missionActive_GUER", false] }
     },
     {},

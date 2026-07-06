@@ -61,7 +61,7 @@ _vehicle addAction
     false,
     false,
     "",
-    "(side _this == west) && {!(_target getVariable ['kshm_deployed', false])}"
+    "(side _this == east) && {!(_target getVariable ['kshm_deployed', false])}"
 ];
 
 _vehicle addAction
@@ -77,7 +77,7 @@ _vehicle addAction
     false,
     false,
     "",
-    "(side _this == west) && {(_target getVariable ['kshm_deployed', false])}"
+    "(side _this == east) && {(_target getVariable ['kshm_deployed', false])}"
 ];
 
 true

@@ -10,7 +10,7 @@ private _savedOwners = [];
 private _zoneData = missionNamespace getVariable ["DZ_zoneData", []];
 private _sectorGrid = missionNamespace getVariable ["DZ_sectorGrid", []];
 private _sectorOwner = missionNamespace getVariable ["DZ_sectorOwner", []];
-private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", east];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [east]];
 private _sectorCount = count _sectorGrid;
 
 private _fnc_sideToKey =
@@ -36,9 +36,9 @@ if (_sectorCount > 0 && { _zoneData isEqualType [] } && { (count _zoneData) >= _
         {
             _savedCaptures pushBack _idx;
 
-            private _ownerSide = _sectorOwner param [_idx, west];
+            private _ownerSide = _sectorOwner param [_idx, east];
             private _ownerKey = [_ownerSide] call _fnc_sideToKey;
-            if (_ownerKey != "" && { !(_ownerSide isEqualTo _sideEnemy) }) then
+            if (_ownerKey != "" && { _ownerSide in _playerSides }) then
             {
                 _savedOwners pushBack [_idx, _ownerKey];
             };

@@ -81,8 +81,7 @@ DZ_fnc_squadFundsMarkerPos = {
 
     // Defaults: 100m south of each respawn point.
     switch (true) do {
-        case (_side isEqualTo west):       { [12295.449, 8772.090,  0] };  // APD base, south
-        case (_side isEqualTo resistance): { [20791.287, 7169.035,  0] };  // Free Altis base, south
+        case (_side isEqualTo east):       { [12295.449, 8772.090,  0] };
         default { [worldSize * 0.5, worldSize * 0.5, 0] };
     }
 };
@@ -99,8 +98,7 @@ DZ_fnc_squadFundsMarkerColor = {
 DZ_fnc_squadFundsSideLabel = {
     params ["_side"];
     switch (true) do {
-        case (_side isEqualTo west):       { "APD" };
-        case (_side isEqualTo resistance): { "Free Altis" };
+        case (_side isEqualTo east):       { "APD" };
         default { str _side };
     }
 };
@@ -196,9 +194,9 @@ DZ_fnc_squadFundsHasEnough = {
     private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _rewardSide = if (_endedSide in _playerSides) then { _endedSide } else {
         switch (_source) do {
-            case "manual": { west };
-            case "fob":    { resistance };
-            default        { sideUnknown };   // auto/empty → split (paid to all player sides)
+            case "manual": { east };
+            case "fob":    { east };
+            default        { sideUnknown };
         }
     };
 
@@ -218,6 +216,4 @@ DZ_fnc_squadFundsHasEnough = {
 // ── Initial render ──────────────────────────────────────────────────
 call DZ_fnc_squadFundsUpdateMarker;
 
-diag_log format ["[DZ_FUNDS] Per-side squad funds initialized. APD=%1₽ FreeAltis=%2₽",
-    [west] call DZ_fnc_squadFundsGetBalance,
-    [resistance] call DZ_fnc_squadFundsGetBalance];
+diag_log format ["[DZ_FUNDS] Squad funds initialized. APD=%1", [east] call DZ_fnc_squadFundsGetBalance];

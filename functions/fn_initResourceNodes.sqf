@@ -168,9 +168,10 @@ private _refreshHandle = [
             private _prevOwner  = _nodeLastOwners param [_idx, sideUnknown];
 
             private _color = switch (true) do {
+                case (_owner isEqualTo east):       { "ColorRed" };
                 case (_owner isEqualTo west):       { "ColorBlue" };
                 case (_owner isEqualTo resistance): { "ColorGreen" };
-                default { "ColorBlack" };   // MEF / contested / unowned
+                default { "ColorBlack" };
             };
 
             _marker setMarkerColor _color;
@@ -181,8 +182,7 @@ private _refreshHandle = [
 
                 if (_owner in _playerSides) then {
                     private _factionLabel = switch (true) do {
-                        case (_owner isEqualTo west):       { "APD" };
-                        case (_owner isEqualTo resistance): { "Free Altis" };
+                        case (_owner isEqualTo east):       { "APD" };
                         default { str _owner };
                     };
                     private _nodeName = _nodeNames param [_idx, "?"];

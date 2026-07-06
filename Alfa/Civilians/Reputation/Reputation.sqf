@@ -73,8 +73,7 @@ ALFA_fnc_repKeyForSide = {
 ALFA_fnc_repSideLabel = {
     params ["_side"];
     switch (true) do {
-        case (_side isEqualTo west):       { "APD" };
-        case (_side isEqualTo resistance): { "Free Altis" };
+        case (_side isEqualTo east):       { "APD" };
         default { str _side };
     }
 };
@@ -125,9 +124,8 @@ ALFA_fnc_repMarkerPos = {
     if (_override isEqualType [] && { count _override >= 2 }) exitWith { _override };
 
     switch (true) do {
-        case (_side isEqualTo west):       { [28000.033, 2998.383, 0] };  // APD rep marker
-        case (_side isEqualTo resistance): { [28005.713, 1987.348, 0] };  // Free Altis rep marker
-        default { [3726.053, 12915.728, 0] };  // legacy IDAP fallback
+        case (_side isEqualTo east):       { [28000.033, 2998.383, 0] };
+        default { [3726.053, 12915.728, 0] };
     }
 };
 
@@ -487,8 +485,8 @@ call ALFA_fnc_repUpdateMarker;
     private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
     private _rewardSide = if (_endedSide in _playerSides) then { _endedSide } else {
         switch (_source) do {
-            case "manual": { west };
-            case "fob":    { resistance };
+            case "manual": { east };
+            case "fob":    { east };
             default        { sideUnknown };
         }
     };

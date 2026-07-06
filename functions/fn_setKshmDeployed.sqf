@@ -16,7 +16,7 @@ if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 private _replyTarget = owner _caller;
 
 // KSHM is APD-exclusive: only west-side callers may deploy/retract.
-if !((side _caller) isEqualTo west) exitWith {
+if !((side _caller) isEqualTo east) exitWith {
     ["КШМ", "КШМ доступна только бойцам APD."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
@@ -33,14 +33,14 @@ if (_deploy) then {
         ["КШМ", "Остановите машину перед развертыванием."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
     };
 
-    private _respawnId = [west, _vehicle, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
+    private _respawnId = [east, _vehicle, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
     _vehicle setVariable ["respawn_id", _respawnId, true];
     _vehicle setVariable ["kshm_deployed", true, true];
     missionNamespace setVariable ["DZ_assetsDirty", true];
     [true] call DZ_fnc_saveAssets;
 
     ["КШМ", "КШМ развернута. Точка возрождения активна."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
-    ["КШМ развернута. APD получает мобильную точку возрождения.", west] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["КШМ развернута. APD получает мобильную точку возрождения.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
 } else {
     if !(_vehicle getVariable ["kshm_deployed", false]) exitWith {
         ["КШМ", "КШМ не развернута."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];

@@ -11,7 +11,8 @@ private _styleEnemyDormant = missionNamespace getVariable ["DZ_styleEnemyDormant
 private _stylePlayerOwned = missionNamespace getVariable ["DZ_stylePlayerOwned", 2];
 private _styleEastOwned = missionNamespace getVariable ["DZ_styleEastOwned", _styleEnemyDormant];
 private _maxSectorId = (count _sectorGrid) - 1;
-private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", east];
+private _sideEnemy = missionNamespace getVariable ["CH_sideEnemy", west];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [east]];
 private _sectorOwner = missionNamespace getVariable ["DZ_sectorOwner", []];
 private _savedOwners = ["DZ_savedSectorOwners", []] call DZ_fnc_storeGet;
 
@@ -75,7 +76,7 @@ private _fnc_setSavedOwner =
     };
 
     private _key = [_side] call _fnc_sideToKey;
-    if (_key != "" && { !(_side isEqualTo _sideEnemy) }) then
+    if (_key != "" && { _side in _playerSides }) then
     {
         _savedOwners pushBack [_sectorId, _key];
     };
@@ -136,8 +137,8 @@ private _captHash = createHashMap;
 
     if (!_hasSavedOwner) then
     {
-        _sectorOwner set [_sectorId, west];
-        [_sectorId, west] call _fnc_setSavedOwner;
+        _sectorOwner set [_sectorId, east];
+        [_sectorId, east] call _fnc_setSavedOwner;
     };
 } forEach _saved;
 
@@ -150,7 +151,7 @@ if (_savedOwners isEqualType []) then
         if (_sectorId >= 0 && { _sectorId <= _maxSectorId } && { !(_ownerSide isEqualTo sideUnknown) }) then
         {
             _sectorOwner set [_sectorId, _ownerSide];
-            if (!(_ownerSide isEqualTo _sideEnemy)) then
+            if (_ownerSide in _playerSides) then
             {
                 _captHash set [_sectorId, true];
                 _saved pushBackUnique _sectorId;
@@ -213,8 +214,8 @@ else
             _state set [4, true];
             _state set [6, true];
             _zoneData set [_sectorId, _state];
-            _sectorOwner set [_sectorId, west];
-            [_sectorId, west] call _fnc_setSavedOwner;
+            _sectorOwner set [_sectorId, east];
+            [_sectorId, east] call _fnc_setSavedOwner;
             [_sectorId, _stylePlayerOwned] call DZ_fnc_setSectorVisualState;
             _playerAreaSectors = _playerAreaSectors + 1;
         }

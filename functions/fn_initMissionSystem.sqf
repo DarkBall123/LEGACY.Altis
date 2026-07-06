@@ -169,8 +169,7 @@ DZ_fnc_missionSideOfPlayer = {
 DZ_fnc_missionSideLabel = {
     params [["_side", sideUnknown]];
     switch (true) do {
-        case (_side isEqualTo west):       { "APD" };
-        case (_side isEqualTo resistance): { "Free Altis" };
+        case (_side isEqualTo east):       { "APD" };
         default { str _side };
     }
 };

@@ -16,9 +16,7 @@ private _uavOperatorBackpacks = ["O_Crocus_AP_Bag", "O_Crocus_AT_Bag"];
 
 private _respawnPoints =
 [
-    // [label, position, side]
-    ["APD",       [12295.449, 8872.09,   123.936], west],
-    ["FreeAltis", [20791.287, 7269.035,   27.926], resistance]
+    ["APD", [12295.449, 8872.09, 123.936], east]
 ];
 
 private _enemyAirSupportClasses =
@@ -352,14 +350,10 @@ missionNamespace setVariable ["DZ_scriptRespawnMarkersEnabled", false];
 
 missionNamespace setVariable ["DZ_cpChance", 0.0003];
 
-// MEF (east) is the AI antagonist. Players are split across two sides:
-// APD on west, "Free Altis" on resistance. Use DZ_playerSides for any
-// "is this a player-faction unit?" check.
-missionNamespace setVariable ["CH_sideEnemy",   east];
-missionNamespace setVariable ["DZ_playerSides", [west, resistance]];
-// CH_sidePlayers kept only as a single-side fallback for legacy code
-// paths (set to the more military faction); prefer DZ_playerSides.
-missionNamespace setVariable ["CH_sidePlayers", west];
+missionNamespace setVariable ["CH_sideEnemy",   west];
+missionNamespace setVariable ["DZ_enemySides",  [west, resistance]];
+missionNamespace setVariable ["DZ_playerSides", [east]];
+missionNamespace setVariable ["CH_sidePlayers", east];
 
 missionNamespace setVariable ["DZ_captureHold", 60];
 missionNamespace setVariable ["DZ_frontierCaptureOnly", true];
@@ -504,9 +498,9 @@ missionNamespace setVariable ["DZ_aiSkillByClass", createHashMapFromArray
 missionNamespace setVariable ["DZ_styleWestOwned", 0];
 missionNamespace setVariable ["DZ_styleEastOwned", 1];
 missionNamespace setVariable ["DZ_styleResistanceOwned", 2];
-missionNamespace setVariable ["DZ_styleEnemyDormant", 1];
-missionNamespace setVariable ["DZ_styleEnemyActive", 1];
-missionNamespace setVariable ["DZ_stylePlayerOwned", 0];
+missionNamespace setVariable ["DZ_styleEnemyDormant", 0];
+missionNamespace setVariable ["DZ_styleEnemyActive", 0];
+missionNamespace setVariable ["DZ_stylePlayerOwned", 1];
 missionNamespace setVariable ["DZ_styleContested", 3];
 
 missionNamespace setVariable ["DZ_zoneStateTemplate", _zoneTemplate];

@@ -41,8 +41,9 @@ private _spawnBlockedUntil = missionNamespace getVariable ["DZ_spawnBlockedUntil
 private _firstCounterDone = missionNamespace getVariable ["DZ_firstCounterDone", []];
 private _nextCounterAt = missionNamespace getVariable ["DZ_nextCounterAt", []];
 private _nextGlobalCounterAt = missionNamespace getVariable ["DZ_nextGlobalCounterAt", 0];
-private _sideEnemy   = missionNamespace getVariable ["CH_sideEnemy", east];
-private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+private _sideEnemy   = missionNamespace getVariable ["CH_sideEnemy", west];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [east]];
+private _enemySides  = missionNamespace getVariable ["DZ_enemySides", [west, resistance]];
 private _respawnPoints = missionNamespace getVariable ["DZ_respawnPoints", []];
 private _now = time;
 private _sectorCount = count _cells;
@@ -106,7 +107,7 @@ private _fnc_setSavedOwner =
     params ["_sectorId", "_side"];
 
     private _key = [_side] call _fnc_sideToKey;
-    private _newKey = if (_key != "" && { !(_side isEqualTo _sideEnemy) }) then { _key } else { "" };
+    private _newKey = if (_key != "" && { _side in _playerSides }) then { _key } else { "" };
 
     private _entryIdx = _savedOwners findIf { (_x param [0, -1]) isEqualTo _sectorId };
     private _oldKey = if (_entryIdx >= 0) then { (_savedOwners select _entryIdx) param [1, ""] } else { "" };
@@ -171,7 +172,7 @@ private _fnc_dominantSide =
                 _tied = true;
             };
         };
-    } forEach [[west, _westCount], [resistance, _resistanceCount], [_sideEnemy, _eastCount]];
+    } forEach [[west, _westCount], [resistance, _resistanceCount], [east, _eastCount]];
 
     if (_bestCount <= 0 || { _tied }) exitWith { sideUnknown };
 
@@ -405,10 +406,10 @@ _savedOwners = _savedOwners select
 } forEach _savedOwners;
 
 {
-    if (_x >= 0 && { _x < _sectorCount } && { (_sectorOwner param [_x, _sideEnemy]) isEqualTo _sideEnemy }) then
+    if (_x >= 0 && { _x < _sectorCount } && { !((_sectorOwner param [_x, _sideEnemy]) in _playerSides) }) then
     {
-        _sectorOwner set [_x, west];
-        [_x, west] call _fnc_setSavedOwner;
+        _sectorOwner set [_x, east];
+        [_x, east] call _fnc_setSavedOwner;
     };
 } forEach _saved;
 
@@ -636,7 +637,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
     };
 
     private _unitSide = side group _unit;
-    if (!(_unitSide in _playerSides) && { !(_unitSide isEqualTo _sideEnemy) }) then
+    if (!(_unitSide in _playerSides) && { !(_unitSide in _enemySides) }) then
     {
         continue;
     };
@@ -682,7 +683,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
             {
                 _sectorCounts set [_candidateId, [_westCount, _resistanceCount + 1, _eastCount]];
             };
-            case (_unitSide isEqualTo _sideEnemy):
+            case (_unitSide isEqualTo east):
             {
                 _sectorCounts set [_candidateId, [_westCount, _resistanceCount, _eastCount + 1]];
             };
@@ -713,10 +714,10 @@ for "_idx" from 0 to (_sectorCount - 1) do
 
     if (_savedCap && { !_captured }) then
     {
-        if ((_sectorOwner param [_idx, _sideEnemy]) isEqualTo _sideEnemy) then
+        if (!((_sectorOwner param [_idx, _sideEnemy]) in _playerSides)) then
         {
-            _sectorOwner set [_idx, west];
-            [_idx, west] call _fnc_setSavedOwner;
+            _sectorOwner set [_idx, east];
+            [_idx, east] call _fnc_setSavedOwner;
         };
 
         _preDone = true;
@@ -1311,15 +1312,15 @@ for "_idx" from 0 to (_sectorCount - 1) do
     {
         case (_ownerSide isEqualTo west): { _westCount };
         case (_ownerSide isEqualTo resistance): { _resistanceCount };
-        case (_ownerSide isEqualTo _sideEnemy): { _eastCount };
+        case (_ownerSide isEqualTo east): { _eastCount };
         default { 0 };
     };
 
     private _attackerCount = switch (true) do
     {
-        case (_ownerSide isEqualTo west): { _resistanceCount + _eastCount };
-        case (_ownerSide isEqualTo resistance): { _westCount + _eastCount };
-        case (_ownerSide isEqualTo _sideEnemy): { _westCount + _resistanceCount };
+        case (_ownerSide isEqualTo west): { _eastCount };
+        case (_ownerSide isEqualTo resistance): { _eastCount };
+        case (_ownerSide isEqualTo east): { _westCount + _resistanceCount };
         default { _westCount + _resistanceCount + _eastCount };
     };
 
