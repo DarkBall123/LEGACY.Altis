@@ -38,11 +38,44 @@ if (isServer) then {
             [_x, -1, _fortifyObjects] call ace_fortify_fnc_registerObjects;
         } forEach _fortifySides;
 
-        ace_fortify_locations = [];
-        {
-            ace_fortify_locations pushBack [_x, 20, 20, 0, false];
-        } forEach (allMissionObjects "rhsgref_cdf_b_ural");
-        publicVariable "ace_fortify_locations";
+        // Build anchors: fortifications can be built near the fortify Ural
+        // and near ANY vehicle whose display name contains "(Ammo)". A
+        // periodic rescan keeps the list current as such vehicles spawn or
+        // despawn (the old one-shot scan missed anything bought later).
+        DZ_fnc_fortifyRebuildAnchors = {
+            private _radius = missionNamespace getVariable ["DZ_fortifyAnchorRadius", 20];
+            private _locations = [];
+
+            {
+                private _veh = _x;
+                if (isNull _veh || { !alive _veh }) then { continue };
+
+                private _isAnchor = _veh isKindOf "rhsgref_cdf_b_ural";
+                if (!_isAnchor) then {
+                    private _name = toLower (getText (configOf _veh >> "displayName"));
+                    _isAnchor = (_name find "(ammo)") >= 0;
+                };
+
+                if (_isAnchor) then {
+                    _locations pushBack [_veh, _radius, _radius, 0, false];
+                };
+            } forEach vehicles;
+
+            ace_fortify_locations = _locations;
+            publicVariable "ace_fortify_locations";
+        };
+
+        call DZ_fnc_fortifyRebuildAnchors;
+
+        if !(missionNamespace getVariable ["DZ_fortifyAnchorRescanStarted", false]) then {
+            missionNamespace setVariable ["DZ_fortifyAnchorRescanStarted", true];
+            [] spawn {
+                while { true } do {
+                    sleep (missionNamespace getVariable ["DZ_fortifyAnchorRescanInterval", 15]);
+                    call DZ_fnc_fortifyRebuildAnchors;
+                };
+            };
+        };
 
         if !(missionNamespace getVariable ["DZ_fortifyEconomyServerEventsAdded", false]) then {
             missionNamespace setVariable ["DZ_fortifyEconomyServerEventsAdded", true];

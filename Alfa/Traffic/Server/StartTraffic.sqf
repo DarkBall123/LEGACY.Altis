@@ -10,7 +10,7 @@ ENGIMA_TRAFFIC_StartTraffic = {
 	private ["_debugMarkerName"];
 
 	private _side = [_this, "SIDE", civilian] call ENGIMA_TRAFFIC_GetParamValue;
-	private _possibleVehicles = [_this, "VEHICLES", ["c_uacivil_van01_01", "c_civil_ambulance_01", "c_cimic_medevac_van", "c_uadsns_kozak5_emergency_F", "c_uavolunteers_medevac_van", "C_Offroad_01_F", "C_Hatchback_01_sport_F", "C_Van_02_transport_F", "C_SUV_01_F"]] call ENGIMA_TRAFFIC_GetParamValue;
+	private _possibleVehicles = [_this, "VEHICLES", ["LOP_CHR_Civ_Offroad", "LOP_CHR_Civ_Landrover", "LOP_CHR_Civ_Hatchback", "LOP_CHR_Civ_UAZ_Open", "LOP_CHR_Civ_UAZ", "LOP_CHR_Civ_Ural", "LOP_CHR_Civ_Ural_open", "UK3CB_C_Lada", "UK3CB_C_OLD_BIKE", "UK3CB_C_TT650", "UK3CB_C_Gaz24", "UK3CB_C_YAVA"]] call ENGIMA_TRAFFIC_GetParamValue;
 	private _vehicleCount = [_this, "VEHICLES_COUNT", 10] call ENGIMA_TRAFFIC_GetParamValue;
 	private _maxGroupsCount = [_this, "MAX_GROUPS_COUNT", 0] call ENGIMA_TRAFFIC_GetParamValue;
 	private _minSpawnDistance = [_this, "MIN_SPAWN_DISTANCE", 800] call ENGIMA_TRAFFIC_GetParamValue;

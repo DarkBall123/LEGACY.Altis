@@ -342,6 +342,11 @@ missionNamespace setVariable ["DZ_persistMaxAssets", 400];
 // Radius around each base/respawn point in which editor-placed storage
 // containers are auto-persisted (their contents saved across restarts).
 missionNamespace setVariable ["DZ_baseContainerRadius", 300];
+// Fortify build anchors: build radius around each anchor vehicle and how
+// often the server rescans for new/removed anchors (the fortify Ural and
+// any vehicle whose display name contains "(Ammo)").
+missionNamespace setVariable ["DZ_fortifyAnchorRadius", 20];
+missionNamespace setVariable ["DZ_fortifyAnchorRescanInterval", 15];
 missionNamespace setVariable ["DZ_respawnPoints", _respawnPoints];
 missionNamespace setVariable ["DZ_scriptRespawnMarkersEnabled", false];
 
