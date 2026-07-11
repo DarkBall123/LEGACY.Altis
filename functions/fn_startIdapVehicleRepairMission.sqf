@@ -214,15 +214,15 @@ private _spawnAmbush = {
         _armour setDir (_anchorPos getDir _vehPos + 180);
 
         private _crewClasses = [
-            "UK3CB_MDF_O_RIF_1",
-            "UK3CB_MDF_O_AR",
-            "UK3CB_MDF_O_TL"
+            "UK3CB_WEI_B_RIF_5",
+            "UK3CB_WEI_B_AR",
+            "UK3CB_WEI_B_TL"
         ];
         private _crewSlots = ["Driver", "Gunner", "Commander"];
 
         {
             private _slot = _x;
-            private _crewClass = _crewClasses param [_forEachIndex, "UK3CB_MDF_O_RIF_1"];
+            private _crewClass = _crewClasses param [_forEachIndex, "UK3CB_WEI_B_RIF_5"];
             private _u = _ambushGroup createUnit [_crewClass, _vehPos, [], 0, "NONE"];
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_u] call DZ_fnc_prepareSpawnedUnit; };
             _u allowFleeing 0;
@@ -243,10 +243,10 @@ private _spawnAmbush = {
     };
 
     private _infantryClasses = [
-        "UK3CB_MDF_O_TL",
-        "UK3CB_MDF_O_AR",
-        "UK3CB_MDF_O_RIF_1",
-        "UK3CB_MDF_O_AT"
+        "UK3CB_WEI_B_TL",
+        "UK3CB_WEI_B_AR",
+        "UK3CB_WEI_B_RIF_5",
+        "UK3CB_WEI_B_AT"
     ];
 
     {

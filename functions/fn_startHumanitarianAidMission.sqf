@@ -259,10 +259,10 @@ private _spawnAmbush = {
     private _ambushGroup = createGroup [_sideEnemy, true];
 
     private _classes = [
-        "UK3CB_MDF_O_TL",
-        "UK3CB_MDF_O_AR",
-        "UK3CB_MDF_O_RIF_1",
-        "UK3CB_MDF_O_AT"
+        "UK3CB_WEI_B_TL",
+        "UK3CB_WEI_B_AR",
+        "UK3CB_WEI_B_RIF_5",
+        "UK3CB_WEI_B_AT"
     ];
 
     {
@@ -274,17 +274,17 @@ private _spawnAmbush = {
     if (random 1 < 0.7) then
     {
         private _vehPos = _anchorPos getPos [10, random 360];
-        private _vehClass = selectRandom ["UK3CB_MDF_O_Offroad_HMG", "UK3CB_MDF_O_MB4WD_LMG"];
+        private _vehClass = selectRandom ["UK3CB_WEI_B_Hilux_DSHKM", "UK3CB_WEI_B_LR_Opentop_PKM"];
         if (isClass (configFile >> "CfgVehicles" >> _vehClass)) then
         {
             private _veh = createVehicle [_vehClass, _vehPos, [], 0, "NONE"];
             _veh setDir (random 360);
 
-            private _driver = _ambushGroup createUnit ["UK3CB_MDF_O_RIF_1", _vehPos, [], 0, "NONE"];
+            private _driver = _ambushGroup createUnit ["UK3CB_WEI_B_RIF_5", _vehPos, [], 0, "NONE"];
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpawnedUnit; };
             _driver moveInDriver _veh;
 
-            private _gunner = _ambushGroup createUnit ["UK3CB_MDF_O_AR", _vehPos, [], 0, "NONE"];
+            private _gunner = _ambushGroup createUnit ["UK3CB_WEI_B_AR", _vehPos, [], 0, "NONE"];
             if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
             _gunner moveInGunner _veh;
 

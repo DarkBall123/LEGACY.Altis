@@ -31,9 +31,9 @@ if !((_sideState get "active")) then
     ["air_defense", "manual", _definition, _missionSide] call DZ_fnc_prepareMissionState;
 };
 
-private _radarClass = "E22_O_JC_W_Radar_system_01_F";
-private _aaaClass   = "E22_O_JC_W_AAA_System_01_F";
-private _samClass   = "E22_O_JC_W_SAM_system_01_F";
+private _radarClass = "UK3CB_LDF_I_T810_ZU23";
+private _aaaClass   = "UK3CB_LDF_I_T810_ZU23";
+private _samClass   = "UK3CB_LDF_I_Igla_AA_pod";
 
 if (
     !isClass (configFile >> "CfgVehicles" >> _radarClass) ||
@@ -175,16 +175,16 @@ private _samCrewGrp = createVehicleCrew _sam;
 
 private _garrisonGroup = createGroup [_sideEnemy, true];
 private _garrisonClasses = [
-    "UK3CB_MDF_O_TL",
-    "UK3CB_MDF_O_AR",
-    "UK3CB_MDF_O_AR",
-    "UK3CB_MDF_O_RIF_1",
-    "UK3CB_MDF_O_RIF_1",
-    "UK3CB_MDF_O_AT",
-    "UK3CB_MDF_O_SNI",
-    "UK3CB_MDF_O_TL",
-    "UK3CB_MDF_O_RIF_1",
-    "UK3CB_MDF_O_AR"
+    "UK3CB_WEI_B_TL",
+    "UK3CB_WEI_B_AR",
+    "UK3CB_WEI_B_AR",
+    "UK3CB_WEI_B_RIF_5",
+    "UK3CB_WEI_B_RIF_5",
+    "UK3CB_WEI_B_AT",
+    "UK3CB_WEI_B_SNI",
+    "UK3CB_WEI_B_TL",
+    "UK3CB_WEI_B_RIF_5",
+    "UK3CB_WEI_B_AR"
 ];
 
 {
@@ -203,18 +203,18 @@ _garrisonGroup setBehaviour "AWARE";
 _garrisonGroup setCombatMode "RED";
 
 private _vehicles = [];
-private _technicalClass = selectRandom ["UK3CB_MDF_O_Offroad_HMG", "UK3CB_MDF_O_MB4WD_LMG"];
+private _technicalClass = selectRandom ["UK3CB_WEI_B_Hilux_DSHKM", "UK3CB_WEI_B_LR_Opentop_PKM"];
 if (isClass (configFile >> "CfgVehicles" >> _technicalClass)) then
 {
     private _vehPos = _radarPos getPos [90 + (random 40), random 360];
     private _veh = createVehicle [_technicalClass, _vehPos, [], 0, "NONE"];
     _veh setDir (random 360);
 
-    private _driver = _garrisonGroup createUnit ["UK3CB_MDF_O_RIF_1", _vehPos, [], 0, "NONE"];
+    private _driver = _garrisonGroup createUnit ["UK3CB_WEI_B_RIF_5", _vehPos, [], 0, "NONE"];
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpawnedUnit; };
     _driver moveInDriver _veh;
 
-    private _gunner = _garrisonGroup createUnit ["UK3CB_MDF_O_AR", _vehPos, [], 0, "NONE"];
+    private _gunner = _garrisonGroup createUnit ["UK3CB_WEI_B_AR", _vehPos, [], 0, "NONE"];
     if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
     _gunner moveInGunner _veh;
 

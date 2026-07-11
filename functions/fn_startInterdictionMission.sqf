@@ -99,9 +99,9 @@ diag_log format ["[INTERDICTION] Convoy route: %1m, spawn at %2 -> dest at %3",
 
 private _vehicleDefs =
 [
-    ["UK3CB_MDF_O_M1151_OGPK_M2", 0],
-    ["UK3CB_MDF_O_MTVR_Open",     18],
-    ["UK3CB_MDF_O_M60A3",         36]
+    ["UK3CB_WEI_B_Hilux_M2", 0],
+    ["UK3CB_WEI_B_LR_Softtop_Transport_Open",     18],
+    ["UK3CB_WEI_B_Hilux_M2",         36]
 ];
 
 private _convoyGroup    = createGroup [_sideEnemy, true];

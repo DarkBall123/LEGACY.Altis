@@ -1,12 +1,10 @@
 /*
  * DZ_fnc_initQuartermaster
- * Initializes the IDAP humanitarian aid hub. The shop offers unarmed
- * humanitarian transport, medical supplies, and utility equipment.
- * Both player factions (APD and Free Altis) may purchase here — the
- * hub is neutral and the NPC is captive/protected.
+ * Initializes the СНАБЖЕНИЕ (ГРУ) supply hub. Sells Soviet trucks,
+ * armour, cars, and static weapons. The NPC is captive/protected.
  *
  * Eden setup:
- *   - Place a civilian NPC (e.g. C_IDAP_Man_AidWorker_*_F) at the hub
+ *   - Place a civilian NPC at the hub
  *   - Init field: [this] call DZ_fnc_initQuartermaster;
  *   - Place a `vehicle_delivery_pad`-named object on the apron
  */
@@ -29,19 +27,16 @@ _npc setCaptive true;
 
 private _catalog = [
 
-    ["vehicles",  "veh_quad",          "Квадроцикл",                    500, ["C_Quadbike_01_F"]],
-    ["vehicles",  "veh_hilux_med",     "Toyota Hilux (медицинский)",    800, ["UK3CB_C_Hilux_Ambulance"]],
-    ["vehicles",  "veh_ural_repair",   "Урал-4320 (ремонтный)",         800, ["UK3CB_C_Ural_Repair"]],
-    ["vehicles",  "veh_ural_fuel",     "Урал-4320 (топливный)",         800, ["UK3CB_C_Ural_Fuel"]],
-    ["vehicles",  "veh_ural_fortify",  "Урал-4320 (фортификации)",      800, ["rhsgref_cdf_b_ural"]],
-    ["vehicles",  "veh_landrover",     "Land Rover (транспортный)",    1000, ["UK3CB_C_LandRover_Softtop_Transport_Open"]],
-    ["vehicles",  "veh_tahoe",         "Chevrolet Tahoe",              1400, ["UK3CB_C_SUV"]],
-    ["vehicles",  "veh_uh1h",          "UH-1H (транспортный)",         3000, ["UK3CB_C_UH1H"]],
+    ["trucks",  "qm_maz_refuel",   "МАЗ-543 (Топливный)", 1500, ["UK3CB_CW_SOV_O_LATE_MAZ_543_Refuel"]],
+    ["trucks",  "qm_maz_recovery", "МАЗ-543 (Тягач)",     1500, ["UK3CB_CW_SOV_O_LATE_MAZ_543_Recovery"]],
 
-    ["crates",    "crate_medical",     "Ящик с медикаментами",          500, ["ACE_medicalSupplyCrate_advanced"]],
+    ["armor",   "qm_brdm2um",      "БРДМ-2УМ",            1500, ["UK3CB_CW_SOV_O_LATE_BRDM2_UM"]],
+    ["armor",   "qm_brdm2",        "БРДМ-2",              2000, ["UK3CB_CW_SOV_O_LATE_BRDM2"]],
 
-    ["equipment", "equip_searchlight", "Прожектор",                     200, ["UK3CB_UN_B_Searchlight"]],
-    ["equipment", "equip_cargo_net",   "Грузовая сеть (коробка)",       250, ["CargoNet_01_box_F"]]
+    ["cars",    "qm_uaz_closed",   "УАЗ-3151 (Крытый)",    600, ["UK3CB_CW_SOV_LATE_UAZ_Closed"]],
+
+    ["statics", "qm_pkm",          "ПКМ",                  250, ["UK3CB_CW_SOV_O_Late_PKM_High"]],
+    ["statics", "qm_2b14",         "2Б14 Поднос",          500, ["UK3CB_CW_SOV_O_Late_2b14_82mm"]]
 ];
 
 private _resolveClass = {
@@ -55,7 +50,7 @@ private _resolveClass = {
 
 private _shopParent = [
     "DZ_Shop",
-    "IDAP — Гуманитарная помощь",
+    "СНАБЖЕНИЕ (ГРУ)",
     "",
     {},
     { true },
@@ -107,9 +102,10 @@ private _categoryActions = createHashMap;
     [_npc, 0, ["ACE_MainActions", "DZ_Shop"], _catAction] call ace_interact_menu_fnc_addActionToObject;
     _categoryActions set [_categoryId, true];
 } forEach [
-    ["vehicles",  "Транспорт",         5],
-    ["crates",    "Медицинские грузы", 4],
-    ["equipment", "Оборудование",      3]
+    ["trucks",  "Грузовики",        5],
+    ["armor",   "Бронемашины",      4],
+    ["cars",    "Машины",           3],
+    ["statics", "Статичное оружие", 2]
 ];
 
 private _catalogLen = count _catalog;
@@ -149,7 +145,7 @@ private _catalogLen = count _catalog;
     };
 } forEach _catalog;
 
-diag_log format ["[DZ_QM] IDAP humanitarian aid hub initialized: %1 (%2 catalog entries)",
+diag_log format ["[DZ_QM] СНАБЖЕНИЕ (ГРУ) hub initialized: %1 (%2 catalog entries)",
     _npc, count _catalog];
 
 true

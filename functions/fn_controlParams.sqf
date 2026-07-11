@@ -9,140 +9,138 @@ private _gridSize = 350;
 private _zoneTemplate = [false, [[], []], -1, 0, false, -1, false, false, -1, -1];
 private _enemyGroupRoot = configNull;
 
-private _defaultEnemyUnitClass = "UK3CB_MDF_O_TL";
+private _defaultEnemyUnitClass = "UK3CB_WEI_B_TL";
 
-private _uavOperatorClasses   = ["UK3CB_MDF_O_OFF"];
-private _uavOperatorBackpacks = ["O_Crocus_AP_Bag", "O_Crocus_AT_Bag"];
+private _uavOperatorClasses   = [];
+private _uavOperatorBackpacks = [];
 
 private _respawnPoints =
 [
-    ["APD", [12295.449, 8872.09, 123.936], east]
+    ["База", [8262.683, 3772.911, 76.472], east]
 ];
 
-private _enemyAirSupportClasses =
-[
-    ["UK3CB_MDF_O_UH1H_M240", 0.75],
-    ["UK3CB_MDF_O_Mystere",   0.25]
-];
+private _enemyAirSupportClasses = [];
 
 private _urbanUnitPool =
 [
-    ["UK3CB_MDF_O_RIF_1",    1.00],
-    ["UK3CB_MDF_O_AR",       0.70],
-    ["UK3CB_MDF_O_LAT",      0.65],
-    ["UK3CB_MDF_O_GL",       0.55],
-    ["UK3CB_MDF_O_MD",       0.45],
-    ["UK3CB_MDF_O_HMG",      0.40],
-    ["UK3CB_MDF_O_HMG_ASST", 0.30],
-    ["UK3CB_MDF_O_AT",       0.30],
-    ["UK3CB_MDF_O_AT_ASST",  0.22],
-    ["UK3CB_MDF_O_ENG",      0.25],
-    ["UK3CB_MDF_O_DEM",      0.20],
-    ["UK3CB_MDF_O_SNI",      0.18],
-    ["UK3CB_MDF_O_SPOT",     0.15]
+    ["UK3CB_WEI_B_RIF_5",    1.00],
+    ["UK3CB_WEI_B_AR",       0.70],
+    ["UK3CB_WEI_B_LAT",      0.65],
+    ["UK3CB_WEI_B_GL",       0.55],
+    ["UK3CB_WEI_B_MD",       0.45],
+    ["UK3CB_WEI_B_MG",       0.40],
+    ["UK3CB_WEI_B_MG_ASST",  0.30],
+    ["UK3CB_WEI_B_RIF_1",    0.35],
+    ["UK3CB_WEI_B_AT",       0.30],
+    ["UK3CB_WEI_B_AT_ASST",  0.22],
+    ["UK3CB_WEI_B_ENG",      0.25],
+    ["UK3CB_WEI_B_DEM",      0.20],
+    ["UK3CB_WEI_B_MK",       0.25],
+    ["UK3CB_WEI_B_SNI",      0.15]
 ];
 
 private _openUnitPool =
 [
-    ["UK3CB_MDF_O_RIF_1",    1.00],
-    ["UK3CB_MDF_O_AR",       0.65],
-    ["UK3CB_MDF_O_LAT",      0.60],
-    ["UK3CB_MDF_O_AT",       0.50],
-    ["UK3CB_MDF_O_AT_ASST",  0.40],
-    ["UK3CB_MDF_O_SNI",      0.45],
-    ["UK3CB_MDF_O_SPOT",     0.35],
-    ["UK3CB_MDF_O_GL",       0.45],
-    ["UK3CB_MDF_O_MD",       0.40],
-    ["UK3CB_MDF_O_AA",       0.30],
-    ["UK3CB_MDF_O_AA_ASST",  0.25],
-    ["UK3CB_MDF_O_ENG",      0.18]
+    ["UK3CB_WEI_B_RIF_5",    1.00],
+    ["UK3CB_WEI_B_AR",       0.65],
+    ["UK3CB_WEI_B_LAT",      0.60],
+    ["UK3CB_WEI_B_AT",       0.50],
+    ["UK3CB_WEI_B_AT_ASST",  0.40],
+    ["UK3CB_WEI_B_SNI",      0.45],
+    ["UK3CB_WEI_B_SPOT",     0.35],
+    ["UK3CB_WEI_B_MK",       0.40],
+    ["UK3CB_WEI_B_GL",       0.45],
+    ["UK3CB_WEI_B_MD",       0.40],
+    ["UK3CB_WEI_B_AA",       0.30],
+    ["UK3CB_WEI_B_AA_ASST",  0.25],
+    ["UK3CB_WEI_B_RIF_10",   0.30]
 ];
 
 private _counterUnitPool =
 [
-    ["UK3CB_MDF_O_RIF_1",    1.00],
-    ["UK3CB_MDF_O_AR",       0.75],
-    ["UK3CB_MDF_O_LAT",      0.65],
-    ["UK3CB_MDF_O_AT",       0.55],
-    ["UK3CB_MDF_O_AT_ASST",  0.40],
-    ["UK3CB_MDF_O_GL",       0.55],
-    ["UK3CB_MDF_O_HMG",      0.45],
-    ["UK3CB_MDF_O_HMG_ASST", 0.35],
-    ["UK3CB_MDF_O_MD",       0.40],
-    ["UK3CB_MDF_O_SNI",      0.25],
-    ["UK3CB_MDF_O_SPOT",     0.20],
-    ["UK3CB_MDF_O_DEM",      0.15]
+    ["UK3CB_WEI_B_RIF_5",    1.00],
+    ["UK3CB_WEI_B_AR",       0.75],
+    ["UK3CB_WEI_B_LAT",      0.65],
+    ["UK3CB_WEI_B_AT",       0.55],
+    ["UK3CB_WEI_B_AT_ASST",  0.40],
+    ["UK3CB_WEI_B_GL",       0.55],
+    ["UK3CB_WEI_B_MG",       0.45],
+    ["UK3CB_WEI_B_MG_ASST",  0.35],
+    ["UK3CB_WEI_B_MD",       0.40],
+    ["UK3CB_WEI_B_MK",       0.30],
+    ["UK3CB_WEI_B_RIF_1",    0.35],
+    ["UK3CB_WEI_B_DEM",      0.15]
 ];
 
 private _urbanFixedSquads =
 [
 
-    [["UK3CB_MDF_O_TL"],                                                                                                     0.35],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"],                                                                                0.50],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                                              1.00],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_LAT"],                                                             0.85],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                                              0.95],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_MD"],                                                              0.90],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_DEM",   "UK3CB_MDF_O_RIF_1"],                                                           0.55],
+    [["UK3CB_WEI_B_TL"],                                                                                                     0.35],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5"],                                                                                0.50],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AR"],                                                              1.00],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_LAT"],                                                             0.85],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_1", "UK3CB_WEI_B_AR"],                                                              0.95],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_GL",    "UK3CB_WEI_B_MD"],                                                              0.90],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_DEM",   "UK3CB_WEI_B_RIF_5"],                                                           0.55],
 
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_HMG",    "UK3CB_MDF_O_HMG_ASST"],                                  0.65],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT",    "UK3CB_MDF_O_AT_ASST","UK3CB_MDF_O_RIF_1"],                                     0.70],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_ENG",   "UK3CB_MDF_O_DEM",    "UK3CB_MDF_O_RIF_1"],                                     0.40],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_LAT",    "UK3CB_MDF_O_MD"],                                        0.65]
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR",    "UK3CB_WEI_B_MG",    "UK3CB_WEI_B_MG_ASST"],                                    0.65],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AT",    "UK3CB_WEI_B_AT_ASST","UK3CB_WEI_B_RIF_5"],                                     0.70],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_ENG",   "UK3CB_WEI_B_DEM",    "UK3CB_WEI_B_RIF_5"],                                     0.40],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_GL",    "UK3CB_WEI_B_LAT",    "UK3CB_WEI_B_MD"],                                        0.65]
 ];
 
 private _openFixedSquads =
 [
 
-    [["UK3CB_MDF_O_TL"],                                                                                                     0.45],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"],                                                                                0.55],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_SPOT"],                                                            0.70],
+    [["UK3CB_WEI_B_TL"],                                                                                                     0.45],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5"],                                                                                0.55],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_SNI",   "UK3CB_WEI_B_SPOT"],                                                            0.70],
 
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                                                              0.90],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_LAT"],                                                             0.85],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_MD",    "UK3CB_MDF_O_AT"],                                                              0.70],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT"],                                                              0.90],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR",    "UK3CB_WEI_B_LAT"],                                                             0.85],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_MD",    "UK3CB_WEI_B_AT"],                                                              0.70],
 
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT",    "UK3CB_MDF_O_AT_ASST","UK3CB_MDF_O_RIF_1"],                                     0.65],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AA",    "UK3CB_MDF_O_AA_ASST","UK3CB_MDF_O_RIF_1"],                                     0.55],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_SPOT",   "UK3CB_MDF_O_RIF_1"],                                     0.45],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AT",    "UK3CB_WEI_B_AT_ASST","UK3CB_WEI_B_RIF_5"],                                     0.65],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AA",    "UK3CB_WEI_B_AA_ASST","UK3CB_WEI_B_RIF_5"],                                     0.55],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_MK",    "UK3CB_WEI_B_SPOT",   "UK3CB_WEI_B_RIF_5"],                                     0.45],
 
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR",    "UK3CB_MDF_O_LAT",    "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_MD"],                   0.50]
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AR",    "UK3CB_WEI_B_LAT",    "UK3CB_WEI_B_GL",    "UK3CB_WEI_B_MD"],                   0.50]
 ];
 
 private _counterFixedSquads =
 [
 
-    [["UK3CB_MDF_O_SL"],                                                                                                     0.45],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                                                              0.65],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_SNI",   "UK3CB_MDF_O_AT"],                                                              0.55],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],                                                              0.95],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR",     "UK3CB_MDF_O_HMG"],                                       0.70],
-    [["UK3CB_MDF_O_TL", "UK3CB_MDF_O_MD",    "UK3CB_MDF_O_AT"],                                                              0.65],
+    [["UK3CB_WEI_B_SL"],                                                                                                     0.45],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT"],                                                              0.65],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_SNI",   "UK3CB_WEI_B_AT"],                                                              0.55],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AR"],                                                              0.95],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AR",     "UK3CB_WEI_B_MG"],                                        0.70],
+    [["UK3CB_WEI_B_TL", "UK3CB_WEI_B_MD",    "UK3CB_WEI_B_AT"],                                                              0.65],
 
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT",    "UK3CB_MDF_O_AT_ASST","UK3CB_MDF_O_AR",     "UK3CB_MDF_O_MD"],                  0.60],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_HMG",   "UK3CB_MDF_O_HMG_ASST","UK3CB_MDF_O_LAT",   "UK3CB_MDF_O_RIF_1"],               0.55],
-    [["UK3CB_MDF_O_SL", "UK3CB_MDF_O_GL",    "UK3CB_MDF_O_AR",     "UK3CB_MDF_O_LAT",    "UK3CB_MDF_O_RIF_1"],               0.55]
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AT",    "UK3CB_WEI_B_AT_ASST","UK3CB_WEI_B_AR",     "UK3CB_WEI_B_MD"],                  0.60],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_MG",    "UK3CB_WEI_B_MG_ASST","UK3CB_WEI_B_LAT",   "UK3CB_WEI_B_RIF_5"],                0.55],
+    [["UK3CB_WEI_B_SL", "UK3CB_WEI_B_GL",    "UK3CB_WEI_B_AR",     "UK3CB_WEI_B_LAT",    "UK3CB_WEI_B_RIF_5"],               0.55]
 ];
 
 private _urbanRandomSquads =
 [
-    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1"]], ["pool", _urbanUnitPool]], 0.80],
-    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_MDF_O_SL"]],                       ["pool", _urbanUnitPool]], 0.55],
-    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR"]],     ["pool", _urbanUnitPool]], 0.40]
+    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5"]], ["pool", _urbanUnitPool]], 0.80],
+    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_WEI_B_SL"]],                       ["pool", _urbanUnitPool]], 0.55],
+    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR"]],     ["pool", _urbanUnitPool]], 0.40]
 ];
 
 private _openRandomSquads =
 [
-    [createHashMapFromArray [["count", [2, 3]], ["required", ["UK3CB_MDF_O_TL"]],                       ["pool", _openUnitPool]], 0.80],
-    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT"]],     ["pool", _openUnitPool]], 0.55],
-    [createHashMapFromArray [["count", [3, 3]], ["required", ["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AT"]],     ["pool", _openUnitPool]], 0.35]
+    [createHashMapFromArray [["count", [2, 3]], ["required", ["UK3CB_WEI_B_TL"]],                       ["pool", _openUnitPool]], 0.80],
+    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AT"]],     ["pool", _openUnitPool]], 0.55],
+    [createHashMapFromArray [["count", [3, 3]], ["required", ["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AT"]],     ["pool", _openUnitPool]], 0.35]
 ];
 
 private _counterRandomSquads =
 [
-    [createHashMapFromArray [["count", [4, 5]], ["required", ["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR"]],     ["pool", _counterUnitPool]], 0.80],
-    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AT"]],     ["pool", _counterUnitPool]], 0.60],
-    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_MDF_O_TL"]],                       ["pool", _counterUnitPool]], 0.35]
+    [createHashMapFromArray [["count", [4, 5]], ["required", ["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AR"]],     ["pool", _counterUnitPool]], 0.80],
+    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AT"]],     ["pool", _counterUnitPool]], 0.60],
+    [createHashMapFromArray [["count", [3, 4]], ["required", ["UK3CB_WEI_B_TL"]],                       ["pool", _counterUnitPool]], 0.35]
 ];
 
 private _urbanSquads   = _urbanFixedSquads   + _urbanRandomSquads;
@@ -152,111 +150,93 @@ private _counterSquads = _counterFixedSquads + _counterRandomSquads;
 private _urbanPackages =
 [
 
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_MB4WD_LMG"],       0.12],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.55],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M113_M240"],       0.55],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5"],                                        "UK3CB_WEI_B_LR_Opentop_PKM"],  0.55],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5"],                                        "UK3CB_WEI_B_Hilux_DSHKM"],     0.55],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT"],                       "UK3CB_WEI_B_Hilux_M2"],        0.45],
 
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M113_M2"],         0.45],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M1151_OGPK_M2"],   0.40],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_MD"],                                         "UK3CB_WEI_B_Hilux_Civ_Open"],  0.30],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_GL"],                                         "UK3CB_WEI_B_S1203"],           0.30],
 
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_MD"],                                        "UK3CB_MDF_O_M998_2DR"],        0.30],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_GL"],                                        "UK3CB_MDF_O_M1025_Unarmed"],   0.30],
-
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],    "UK3CB_MDF_O_MTVR_Open"],       0.25]
+    [[["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_MD"],     "UK3CB_WEI_B_LR_Softtop_Transport_Open"], 0.25]
 ];
 
 private _openPackages =
 [
 
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.55],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M1151"],           0.50],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_MB4WD_LMG"],       0.12],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5"],                                        "UK3CB_WEI_B_Hilux_DSHKM"],     0.55],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5"],                                        "UK3CB_WEI_B_LR_Opentop_PKM"],  0.50],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT"],                       "UK3CB_WEI_B_Hilux_M2"],        0.40],
 
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M1151_OGPK_M2"],   0.40],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M113_M2"],         0.35],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_SNI"],                                        "UK3CB_WEI_B_Hilux_Civ_Closed"],0.30],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_MD"],                                         "UK3CB_WEI_B_Skoda"],           0.30],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_GL", "UK3CB_WEI_B_RIF_5"],                                         "UK3CB_WEI_B_LR_Softtop_Transport_Open"], 0.30],
 
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_SNI"],                                       "UK3CB_MDF_O_M998_2DR"],        0.30],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_MD"],                                        "UK3CB_MDF_O_M113_Unarmed"],    0.30],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_GL", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M1025_Unarmed"],   0.30],
-
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],    "UK3CB_MDF_O_MTVR_Open"],       0.25]
+    [[["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_MD"],     "UK3CB_WEI_B_Ikarus"],          0.25]
 ];
 
 private _counterPackages =
 [
 
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M1151_OGPK_M2"],   0.50],
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT"],                      "UK3CB_MDF_O_M113_M2"],         0.50],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_Offroad_HMG"],     0.45],
-    [[["UK3CB_MDF_O_TL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_RIF_1"],                                        "UK3CB_MDF_O_M113_M240"],       0.45],
+    [[["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT"],                       "UK3CB_WEI_B_Hilux_M2"],        0.50],
+    [[["UK3CB_WEI_B_SL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT"],                       "UK3CB_WEI_B_Hilux_DSHKM"],     0.50],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5"],                                        "UK3CB_WEI_B_LR_Opentop_PKM"],  0.45],
+    [[["UK3CB_WEI_B_TL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_RIF_5"],                                        "UK3CB_WEI_B_Hilux_Civ_Open"],  0.45],
 
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AT", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_MD"],    "UK3CB_MDF_O_MTVR_Open"],       0.50],
-    [[["UK3CB_MDF_O_SL", "UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_GL", "UK3CB_MDF_O_AR", "UK3CB_MDF_O_HMG"],   "UK3CB_MDF_O_MTVR_Open"],       0.40]
+    [[["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AT", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_MD"],     "UK3CB_WEI_B_LR_Softtop_Transport_Open"], 0.50],
+    [[["UK3CB_WEI_B_SL", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_GL", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_MG"],     "UK3CB_WEI_B_Ikarus"],          0.40]
 ];
 
 private _urbanVehiclePool =
 [
-    ["UK3CB_MDF_O_M113_M2",          0.65],
-    ["UK3CB_MDF_O_M113_M240",        0.70],
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.50],
-    ["UK3CB_MDF_O_Offroad_HMG",      0.55],
-    ["UK3CB_MDF_O_MB4WD_LMG",        0.12],
-    ["UK3CB_MDF_O_M998_2DR",         0.35],
-    ["UK3CB_MDF_O_M1025_Unarmed",    0.30],
-    ["UK3CB_MDF_O_M60A3",            0.10]
+    ["UK3CB_WEI_B_Hilux_M2",        0.65],
+    ["UK3CB_WEI_B_Hilux_DSHKM",     0.70],
+    ["UK3CB_WEI_B_LR_Opentop_PKM",  0.55],
+    ["UK3CB_WEI_B_Hilux_Civ_Open",  0.35],
+    ["UK3CB_WEI_B_S1203",           0.30],
+    ["UK3CB_WEI_B_LR_Softtop_Transport_Open", 0.30]
 ];
 
 private _openVehiclePool =
 [
-    ["UK3CB_MDF_O_Offroad_HMG",      0.65],
-    ["UK3CB_MDF_O_MB4WD_LMG",        0.12],
-    ["UK3CB_MDF_O_M1151",            0.55],
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.45],
-    ["UK3CB_MDF_O_M113_M240",        0.45],
-    ["UK3CB_MDF_O_M113_Unarmed",     0.45],
-    ["UK3CB_MDF_O_M1025_Unarmed",    0.55],
-    ["UK3CB_MDF_O_M998_2DR",         0.50],
-    ["UK3CB_MDF_O_Offroad_Unarmed",  0.50],
-    ["UK3CB_MDF_O_MB4WD_Unarmed",    0.10],
-    ["UK3CB_MDF_O_M60A3",            0.12]
+    ["UK3CB_WEI_B_Hilux_DSHKM",     0.65],
+    ["UK3CB_WEI_B_LR_Opentop_PKM",  0.55],
+    ["UK3CB_WEI_B_Hilux_M2",        0.45],
+    ["UK3CB_WEI_B_Hilux_Civ_Open",  0.45],
+    ["UK3CB_WEI_B_Hilux_Civ_Closed",0.40],
+    ["UK3CB_WEI_B_Skoda",           0.50],
+    ["UK3CB_WEI_B_S1203",           0.50],
+    ["UK3CB_WEI_B_LR_Softtop_Transport_Open", 0.45],
+    ["UK3CB_WEI_B_TT650",           0.30]
 ];
 
 private _counterVehiclePool =
 [
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    0.55],
-    ["UK3CB_MDF_O_M113_M2",          0.55],
-    ["UK3CB_MDF_O_M113_M240",        0.50],
-    ["UK3CB_MDF_O_Offroad_HMG",      0.55],
-    ["UK3CB_MDF_O_MB4WD_LMG",        0.12],
-    ["UK3CB_MDF_O_M1151",            0.30],
-    ["UK3CB_MDF_O_MTVR_Open",        0.30],
-    ["UK3CB_MDF_O_M60A3",            0.20]
+    ["UK3CB_WEI_B_Hilux_M2",        0.55],
+    ["UK3CB_WEI_B_Hilux_DSHKM",     0.55],
+    ["UK3CB_WEI_B_LR_Opentop_PKM",  0.50],
+    ["UK3CB_WEI_B_LR_Softtop_Transport_Open", 0.40],
+    ["UK3CB_WEI_B_Ikarus",          0.30]
 ];
 
 private _vehicleMeta = createHashMapFromArray
 [
-    ["UK3CB_MDF_O_M60A3",            ["tank"]],
-    ["UK3CB_MDF_O_M1151_OGPK_M2",    ["technical"]],
-    ["UK3CB_MDF_O_M1151",            ["technical"]],
-    ["UK3CB_MDF_O_Offroad_HMG",      ["technical"]],
-    ["UK3CB_MDF_O_MB4WD_LMG",        ["technical"]],
-    ["UK3CB_MDF_O_Offroad_Unarmed",  ["utility"]],
-    ["UK3CB_MDF_O_MB4WD_Unarmed",    ["utility"]],
-    ["UK3CB_MDF_O_MTVR_Open",        ["truck"]],
-    ["UK3CB_MDF_O_MTVR_Refuel",      ["truck"]],
-    ["UK3CB_MDF_O_MTVR_Repair",      ["truck"]],
-    ["UK3CB_MDF_O_MTVR_Reammo",      ["truck"]],
-
-    ["UK3CB_MDF_O_M113_M2",          ["technical"]],
-    ["UK3CB_MDF_O_M113_M240",        ["technical"]],
-    ["UK3CB_MDF_O_M113_Unarmed",     ["utility"]],
-    ["UK3CB_MDF_O_M1025_Unarmed",    ["utility"]],
-    ["UK3CB_MDF_O_M998_2DR",         ["utility"]]
+    ["UK3CB_WEI_B_Hilux_M2",        ["technical"]],
+    ["UK3CB_WEI_B_Hilux_DSHKM",     ["technical"]],
+    ["UK3CB_WEI_B_LR_Opentop_PKM",  ["technical"]],
+    ["UK3CB_WEI_B_LR_Softtop_Transport_Open", ["truck"]],
+    ["UK3CB_WEI_B_Ikarus",          ["truck"]],
+    ["UK3CB_WEI_B_LR_Opentop_Reammo",["truck"]],
+    ["UK3CB_WEI_B_LR_Opentop_Refuel",["truck"]],
+    ["UK3CB_WEI_B_LR_Opentop_Repair",["truck"]],
+    ["UK3CB_WEI_B_Hilux_Civ_Open",  ["utility"]],
+    ["UK3CB_WEI_B_Hilux_Civ_Closed",["utility"]],
+    ["UK3CB_WEI_B_S1203",           ["utility"]],
+    ["UK3CB_WEI_B_Skoda",           ["utility"]],
+    ["UK3CB_WEI_B_TT650",           ["utility"]]
 ];
 
 private _vehicleCategoryCaps = createHashMapFromArray
 [
-    ["tank",      1],
     ["technical", 4],
     ["truck",     2],
     ["utility",   2]
@@ -264,7 +244,6 @@ private _vehicleCategoryCaps = createHashMapFromArray
 
 private _vehicleCategoryLocalCaps = createHashMapFromArray
 [
-    ["tank",      1],
     ["technical", 2],
     ["truck",     1],
     ["utility",   1]
@@ -364,13 +343,10 @@ missionNamespace setVariable ["DZ_resourceMarkerRefreshInterval", 15];
 missionNamespace setVariable ["DZ_resourceNodes",
 [
 
-    ["everland_factory",      "Фабрика Everland",                                       [6176.11,  16242.6,   0],  "manufacturing", 160],
-    ["telos_intel",           "Разведовательно-исследовательный военный центр Телос",   [16084.8,  16998.2,   0],  "intel",         120],
-    ["sofia_radar",           "РЛС София",                                              [25323.4,  21812.7,   0],  "intel",         120],
-    ["agola_solar",           "Солнечная Электростанция AGOLA SOLAR",                   [15497.3,  16283.0,   0],  "manufacturing", 160],
-    ["agola_diesel",          "Дизельная Электростанция AGOLA SOLAR",                   [25406.1,  20328.3,   0],  "oil",           300],
-    ["molos_airfield",        "Аэродром Молос",                                         [26995.1,  24743.4,   0],  "air_fuel",      160],
-    ["aviation_club_airfield","Аэродром Авиаклуба",                                     [11512.5,  11662.1,   0],  "air_fuel",      160]
+    ["buchtov_fuel",       "Fuel Depot Buchtov",           [974.232,  11142.87, 0],  "oil",           300],
+    ["belin_ltd",          "Belin Ltd.",                   [1589.325, 4813.543, 0],  "manufacturing", 160],
+    ["jantina_depot",      "Jantina Depot",                [4046.559, 9614.416, 0],  "manufacturing", 160],
+    ["kostrulya_nuclear",  "Nuclear Power Plant Kostrulya",[6973.962, 5082.875, 0],  "manufacturing", 300]
 ]];
 
 missionNamespace setVariable ["DZ_resourceNodeMarkerType", createHashMapFromArray
@@ -385,24 +361,32 @@ missionNamespace setVariable ["DZ_resourceNodeMarkerType", createHashMapFromArra
 missionNamespace setVariable ["DZ_aiBaseSkill", 0.55];
 missionNamespace setVariable ["DZ_aiSkillByClass", createHashMapFromArray
 [
-    ["UK3CB_MDF_O_SL",       0.70],
-    ["UK3CB_MDF_O_SNI",      0.70],
-    ["UK3CB_MDF_O_TL",       0.65],
-    ["UK3CB_MDF_O_OFF",      0.65],
-    ["UK3CB_MDF_O_AR",       0.60],
-    ["UK3CB_MDF_O_HMG",      0.60],
-    ["UK3CB_MDF_O_AT",       0.60],
-    ["UK3CB_MDF_O_AA",       0.60],
-    ["UK3CB_MDF_O_SPOT",     0.60],
-    ["UK3CB_MDF_O_LAT",      0.55],
-    ["UK3CB_MDF_O_GL",       0.55],
-    ["UK3CB_MDF_O_ENG",      0.55],
-    ["UK3CB_MDF_O_DEM",      0.55],
-    ["UK3CB_MDF_O_HMG_ASST", 0.50],
-    ["UK3CB_MDF_O_AT_ASST",  0.50],
-    ["UK3CB_MDF_O_AA_ASST",  0.50],
-    ["UK3CB_MDF_O_MD",       0.50],
-    ["UK3CB_MDF_O_RIF_1",    0.50]
+    ["UK3CB_WEI_B_SL",       0.70],
+    ["UK3CB_WEI_B_COM",      0.70],
+    ["UK3CB_WEI_B_SNI",      0.70],
+    ["UK3CB_WEI_B_MK",       0.65],
+    ["UK3CB_WEI_B_TL",       0.65],
+    ["UK3CB_WEI_B_OFF",      0.65],
+    ["UK3CB_WEI_B_AR",       0.60],
+    ["UK3CB_WEI_B_MG",       0.60],
+    ["UK3CB_WEI_B_LMG",      0.60],
+    ["UK3CB_WEI_B_AT",       0.60],
+    ["UK3CB_WEI_B_AA",       0.60],
+    ["UK3CB_WEI_B_SPOT",     0.60],
+    ["UK3CB_WEI_B_LAT",      0.55],
+    ["UK3CB_WEI_B_GL",       0.55],
+    ["UK3CB_WEI_B_ENG",      0.55],
+    ["UK3CB_WEI_B_DEM",      0.55],
+    ["UK3CB_WEI_B_CREW",     0.55],
+    ["UK3CB_WEI_B_MG_ASST",  0.50],
+    ["UK3CB_WEI_B_AT_ASST",  0.50],
+    ["UK3CB_WEI_B_AA_ASST",  0.50],
+    ["UK3CB_WEI_B_MD",       0.50],
+    ["UK3CB_WEI_B_RIF_5",    0.50],
+    ["UK3CB_WEI_B_RIF_1",    0.50],
+    ["UK3CB_WEI_B_RIF_10",   0.50],
+    ["UK3CB_WEI_B_RIF_8",    0.50],
+    ["UK3CB_WEI_B_RIF_4",    0.50]
 ]];
 
 missionNamespace setVariable ["DZ_styleWestOwned", 0];

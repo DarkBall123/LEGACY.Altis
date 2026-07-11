@@ -145,10 +145,10 @@ private _defenderUnits = [];
 
 private _guardGroup = createGroup [_sideEnemy, true];
 private _guardClasses = [
-    "UK3CB_MDF_O_TL",
-    "UK3CB_MDF_O_RIF_1",
-    "UK3CB_MDF_O_AR",
-    "UK3CB_MDF_O_AT"
+    "UK3CB_WEI_B_TL",
+    "UK3CB_WEI_B_RIF_5",
+    "UK3CB_WEI_B_AR",
+    "UK3CB_WEI_B_AT"
 ];
 private _guards = [];
 {

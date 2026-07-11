@@ -133,7 +133,7 @@ private _aircraftClass = (_validPool # 0) # 0;
 
 private _targetPlayer = selectRandom _players;
 private _targetPos = getPosATL (vehicle _targetPlayer);
-private _isMystere = _aircraftClass == "UK3CB_MDF_O_Mystere";
+private _isMystere = (_aircraftClass isKindOf "Plane");
 private _spawnDistance = if (_isMystere) then
 {
     missionNamespace getVariable ["DZ_enemyAirSupportPlaneSpawnDistance", 4500]

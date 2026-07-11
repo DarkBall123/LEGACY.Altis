@@ -1,20 +1,14 @@
 /*
  * DZ_fnc_initCartel
- * Initializes the Pyrgos Cartel black-market broker. Smuggles scarce
- * military gear past the MEF blockade — heavy weapons, AT systems,
- * sniper kits, explosives. Both player factions (APD, Free Altis) may
- * purchase here; the trading zone is neutral and the broker is captive
- * (per the cartel "no fighting in the souk" rule).
+ * Initializes the СНАБЖЕНИЕ (ВДВ) supply broker. Sells VDV airborne
+ * vehicles — helicopters, GAZ-66 trucks, UAZ jeeps. The broker is
+ * captive and the trading zone is neutral.
  *
  * Eden setup:
- *   - Place a civilian NPC (any underworld-looking type, e.g.
- *     C_man_polo_5_F or a CUP/UK3CB criminal) at the cartel hub
+ *   - Place a civilian NPC at the SNAB hub
  *   - Init field: [this] call DZ_fnc_initCartel;
  *   - Place a delivery pad object named `cartel_delivery_pad` nearby
- *
- * The broker and the pad must be on a different site than the IDAP
- * hub — the cartel zone is supposed to be deep, concealed, and the
- * approach routes are open ground (PvP-friendly).
+ *     (or skip it — one is auto-created 12m in front of the broker).
  */
 
 params [["_npc", objNull, [objNull]]];
@@ -52,26 +46,18 @@ _npc setCaptive true;
 
 private _catalog = [
 
-    ["cartel_made",   "cm_hilux",              "Toyota Hilux",                                            800, ["UK3CB_FIA_I_Offroad"]],
-    ["cartel_made",   "cm_hilux_armor",        "Toyota Hilux (с усиленной броней)",                      1400, ["I_Tura_Offroad_armor_lxWS"]],
-    ["cartel_made",   "cm_hilux_armor_armed",  "Toyota Hilux (с усиленной броней, вооруженный)",         2000, ["I_Tura_Offroad_armor_armed_lxWS"]],
-    ["cartel_made",   "cm_hilux_armor_at",     "Toyota Hilux (с усиленной броней, противотанковый)",     2500, ["I_Tura_Offroad_armor_AT_lxWS"]],
-    ["cartel_made",   "cm_hilux_armor_aa",     "Toyota Hilux (с усиленной броней, зенитный)",            3000, ["I_Tura_Offroad_armor_AA_lxWS"]],
-    ["cartel_made",   "cm_dshkm_high",         "ДШКМ (высокий)",                                          800, ["UK3CB_AAF_I_DSHKM"]],
-    ["cartel_made",   "cm_dshkm_low",          "ДШКМ (низкий)",                                           800, ["UK3CB_AAF_I_DSHkM_Mini_TriPod"]],
-    ["cartel_made",   "cm_crate_ak47",         "Ящик с АК-47",                                            500, ["UK3CB_AK47_Equipbox_Indfor"]],
-    ["cartel_made",   "cm_crate_m16a3",        "Ящик с М16A3",                                            800, ["UK3CB_M16A3_Equipbox_Blufor"]],
-    ["cartel_made",   "cm_crate_svd",          "Ящик с СВД",                                              800, ["UK3CB_SVD_OLD_Equipbox_Opfor"]],
-    ["cartel_made",   "cm_crate_launchers",    "Ящик с пусковыми установками",                           5000, ["rhs_launcher_crate"]],
+    ["helos",  "heli_mi8amt",       "Ми-8АМТ",              1500, ["UK3CB_CW_SOW_O_LATE_Mi8AMT", "UK3CB_CW_SOV_O_LATE_Mi8AMT"]],
+    ["helos",  "heli_mi8amtsh",     "Ми-8АМТШ",             2500, ["UK3CB_CW_SOV_O_LATE_Mi8AMTSh"]],
+    ["helos",  "heli_mi24p",        "Ми-24П",               3500, ["UK3CB_CW_SOV_O_LATE_Mi_24P"]],
 
-    ["aaf_captured",  "aaf_landrover_armed",   "Land Rover (вооруженный)",                               1400, ["UK3CB_AAF_I_LR_SF_WMIK_M240_M240"]],
-    ["aaf_captured",  "aaf_dingo",             "Динго (МРАП)",                                           1600, ["UK3CB_AAF_B_Dingo"]],
-    ["aaf_captured",  "aaf_warrior",           "Вориор (БМП)",                                           5000, ["I_APC_tracked_03_cannon_F"]],
-    ["aaf_captured",  "aaf_mh9_benches",       "MH-9 (транспортный, скамейки)",                          3000, ["UK3CB_AAF_B_Benches_MH9"]],
-    ["aaf_captured",  "aaf_aw159",             "AW159 (ударный)",                                        5000, ["I_Heli_light_03_dynamicLoadout_Globe"]],
-    ["aaf_captured",  "aaf_crate_wps",         "Ящик с основным оружием AAF",                            1000, ["Box_IND_Wps_F"]],
-    ["aaf_captured",  "aaf_crate_demo",        "Ящик со взрывчаткой AAF",                                1000, ["Box_IND_AmmoOrd_F"]],
-    ["aaf_captured",  "aaf_crate_ammo",        "Ящик с основными боеприпасами AAF",                       100, ["Box_IND_Ammo_F"]]
+    ["trucks", "truck_gaz66_ammo",  "ГАЗ-66 (Боеприпасы)",  1500, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Ammo"]],
+    ["trucks", "truck_gaz66_rep",   "ГАЗ-66 (Ремонтный)",   1500, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Repair"]],
+    ["trucks", "truck_gaz66_med",   "ГАЗ-66 (Медицинский)", 1000, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Med"]],
+    ["trucks", "truck_gaz66_radio", "ГАЗ-66 (Связь)",       1500, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Radio"]],
+    ["trucks", "truck_gaz66_open",  "ГАЗ-66 (Открытый)",    1000, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Open"]],
+
+    ["cars",   "car_uaz_open",      "УАЗ-3151 (Открытый)",   600, ["UK3CB_CW_SOV_LATE_VDV_UAZ_Open"]],
+    ["cars",   "car_uaz_mg",        "УАЗ-3151 (ДШКМ)",      1000, ["UK3CB_CW_SOV_LATE_VDV_UAZ_MG"]]
 ];
 
 private _resolveClass = {
@@ -85,7 +71,7 @@ private _resolveClass = {
 
 private _shopParent = [
     "DZ_Cartel",
-    "Чёрный рынок",
+    "СНАБЖЕНИЕ (ВДВ)",
     "",
     {},
     { true },
@@ -137,8 +123,9 @@ private _categoryActions = createHashMap;
     [_npc, 0, ["ACE_MainActions", "DZ_Cartel"], _catAction] call ace_interact_menu_fnc_addActionToObject;
     _categoryActions set [_categoryId, true];
 } forEach [
-    ["cartel_made",  "Товары Синдиката", 5],
-    ["aaf_captured", "Трофеи AAF",       4]
+    ["helos",  "Вертолеты", 5],
+    ["trucks", "Грузовики", 4],
+    ["cars",   "Машины",    3]
 ];
 
 private _catalogLen = count _catalog;
@@ -163,7 +150,7 @@ private _catalogLen = count _catalog;
 
                 private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
 
-                [_id, _class, _cost, _actualPlayer, "cartel_delivery_pad", "Чёрный рынок"]
+                [_id, _class, _cost, _actualPlayer, "cartel_delivery_pad", "СНАБЖЕНИЕ (ВДВ)"]
                     remoteExecCall ["DZ_fnc_purchaseItem", 2];
             },
             { true },
@@ -179,7 +166,7 @@ private _catalogLen = count _catalog;
     };
 } forEach _catalog;
 
-diag_log format ["[DZ_CARTEL] Pyrgos Cartel broker initialized: %1 (%2 catalog entries)",
+diag_log format ["[DZ_CARTEL] SNAB broker initialized: %1 (%2 catalog entries)",
     _npc, count _catalog];
 
 true

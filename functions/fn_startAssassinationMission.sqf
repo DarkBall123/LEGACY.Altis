@@ -119,7 +119,7 @@ if (_nearbyBuildings isNotEqualTo []) then
 };
 
 private _targetGroup = createGroup [_sideEnemy, true];
-private _target = _targetGroup createUnit ["UK3CB_MDF_O_OFF", _targetPos, [], 0, "NONE"];
+private _target = _targetGroup createUnit ["UK3CB_WEI_B_OFF", _targetPos, [], 0, "NONE"];
 _target setName "Полковник Дюмон";
 _target setSkill 0.7;
 _target setUnitPos "UP";

@@ -162,6 +162,7 @@ diag_log format ["[ARTILLERY_HUNT] Mortar position: %1", _mortarPos];
 
 private _mortarClass = "";
 private _mortarCandidates = [
+    "UK3CB_WEI_B_2b14_82mm",
     "RHS_Podnos_MSV",
     "Mortar_01_F",
     "I_Mortar_01_F"
@@ -186,12 +187,12 @@ _crewGroup setBehaviour "SAFE";
 _crewGroup setCombatMode "YELLOW";
 _crewGroup allowFleeing 0;
 
-private _gunner = _crewGroup createUnit ["UK3CB_MDF_O_TL", _mortarPos, [], 0, "NONE"];
+private _gunner = _crewGroup createUnit ["UK3CB_WEI_B_TL", _mortarPos, [], 0, "NONE"];
 if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_gunner] call DZ_fnc_prepareSpawnedUnit; };
 _gunner allowFleeing 0;
 _gunner moveInGunner _mortarObject;
 
-private _loader = _crewGroup createUnit ["UK3CB_MDF_O_RIF_1", _mortarPos getPos [2, random 360], [], 0, "NONE"];
+private _loader = _crewGroup createUnit ["UK3CB_WEI_B_RIF_5", _mortarPos getPos [2, random 360], [], 0, "NONE"];
 if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_loader] call DZ_fnc_prepareSpawnedUnit; };
 _loader allowFleeing 0;
 
@@ -201,7 +202,7 @@ for "_i" from 1 to _sentryCount do
 {
     private _sentryPos = _mortarPos getPos [10 + (random 10), random 360];
     private _u = _crewGroup createUnit [
-        selectRandom ["UK3CB_MDF_O_RIF_1", "UK3CB_MDF_O_AR"],
+        selectRandom ["UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AR"],
         _sentryPos,
         [],
         0,
@@ -222,8 +223,8 @@ private _allCrewUnits = [_gunner, _loader] + _sentries;
 diag_log format ["[ARTILLERY_HUNT] Spawned %1 crew/sentries (gunner seated)", count _allCrewUnits];
 
 private _civilianClasses = [
-    "UK3CB_MDF_O_RIF_1",
-    "UK3CB_MDF_O_MD"
+    "UK3CB_WEI_B_RIF_5",
+    "UK3CB_WEI_B_MD"
 ];
 
 private _vanillaCiv = [
