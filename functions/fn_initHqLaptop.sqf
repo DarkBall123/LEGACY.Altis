@@ -16,15 +16,15 @@ if (_laptop getVariable ["hq_actions_added", false]) exitWith { true };
 _laptop setVariable ["hq_actions_added", true, false];
 
 private _missionList = [
-    ["interdiction",     "Миссия: Перехват конвоя MEF"],
-    ["assassination",    "Миссия: Ликвидация офицера MEF"],
-    ["destroy_cache",    "Миссия: Уничтожить склады MEF"],
+    ["interdiction",     "Миссия: Перехват конвоя Хунты"],
+    ["assassination",    "Миссия: Ликвидация офицера Хунты"],
+    ["destroy_cache",    "Миссия: Уничтожить склады Хунты"],
     ["artillery_hunt",   "Миссия: Контрбатарейная борьба"],
-    ["downed_pilot",     "Миссия: Спасти пилота AAF"],
+    ["downed_pilot",     "Миссия: Спасти пилота ОКСВ"],
     ["humanitarian_aid", "Миссия: Доставка гуманитарной помощи"],
     ["eod",              "Миссия: Разминирование маршрута"],
-    ["idap_repair",      "Миссия: Дозаправка транспорта IDAP"],
-    ["air_defense",      "Миссия: Подавление ПВО MEF"],
+    ["idap_repair",      "Миссия: Дозаправка транспорта Красного Креста"],
+    ["air_defense",      "Миссия: Подавление ПВО Хунты"],
     ["defend_informant", "Миссия: Прикрытие перебежчика"],
     ["heli_intercept",   "Миссия: Воздушный перехват"]
 ];

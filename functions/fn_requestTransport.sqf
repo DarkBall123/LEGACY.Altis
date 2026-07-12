@@ -14,7 +14,7 @@ if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 private _replyTarget = owner _caller;
 
 if !((side _caller) isEqualTo east) exitWith {
-    ["Транспорт", "Запрос Мотоцикла доступен только бойцам «Свободный Алтис»."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    ["Транспорт", "Запрос мотоцикла доступен только бойцам ОКСВ."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 private _cooldownSeconds = 600;

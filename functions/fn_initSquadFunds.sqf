@@ -91,7 +91,7 @@ DZ_fnc_squadFundsMarkerColor = {
 DZ_fnc_squadFundsSideLabel = {
     params ["_side"];
     switch (true) do {
-        case (_side isEqualTo east):       { "APD" };
+        case (_side isEqualTo east):       { "ОКСВ" };
         default { str _side };
     }
 };

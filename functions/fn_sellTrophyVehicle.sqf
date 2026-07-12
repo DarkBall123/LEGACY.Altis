@@ -7,7 +7,7 @@
  *
  * Only sells vehicles that:
  *   - Have already been claimed as trophies (DZ_trophyVehicle = true).
- *     Random/unowned MEF wrecks players didn't bother saving aren't
+ *     Random/unowned Хунты wrecks players didn't bother saving aren't
  *     eligible — the trophy system was the "claim" step.
  *   - Belong to the calling player's faction (Free Altis can't sell
  *     APD's trophies and vice versa).

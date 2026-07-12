@@ -29,7 +29,7 @@ private _replyTarget = owner _caller;
 private _callerSide  = side _caller;
 
 private _factionLabel = switch (true) do {
-    case (_callerSide isEqualTo east):       { "APD" };
+    case (_callerSide isEqualTo east):       { "ОКСВ" };
     default { str _callerSide };
 };
 

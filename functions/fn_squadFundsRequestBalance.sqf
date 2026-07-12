@@ -2,7 +2,7 @@
  * DZ_fnc_squadFundsRequestBalance
  * Sends the calling player the balance of their own faction's wallet.
  *
- * If the caller belongs to a non-player side (e.g. spectator, MEF role
+ * If the caller belongs to a non-player side (e.g. spectator, Хунты role
  * during testing), we fall back to showing every player-side balance so
  * something useful still appears.
  */

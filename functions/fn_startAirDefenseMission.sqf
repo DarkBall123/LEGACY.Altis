@@ -1,17 +1,15 @@
 /*
  * DZ_fnc_startAirDefenseMission
- * SEAD mission: the Malden Expeditionary Force (MEF) has deployed a
- * radar station, an AAA gun and a SAM launcher near a named settlement.
- * Both player factions (APD, Free Altis) can receive this contract;
- * targets and garrison are MEF (east). Players get only the settlement
- * name and must recon the area, then destroy all three systems.
+ * SEAD mission: the Хунта (west) has deployed two ZU-23 flak guns and an
+ * Igla SAM launcher near a named settlement. The ОКСВ (east) receives the
+ * contract; targets and garrison are enemy (west). Players get only the
+ * settlement name and must recon the area, then destroy all three systems.
  *
  * No map markers are placed — the location name in the briefing is the
  * only guidance. 2-hour time limit, high cash reward.
  *
- * Faction note: the systems are east (OPFOR / MEF). Both player sides
- * (west and resistance) are hostile to east, so a live, crewed AAA
- * engages player aircraft regardless of which faction triggers it.
+ * Faction note: the systems and garrison spawn on CH_sideEnemy (west), so
+ * a live, crewed AAA engages ОКСВ (east) aircraft that stray into range.
  */
 
 if (!isServer) exitWith { false };
@@ -240,13 +238,13 @@ missionNamespace setVariable ["DZ_airDefenseSAM",   _sam];
     "hint",
     "MISSION: ПОДАВЛЕНИЕ ПВО",
     format [
-        "Мальденские оккупационные силы (MEF) развернули радиолокационную станцию (РЛС), зенитный комплекс (ЗАК) и зенитно-ракетный комплекс (ЗРК) в районе населённого пункта %1. Точные координаты неизвестны — проведите разведку и уничтожьте ВСЕ ТРИ объекта.\n\nОтметок на карте нет. Ориентируйтесь по названию населённого пункта.\n\nВНИМАНИЕ: ПВО активна. Применение авиации крайне опасно. Объект охраняется силами MEF.",
+        "Силы Хунты развернули две зенитные установки ЗУ-23 (на шасси Т-810) и переносной зенитно-ракетный комплекс «Игла» в районе населённого пункта %1. Точные координаты неизвестны — проведите разведку и уничтожьте ВСЕ ТРИ объекта.\n\nОтметок на карте нет. Ориентируйтесь по названию населённого пункта.\n\nВНИМАНИЕ: ПВО активна. Применение авиации крайне опасно. Объект охраняется силами Хунты.",
         _locName
     ]
 ] call DZ_fnc_missionUi;
 
 [
-    format ["Разведка докладывает о ПВО противника в районе %1. Найдите и уничтожьте РЛС, ЗАК и ЗРК.", _locName],
+    format ["Разведка докладывает о ПВО противника в районе %1. Найдите и уничтожьте обе установки ЗУ-23 и ЗРК «Игла».", _locName],
     _missionSide
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
 
@@ -275,17 +273,17 @@ private _stateHandle = [
         if (_radarDead && { !(missionNamespace getVariable ["DZ_airDefenseRadarReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseRadarReported", true];
-            ["РЛС противника уничтожена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["Зенитная установка ЗУ-23 уничтожена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
         if (_aaaDead && { !(missionNamespace getVariable ["DZ_airDefenseAAAReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseAAAReported", true];
-            ["Зенитный комплекс (ЗАК) уничтожен.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["Ещё одна установка ЗУ-23 уничтожена.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
         if (_samDead && { !(missionNamespace getVariable ["DZ_airDefenseSAMReported", false]) }) then
         {
             missionNamespace setVariable ["DZ_airDefenseSAMReported", true];
-            ["Зенитно-ракетный комплекс (ЗРК) уничтожен.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["ЗРК «Игла» уничтожен.", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
 
         if (_radarDead && _aaaDead && _samDead) exitWith

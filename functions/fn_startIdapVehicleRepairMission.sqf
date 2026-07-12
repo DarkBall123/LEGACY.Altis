@@ -1,7 +1,7 @@
 /*
  * DZ_fnc_startIdapVehicleRepairMission
- * Starts the IDAP humanitarian vehicle refuel mission.
- * An IDAP van is stranded with an empty fuel tank in hostile
+ * Starts the Red Cross humanitarian vehicle refuel mission.
+ * A Red Cross van is stranded with an empty fuel tank in hostile
  * territory. Players must reach it, defend against an armoured
  * ambush and refill the tank (ACE jerrycan / fuel truck).
  */
@@ -108,10 +108,9 @@ diag_log format ["[IDAP_REPAIR] Breakdown position: %1", _breakdownPos];
 
 private _vehicleClass = "";
 private _vehicleCandidates = [
-    "C_IDAP_Van_02_F",
-    "C_IDAP_Van_02_medevac_F",
-    "C_IDAP_Offroad_01_F",
-    "C_Van_02_transport_F",
+    "UK3CB_CHC_C_S1203_Amb",
+    "C_Van_01_box_F",
+    "C_Van_01_transport_F",
     "C_Offroad_01_F"
 ];
 {
@@ -138,11 +137,9 @@ _vehicle setVariable ["DZ_idapRepairVehicle", true, true];
 private _driverGroup = createGroup [civilian, true];
 private _driverClass = "";
 private _driverCandidates = [
-    "C_IDAP_Man_AidWorker_01_F",
-    "C_IDAP_Man_AidWorker_02_F",
-    "C_IDAP_Man_AidWorker_03_F",
+    "C_man_1",
     "C_Driver_1_F",
-    "C_man_1"
+    "C_man_polo_1_F"
 ];
 {
     if (isClass (configFile >> "CfgVehicles" >> _x)) exitWith { _driverClass = _x; };
@@ -151,7 +148,7 @@ private _driverCandidates = [
 if (_driverClass == "") then { _driverClass = "C_man_1"; };
 
 private _driver = _driverGroup createUnit [_driverClass, _breakdownPos, [], 0, "NONE"];
-_driver setName "Водитель IDAP";
+_driver setName "Водитель Красного Креста";
 _driver setCaptive true;
 _driver disableAI "MOVE";
 _driver disableAI "AUTOTARGET";
@@ -164,7 +161,7 @@ if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_driver] call DZ_fnc_prepareSpaw
 
 diag_log format ["[IDAP_REPAIR] Driver spawned: %1 in vehicle %2", _driver, _vehicle];
 
-["create", "marker_idap_repair", _breakdownPos, "loc_Transmitter", "Транспорт IDAP без топлива"] call DZ_fnc_missionUi;
+["create", "marker_idap_repair", _breakdownPos, "loc_Transmitter", "Транспорт Красного Креста без топлива"] call DZ_fnc_missionUi;
 
 [
     [_driver],
@@ -180,11 +177,11 @@ missionNamespace setVariable ["DZ_idapRepairAmbushTriggered", false];
 
 [
     "hint",
-    "MISSION: ДОЗАПРАВКА ТРАНСПОРТА IDAP",
-    "У гуманитарного автомобиля IDAP закончилось топливо во вражеской территории. Водитель внутри, перепуган и не вооружён.\n\nВаши задачи:\n1) Достичь автомобиля.\n2) Заправить пустой бак (ACE: канистра или топливозаправщик).\n\nВНИМАНИЕ: при приближении к автомобилю захватчики могут устроить засаду с применением бронетехники. Будьте готовы к бою."
+    "MISSION: ДОЗАПРАВКА ТРАНСПОРТА КРАСНОГО КРЕСТА",
+    "У гуманитарного автомобиля Красного Креста закончилось топливо во вражеской территории. Водитель внутри, перепуган и не вооружён.\n\nВаши задачи:\n1) Достичь автомобиля.\n2) Заправить пустой бак (ACE: канистра или топливозаправщик).\n\nВНИМАНИЕ: при приближении к автомобилю захватчики могут устроить засаду с применением бронетехники. Будьте готовы к бою."
 ] call DZ_fnc_missionUi;
 
-["Гуманитарный конвой IDAP запрашивает топливо. Достигните автомобиля и заправьте бак.", _missionSide]
+["Гуманитарный конвой Красного Креста запрашивает топливо. Достигните автомобиля и заправьте бак.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
 private _spawnAmbush = {
@@ -357,7 +354,7 @@ private _stateHandle = [
             diag_log format ["[IDAP_REPAIR] SUCCESS triggered. Final fuel: %1", _fuelLvl];
             [_handle] call CBA_fnc_removePerFrameHandler;
             ["success", _missionSide] call DZ_fnc_endMission;
-            ["Автомобиль IDAP заправлен. Гуманитарный конвой может продолжить путь.", _missionSide]
+            ["Автомобиль Красного Креста заправлен. Гуманитарный конвой может продолжить путь.", _missionSide]
                 remoteExecCall ["DZ_fnc_sideMessage", 0];
         };
     },

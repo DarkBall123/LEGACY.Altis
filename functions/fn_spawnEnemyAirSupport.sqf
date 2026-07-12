@@ -1,6 +1,6 @@
 /*
  * DZ_fnc_spawnEnemyAirSupport
- * Spawns one MEF aircraft as a background threat near active players.
+ * Spawns one Хунты aircraft as a background threat near active players.
  */
 
 if (!isServer) exitWith { false };

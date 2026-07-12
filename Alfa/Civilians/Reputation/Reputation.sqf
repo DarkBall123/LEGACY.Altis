@@ -70,7 +70,7 @@ ALFA_fnc_repKeyForSide = {
 ALFA_fnc_repSideLabel = {
     params ["_side"];
     switch (true) do {
-        case (_side isEqualTo east):       { "APD" };
+        case (_side isEqualTo east):       { "ОКСВ" };
         default { str _side };
     }
 };
@@ -470,7 +470,7 @@ call ALFA_fnc_repUpdateMarker;
     private _reason = switch (_missionId) do {
         case "artillery_hunt":   { "Mortar position destroyed." };
         case "assassination":    { "Field commander eliminated." };
-        case "idap_repair":      { "IDAP vehicle repaired and crew rescued." };
+        case "idap_repair":      { "Red Cross vehicle repaired and crew rescued." };
         case "air_defense":      { "Enemy air-defense network destroyed." };
         case "defend_informant": { "Informant defended and extracted." };
         case "heli_intercept":   { "Enemy helicopter intercepted." };

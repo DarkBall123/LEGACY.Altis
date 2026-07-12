@@ -17,7 +17,7 @@
  *         flip immediately on capture.
  *
  * Capture-time announcement: when a node's owner CHANGES between ticks,
- * we fire a one-shot side message ("APD захватили Athanos refinery —
+ * we fire a one-shot side message ("ОКСВ захватили Fuel Depot Buchtov —
  * следующий доход через ~XX минут") so players know the system is alive.
  *
  * Persistence: last-tick timestamp survives server restarts via
@@ -171,7 +171,7 @@ private _refreshHandle = [
 
                 if (_owner in _playerSides) then {
                     private _factionLabel = switch (true) do {
-                        case (_owner isEqualTo east):       { "APD" };
+                        case (_owner isEqualTo east):       { "ОКСВ" };
                         default { str _owner };
                     };
                     private _nodeName = _nodeNames param [_idx, "?"];

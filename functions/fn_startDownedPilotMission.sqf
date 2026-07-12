@@ -171,9 +171,9 @@ private _pilotGroup = createGroup [civilian, true];
 private _pilotClass = "";
 {
     if (isClass (configFile >> "CfgVehicles" >> _x)) exitWith { _pilotClass = _x; };
-} forEach ["UK3CB_AAF_B_JET_PILOT", "I_pilot_F", "B_Pilot_F", "C_man_1"];
+} forEach ["UK3CB_CW_SOV_O_LATE_JET_PILOT", "I_pilot_F", "B_Pilot_F", "C_man_1"];
 private _pilot = _pilotGroup createUnit [_pilotClass, _crashPos, [], 0, "NONE"];
-_pilot setName "Капитан Стефанос Мавридис";
+_pilot setName "Капитан Андрей Соколов";
 _pilot setCaptive true;
 _pilot disableAI "MOVE";
 _pilot disableAI "AUTOTARGET";

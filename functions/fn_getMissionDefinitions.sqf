@@ -17,7 +17,7 @@ private _register =
     "interdiction",
     createHashMapFromArray
     [
-        ["title", "Перехват конвоя MEF"],
+        ["title", "Перехват конвоя Хунты"],
         ["description", "Уничтожить конвой снабжения мальденских оккупационных сил до прибытия в пункт назначения."],
         ["startFunction", "DZ_fnc_startInterdictionMission"],
         ["implemented", true],
@@ -32,8 +32,8 @@ private _register =
     "assassination",
     createHashMapFromArray
     [
-        ["title", "Ликвидация офицера MEF"],
-        ["description", "Устранить полевого командира MEF и забрать оперативные документы."],
+        ["title", "Ликвидация офицера Хунты"],
+        ["description", "Устранить полевого командира Хунты и забрать оперативные документы."],
         ["startFunction", "DZ_fnc_startAssassinationMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -47,8 +47,8 @@ private _register =
     "downed_pilot",
     createHashMapFromArray
     [
-        ["title", "Спасти пилота AAF"],
-        ["description", "Освободить и эвакуировать сбитого пилота AAF из плена MEF."],
+        ["title", "Спасти пилота ОКСВ"],
+        ["description", "Освободить и эвакуировать сбитого пилота ОКСВ из плена Хунты."],
         ["startFunction", "DZ_fnc_startDownedPilotMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -62,7 +62,7 @@ private _register =
     "destroy_cache",
     createHashMapFromArray
     [
-        ["title", "Уничтожить склады MEF"],
+        ["title", "Уничтожить склады Хунты"],
         ["description", "Найти и уничтожить полевые склады оружия захватчиков в обозначенном районе."],
         ["startFunction", "DZ_fnc_startDestroyCacheMission"],
         ["implemented", true],
@@ -78,7 +78,7 @@ private _register =
     createHashMapFromArray
     [
         ["title", "Контрбатарейная борьба"],
-        ["description", "Найти и уничтожить миномётную группу MEF, ведущую огонь по мирному поселению."],
+        ["description", "Найти и уничтожить миномётную группу Хунты, ведущую огонь по мирному поселению."],
         ["startFunction", "DZ_fnc_startArtilleryHuntMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -93,7 +93,7 @@ private _register =
     createHashMapFromArray
     [
         ["title", "Доставка гуманитарной помощи"],
-        ["description", "Доставить груз IDAP в три отрезанных от снабжения поселения сквозь блокаду MEF."],
+        ["description", "Доставить груз Красного Креста в три отрезанных от снабжения поселения сквозь блокаду Хунты."],
         ["startFunction", "DZ_fnc_startHumanitarianAidMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -122,8 +122,8 @@ private _register =
     "idap_repair",
     createHashMapFromArray
     [
-        ["title", "Дозаправка транспорта IDAP"],
-        ["description", "Достичь застрявшего автомобиля IDAP, отбить засаду MEF и заправить пустой бак (ACE: канистра или топливозаправщик)."],
+        ["title", "Дозаправка транспорта Красного Креста"],
+        ["description", "Достичь застрявшего автомобиля Красного Креста, отбить засаду Хунты и заправить пустой бак (ACE: канистра или топливозаправщик)."],
         ["startFunction", "DZ_fnc_startIdapVehicleRepairMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -137,7 +137,7 @@ private _register =
     "air_defense",
     createHashMapFromArray
     [
-        ["title", "Подавление ПВО MEF"],
+        ["title", "Подавление ПВО Хунты"],
         ["description", "По названию населённого пункта найти и уничтожить РЛС, ЗАК и ЗРК захватчиков. Воздушное пространство закрыто."],
         ["startFunction", "DZ_fnc_startAirDefenseMission"],
         ["implemented", true],
@@ -153,7 +153,7 @@ private _register =
     createHashMapFromArray
     [
         ["title", "Прикрытие перебежчика"],
-        ["description", "Удержать захваченный сектор с перебежчиком против волн контратаки MEF, затем доставить его на базу. Требуется захваченная территория."],
+        ["description", "Удержать захваченный сектор с перебежчиком против волн контратаки Хунты, затем доставить его на базу. Требуется захваченная территория."],
         ["startFunction", "DZ_fnc_startDefendInformantMission"],
         ["implemented", true],
         ["manualEnabled", true],
@@ -168,7 +168,7 @@ private _register =
     createHashMapFromArray
     [
         ["title", "Воздушный перехват"],
-        ["description", "Найти и уничтожить ударный вертолёт MEF, патрулирующий район. Текущее положение отмечено на карте."],
+        ["description", "Найти и уничтожить ударный вертолёт Хунты, патрулирующий район. Текущее положение отмечено на карте."],
         ["startFunction", "DZ_fnc_startHeliInterceptMission"],
         ["implemented", true],
         ["manualEnabled", true],

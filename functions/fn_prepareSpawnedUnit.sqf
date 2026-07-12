@@ -1,6 +1,6 @@
 /*
  * DZ_fnc_prepareSpawnedUnit
- * Per-unit setup hook called on every MEF AI spawned by zone garrisons,
+ * Per-unit setup hook called on every Хунты AI spawned by zone garrisons,
  * missions, packages, and counter-attacks.
  *
  * Responsibilities:

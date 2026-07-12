@@ -5,12 +5,12 @@
  *
  * For each node:
  *   - resolve current sector owner via DZ_sectorOwner
- *   - if owner is a player side (west / resistance), credit their
+ *   - if owner is the player side (east / ОКСВ), credit their
  *     wallet via DZ_fnc_squadFundsAdjust and emit a side-message
- *   - if owner is MEF (east) / contested / unowned → no payout
+ *   - if owner is the Хунта (west) / contested / unowned → no payout
  *
  * Also accumulates per-side totals into a single side message
- * ("APD добыли 760₽ с 3 точек ресурсов: Athanos, Selakano, Pyrgos.")
+ * ("ОКСВ добыли 760₽ с 3 точек ресурсов: Buchtov, Belin, Jantina.")
  * so players see one consolidated summary, not seven separate hints.
  */
 
@@ -68,7 +68,7 @@ private _minsToNext = floor (_tickInterval / 60);
     if (_side isEqualTo sideUnknown) then { continue };
 
     private _factionLabel = switch (true) do {
-        case (_side isEqualTo east):       { "APD" };
+        case (_side isEqualTo east):       { "ОКСВ" };
         default { str _side };
     };
 
@@ -86,7 +86,7 @@ private _minsToNext = floor (_tickInterval / 60);
 } forEach _sideTotals;
 
 if (_sideTotals isEqualTo createHashMap || { count _sideTotals == 0 }) then {
-    diag_log "[DZ_RES] Tick: no nodes paid (all MEF or unowned).";
+    diag_log "[DZ_RES] Tick: no nodes paid (all Хунты or unowned).";
 };
 
 true

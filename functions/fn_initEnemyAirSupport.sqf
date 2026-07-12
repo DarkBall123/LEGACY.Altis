@@ -1,6 +1,6 @@
 /*
  * DZ_fnc_initEnemyAirSupport
- * Starts rare background MEF air support checks.
+ * Starts rare background Хунты air support checks.
  */
 
 if (!isServer) exitWith { false };

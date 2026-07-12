@@ -150,7 +150,7 @@ DZ_fnc_missionSideOfPlayer = {
 DZ_fnc_missionSideLabel = {
     params [["_side", sideUnknown]];
     switch (true) do {
-        case (_side isEqualTo east):       { "APD" };
+        case (_side isEqualTo east):       { "ОКСВ" };
         default { str _side };
     }
 };
