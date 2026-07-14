@@ -239,14 +239,14 @@ class ACE_Settings
 {
     class ace_fortify_timeMin
     {
-        value = 4;
+        value = 2;
         typeName = "SCALAR";
         force = 1;
     };
 
     class ace_fortify_timeCostCoefficient
     {
-        value = 0.05;
+        value = 0.025;
         typeName = "SCALAR";
         force = 1;
     };
