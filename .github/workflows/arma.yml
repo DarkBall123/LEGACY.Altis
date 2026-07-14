@@ -40,7 +40,7 @@ jobs:
       HEMTT_VERSION: ${{ vars.HEMTT_VERSION || 'v1.19.1' }}
       HEMTT_LINUX_SHA256: ${{ vars.HEMTT_LINUX_SHA256 || 'd503b42b71eb00ec31cca70268896769294aa96d18c1c786bfe3267681ba4d7f' }}
       HEMTT_BUILD_ARGS: ${{ vars.HEMTT_BUILD_ARGS || '--no-bin --no-rap' }}
-      MISSION_PBO_NAME: ${{ vars.MISSION_PBO_NAME || 'LEGACY.Altis' }}
+      MISSION_PBO_NAME: ${{ vars.MISSION_PBO_NAME || 'ChudoYudo.yulakia' }}
       MISSION_OUTPUT_DIR: .hemttout
     steps:
       - name: Checkout the source code
@@ -80,7 +80,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LEGACY.Altis-${{ github.sha }}-nobin
+          name: ChudoYudo.yulakia-${{ github.sha }}-nobin
           path: |
             .hemttout/build
             .hemttout/${{ env.MISSION_PBO_NAME }}
@@ -105,7 +105,7 @@ jobs:
       group: production-mission-deploy
       cancel-in-progress: false
     env:
-      MISSION_PBO_NAME: ${{ vars.MISSION_PBO_NAME || 'LEGACY.Altis' }}
+      MISSION_PBO_NAME: ${{ vars.MISSION_PBO_NAME || 'ChudoYudo.yulakia' }}
       MISSION_OUTPUT_DIR: .hemttout
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '21' }}

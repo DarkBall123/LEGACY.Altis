@@ -1,7 +1,7 @@
 /*
  * initServer.sqf
  * Bootstraps server-side mission systems, side relations, radio tracks,
- * Alfa ambience, and squad funds for the LEGACY.Altis campaign.
+ * Alfa ambience, and squad funds for the ChudoYudo campaign.
  *
  * Side layout:
  *   east       (OPFOR)  — the single player faction

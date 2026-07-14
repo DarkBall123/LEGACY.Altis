@@ -1,6 +1,6 @@
 /*
  * Alfa/Civilians/Reputation/Reputation.sqf
- * Per-side civilian reputation pools for LEGACY.Altis.
+ * Per-side civilian reputation pools for ChudoYudo.
  *
  * Each player faction has its own standing with the civilian
  * population:

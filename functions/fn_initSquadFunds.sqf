@@ -1,6 +1,6 @@
 /*
  * DZ_fnc_initSquadFunds
- * Initializes per-side persistent squad funds for LEGACY.Altis.
+ * Initializes per-side persistent squad funds for ChudoYudo.
  *
  * Each player faction has its own wallet:
  *   - APD          (west)        → DZ_squadFundsBalance_west
