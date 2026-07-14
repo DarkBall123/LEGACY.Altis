@@ -24,13 +24,13 @@ DZ_fnc_fortifyGetCost = {
 };
 
 private _fortifySupplyCosts = [
-    ["CamoNet_INDP_open_F",      15],
-    ["Land_BagFence_Round_F",    10],
-    ["Land_BagFence_Long_F",     15],
-    ["Land_BagFence_Short_F",     7],
-    ["Campfire_burning_F",        2],
-    ["Land_BagBunker_Small_F",   50],
-    ["Land_BagBunker_Tower_F",  100]
+    ["CamoNet_INDP_open_F",      40],
+    ["Land_BagFence_Round_F",    30],
+    ["Land_BagFence_Long_F",     40],
+    ["Land_BagFence_Short_F",    20],
+    ["Campfire_burning_F",        5],
+    ["Land_BagBunker_Small_F",  150],
+    ["Land_BagBunker_Tower_F",  300]
 ];
 
 missionNamespace setVariable ["DZ_fortifySupplyCosts", createHashMapFromArray _fortifySupplyCosts];

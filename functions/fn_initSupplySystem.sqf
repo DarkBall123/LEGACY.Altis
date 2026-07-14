@@ -8,10 +8,12 @@
  *   - ammo trucks (GAZ-66 Ammo / any "(ammo)" vehicle) — mobile,
  *     doubling as ACE Fortify build anchors.
  *
- * This file only builds the framework: the container model, the
- * DZ_fnc_supply* helper API, server-side registration/rescan/persistence,
- * a passive base trickle (recovery floor) and a Draw3D HUD readout.
- * The sinks (fortify / shop / spawn) and the haul loop are later phases.
+ * Provides the container model, the DZ_fnc_supply* helper API,
+ * server-side registration/rescan/persistence, a passive base trickle
+ * (recovery floor), node supply pools + ACE logistics transfer actions
+ * (collect from node / offload to base / load from base), the spawn sink
+ * (respawn costs supplies; a stockpile at zero blocks its respawn point),
+ * and a Draw3D HUD. The fortify and shop sinks live in their own files.
  *
  * Called from BOTH initServer.sqf (server block) and initPlayerLocal.sqf
  * (client block); both halves are idempotent.
@@ -31,6 +33,12 @@ if (isNil "DZ_supplyBaseRegen")        then { DZ_supplyBaseRegen        =   50; 
 if (isNil "DZ_supplyBaseRegenInterval") then { DZ_supplyBaseRegenInterval = 300; };
 if (isNil "DZ_supplyContainerRescanInterval") then { DZ_supplyContainerRescanInterval = 15; };
 if (isNil "DZ_supplyHudRange")         then { DZ_supplyHudRange         =   60; };
+if (isNil "DZ_supplyNodePoolCap")      then { DZ_supplyNodePoolCap      =  600; };
+if (isNil "DZ_supplyNodePerTick")      then { DZ_supplyNodePerTick      =  200; };
+if (isNil "DZ_supplyNodeAccrualInterval") then { DZ_supplyNodeAccrualInterval = 300; };
+if (isNil "DZ_supplyTransferRadius")   then { DZ_supplyTransferRadius   =   25; };
+if (isNil "DZ_supplySpawnCost")        then { DZ_supplySpawnCost        =   20; };
+if (isNil "DZ_supplySpawnBlockInterval") then { DZ_supplySpawnBlockInterval = 20; };
 
 DZ_fnc_supplyGet = {
     params [["_c", objNull]];
@@ -118,6 +126,144 @@ DZ_fnc_supplyNearestContainer = {
     _best
 };
 
+DZ_fnc_supplyNodeGet = {
+    params [["_nodeId", ""]];
+    private _hm = missionNamespace getVariable ["DZ_nodeSupplies", createHashMap];
+    _hm getOrDefault [_nodeId, 0]
+};
+
+DZ_fnc_supplyNodeSave = {
+    if (!isServer) exitWith {};
+    private _hm = missionNamespace getVariable ["DZ_nodeSupplies", createHashMap];
+    private _arr = [];
+    { _arr pushBack [_x, _hm getOrDefault [_x, 0]]; } forEach (keys _hm);
+    ["DZ_nodeSupplies", _arr] call DZ_fnc_storeSet;
+    call DZ_fnc_storeFlush;
+};
+
+DZ_fnc_supplyNearestNode = {
+    params [["_pos", [0,0,0]], ["_radius", 25]];
+    private _best = "";
+    private _bestDist = _radius + 1;
+    {
+        _x params [["_nid", ""], ["_nname", ""], ["_npos", [0,0,0]]];
+        if (_npos isEqualType [] && { (count _npos) >= 2 }) then {
+            private _d = _pos distance2D _npos;
+            if (_d <= _radius && { _d < _bestDist }) then { _bestDist = _d; _best = _nid; };
+        };
+    } forEach (missionNamespace getVariable ["DZ_resourceNodes", []]);
+    _best
+};
+
+DZ_fnc_supplyPlayerContainer = {
+    params [["_unit", objNull]];
+    if (isNull _unit) exitWith { objNull };
+    private _veh = vehicle _unit;
+    if (_veh != _unit && { !isNil { _veh getVariable "DZ_suppliesMax" } }) exitWith { _veh };
+    [getPosATL _unit, missionNamespace getVariable ["DZ_supplyTransferRadius", 25], 0] call DZ_fnc_supplyNearestContainer
+};
+
+DZ_fnc_supplyCollectFromNode = {
+    if (!isServer) exitWith {};
+    params [["_unit", objNull], ["_container", objNull]];
+    private _reply = [owner _unit, 0] select (isNull _unit);
+    if (isNull _container) then { _container = [_unit] call DZ_fnc_supplyPlayerContainer; };
+    if (isNull _container) exitWith {
+        ["Логистика", "Нет транспорта-контейнера рядом (грузовик боеприпасов / КШМ)."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _nodeId = [getPosATL _container, missionNamespace getVariable ["DZ_supplyTransferRadius", 25]] call DZ_fnc_supplyNearestNode;
+    if (_nodeId isEqualTo "") exitWith {
+        ["Логистика", "Рядом нет ресурсной точки."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _pool = [_nodeId] call DZ_fnc_supplyNodeGet;
+    private _free = ([_container] call DZ_fnc_supplyMax) - ([_container] call DZ_fnc_supplyGet);
+    private _move = _pool min _free;
+    if (_move <= 0) exitWith {
+        ["Логистика", format ["Грузить нечего (на точке: %1, свободно в транспорте: %2).", round _pool, round _free]] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _hm = missionNamespace getVariable ["DZ_nodeSupplies", createHashMap];
+    _hm set [_nodeId, _pool - _move];
+    missionNamespace setVariable ["DZ_nodeSupplies", _hm, true];
+    publicVariable "DZ_nodeSupplies";
+    call DZ_fnc_supplyNodeSave;
+
+    [_container, _move, format ["collect from node %1", _nodeId]] call DZ_fnc_supplyAdjust;
+    ["Логистика", format ["Загружено %1 снабжения. В транспорте: %2.", round _move, round ([_container] call DZ_fnc_supplyGet)]] remoteExecCall ["DZ_fnc_showHint", _reply];
+};
+
+DZ_fnc_supplyOffloadToBase = {
+    if (!isServer) exitWith {};
+    params [["_unit", objNull], ["_container", objNull]];
+    private _reply = [owner _unit, 0] select (isNull _unit);
+    if (isNull _container) then { _container = [_unit] call DZ_fnc_supplyPlayerContainer; };
+    if (isNull _container) exitWith {
+        ["Логистика", "Нет транспорта-контейнера рядом."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _basePos = missionNamespace getVariable ["DZ_supplyBasePos", []];
+    private _radius = missionNamespace getVariable ["DZ_supplyTransferRadius", 25];
+    if !(_basePos isEqualType [] && { (count _basePos) >= 2 } && { (getPosATL _container) distance2D _basePos < _radius }) exitWith {
+        ["Логистика", "Подъедьте к складу базы, чтобы разгрузить."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _have = [_container] call DZ_fnc_supplyGet;
+    private _free = ([("base")] call DZ_fnc_supplyMax) - ([("base")] call DZ_fnc_supplyGet);
+    private _move = _have min _free;
+    if (_move <= 0) exitWith {
+        ["Логистика", "Разгружать нечего или склад базы полон."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    [_container, 0 - _move, "offload to base"] call DZ_fnc_supplyAdjust;
+    ["base", _move, "offload to base"] call DZ_fnc_supplyAdjust;
+    ["Логистика", format ["Разгружено %1 на склад базы. На складе: %2.", round _move, round ([("base")] call DZ_fnc_supplyGet)]] remoteExecCall ["DZ_fnc_showHint", _reply];
+};
+
+DZ_fnc_supplyLoadFromBase = {
+    if (!isServer) exitWith {};
+    params [["_unit", objNull], ["_container", objNull]];
+    private _reply = [owner _unit, 0] select (isNull _unit);
+    if (isNull _container) then { _container = [_unit] call DZ_fnc_supplyPlayerContainer; };
+    if (isNull _container) exitWith {
+        ["Логистика", "Нет транспорта-контейнера рядом."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _basePos = missionNamespace getVariable ["DZ_supplyBasePos", []];
+    private _radius = missionNamespace getVariable ["DZ_supplyTransferRadius", 25];
+    if !(_basePos isEqualType [] && { (count _basePos) >= 2 } && { (getPosATL _container) distance2D _basePos < _radius }) exitWith {
+        ["Логистика", "Подъедьте к складу базы, чтобы загрузить."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    private _avail = [("base")] call DZ_fnc_supplyGet;
+    private _free = ([_container] call DZ_fnc_supplyMax) - ([_container] call DZ_fnc_supplyGet);
+    private _move = _avail min _free;
+    if (_move <= 0) exitWith {
+        ["Логистика", "Склад базы пуст или транспорт полон."] remoteExecCall ["DZ_fnc_showHint", _reply];
+    };
+
+    ["base", 0 - _move, "load to truck"] call DZ_fnc_supplyAdjust;
+    [_container, _move, "load from base"] call DZ_fnc_supplyAdjust;
+    ["Логистика", format ["Загружено %1 в транспорт. В транспорте: %2.", round _move, round ([_container] call DZ_fnc_supplyGet)]] remoteExecCall ["DZ_fnc_showHint", _reply];
+};
+
+DZ_fnc_supplyChargeSpawn = {
+    if (!isServer) exitWith {};
+    params [["_unit", objNull], ["_pos", [0,0,0]]];
+    if (isNull _unit) exitWith {};
+
+    private _cost = missionNamespace getVariable ["DZ_supplySpawnCost", 20];
+    if (_cost <= 0) exitWith {};
+
+    private _c = [_pos, missionNamespace getVariable ["DZ_supplyTransferRadius", 25], 0] call DZ_fnc_supplyNearestContainer;
+    if (!isNull _c && { (_c getVariable ["DZ_supplyKind", ""]) isEqualTo "kshm" }) then {
+        [_c, 0 - _cost, "spawn (КШМ)"] call DZ_fnc_supplyAdjust;
+    } else {
+        ["base", 0 - _cost, "spawn (база)"] call DZ_fnc_supplyAdjust;
+    };
+};
+
 if (isServer) then {
     private _serverSetup = {
         if (missionNamespace getVariable ["DZ_supplyServerStarted", false]) exitWith {};
@@ -130,6 +276,34 @@ if (isServer) then {
         private _baseObj = missionNamespace getVariable ["logistics_point", objNull];
         private _basePos = if (!isNull _baseObj) then { getPosATL _baseObj } else { [8262.683, 3772.911, 76.472] };
         missionNamespace setVariable ["DZ_supplyBasePos", _basePos, true];
+
+        private _savedNodes = ["DZ_nodeSupplies", []] call DZ_fnc_storeGet;
+        private _nodeHm = createHashMap;
+        if (_savedNodes isEqualType []) then {
+            {
+                if (_x isEqualType [] && { (count _x) >= 2 }) then { _nodeHm set [_x # 0, _x # 1]; };
+            } forEach _savedNodes;
+        };
+        missionNamespace setVariable ["DZ_nodeSupplies", _nodeHm, true];
+        publicVariable "DZ_nodeSupplies";
+
+        private _spawnMarker = "respawn_east";
+        private _spawnMarkerPos = markerPos _spawnMarker;
+        private _spawnMarkerData = [];
+        if ((markerType _spawnMarker) != "" && { !(_spawnMarkerPos isEqualTo [0,0,0]) }) then {
+            _spawnMarkerData = [
+                markerType _spawnMarker,
+                getMarkerColor _spawnMarker,
+                markerText _spawnMarker,
+                markerShape _spawnMarker,
+                getMarkerSize _spawnMarker,
+                markerDir _spawnMarker
+            ];
+        };
+        missionNamespace setVariable ["DZ_supplySpawnBaseMarker", _spawnMarker, true];
+        missionNamespace setVariable ["DZ_supplySpawnBaseMarkerPos",
+            (if (_spawnMarkerPos isEqualTo [0,0,0]) then { [] } else { _spawnMarkerPos }), true];
+        missionNamespace setVariable ["DZ_supplySpawnBaseMarkerData", _spawnMarkerData, true];
 
         DZ_fnc_supplyRebuildContainers = {
             private _list = [];
@@ -182,6 +356,98 @@ if (isServer) then {
             };
         };
 
+        [] spawn {
+            while { true } do {
+                sleep (missionNamespace getVariable ["DZ_supplyNodeAccrualInterval", 300]);
+
+                private _nodeIds       = missionNamespace getVariable ["DZ_resourceNodeIds", []];
+                private _nodeSectorIds = missionNamespace getVariable ["DZ_resourceNodeSectorIds", []];
+                private _sectorOwner   = missionNamespace getVariable ["DZ_sectorOwner", []];
+                private _playerSides   = missionNamespace getVariable ["DZ_playerSides", [east]];
+                private _perTick       = missionNamespace getVariable ["DZ_supplyNodePerTick", 200];
+                private _cap           = missionNamespace getVariable ["DZ_supplyNodePoolCap", 600];
+                private _hm            = missionNamespace getVariable ["DZ_nodeSupplies", createHashMap];
+                private _changed       = false;
+
+                {
+                    private _idx      = _forEachIndex;
+                    private _sectorId = _nodeSectorIds param [_idx, -1];
+                    if (_sectorId < 0) then { continue };
+                    private _owner = _sectorOwner param [_sectorId, sideUnknown];
+                    if !(_owner in _playerSides) then { continue };
+
+                    private _cur = _hm getOrDefault [_x, 0];
+                    if (_cur < _cap) then {
+                        _hm set [_x, (_cur + _perTick) min _cap];
+                        _changed = true;
+                    };
+                } forEach _nodeIds;
+
+                if (_changed) then {
+                    missionNamespace setVariable ["DZ_nodeSupplies", _hm, true];
+                    publicVariable "DZ_nodeSupplies";
+                    call DZ_fnc_supplyNodeSave;
+                };
+            };
+        };
+
+        [] spawn {
+            while { true } do {
+                sleep (missionNamespace getVariable ["DZ_supplySpawnBlockInterval", 20]);
+                private _cost = missionNamespace getVariable ["DZ_supplySpawnCost", 20];
+                if (_cost <= 0) then { continue };
+
+                private _mk    = missionNamespace getVariable ["DZ_supplySpawnBaseMarker", "respawn_east"];
+                private _mkPos = missionNamespace getVariable ["DZ_supplySpawnBaseMarkerPos", []];
+                if (_mkPos isEqualType [] && { (count _mkPos) >= 2 }) then {
+                    private _exists   = (markerType _mk) != "";
+                    private _baseSupp = [("base")] call DZ_fnc_supplyGet;
+                    if (_baseSupp < _cost && _exists) then {
+                        deleteMarker _mk;
+                        ["Склад базы пуст — возрождение на базе приостановлено.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                    };
+                    if (_baseSupp >= _cost && { !_exists }) then {
+                        createMarker [_mk, _mkPos];
+                        private _d = missionNamespace getVariable ["DZ_supplySpawnBaseMarkerData", []];
+                        if (_d isEqualType [] && { (count _d) >= 6 }) then {
+                            _mk setMarkerShape (_d # 3);
+                            _mk setMarkerType  (_d # 0);
+                            _mk setMarkerColor (_d # 1);
+                            _mk setMarkerText  (_d # 2);
+                            _mk setMarkerSize  (_d # 4);
+                            _mk setMarkerDir   (_d # 5);
+                        } else {
+                            _mk setMarkerShape "ICON";
+                            _mk setMarkerType  "Empty";
+                            _mk setMarkerAlpha 0;
+                        };
+                        ["Склад базы пополнен — возрождение на базе восстановлено.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                    };
+                };
+
+                {
+                    private _v = _x;
+                    if (isNull _v || { !alive _v }) then { continue };
+                    if !((_v getVariable ["DZ_supplyKind", ""]) isEqualTo "kshm") then { continue };
+                    if !(_v getVariable ["kshm_deployed", false]) then { continue };
+
+                    private _supp = [_v] call DZ_fnc_supplyGet;
+                    private _rid  = _v getVariable ["respawn_id", []];
+
+                    if (_supp < _cost && { _rid isNotEqualTo [] }) then {
+                        _rid call BIS_fnc_removeRespawnPosition;
+                        _v setVariable ["respawn_id", [], true];
+                        ["КШМ без снабжения — точка возрождения приостановлена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                    };
+                    if (_supp >= _cost && { _rid isEqualTo [] }) then {
+                        private _newRid = [east, _v, "Мобильный штаб ОКСВ"] call BIS_fnc_addRespawnPosition;
+                        _v setVariable ["respawn_id", _newRid, true];
+                        ["КШМ снабжена — точка возрождения восстановлена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                    };
+                } forEach (missionNamespace getVariable ["DZ_supplyContainers", []]);
+            };
+        };
+
         diag_log format ["[DZ_SUPPLY] Server framework online. Base stock %1/%2 at %3.",
             missionNamespace getVariable ["DZ_supplyStock_base", 0], DZ_supplyBaseCap, _basePos];
     };
@@ -196,6 +462,13 @@ if (isServer) then {
 if (hasInterface) then {
     if (missionNamespace getVariable ["DZ_supplyHudAdded", false]) exitWith {};
     missionNamespace setVariable ["DZ_supplyHudAdded", true];
+
+    addMissionEventHandler ["EntityRespawned", {
+        params ["_newEntity", "_oldEntity"];
+        if (_newEntity isEqualTo player) then {
+            [player, getPosATL player] remoteExecCall ["DZ_fnc_supplyChargeSpawn", 2];
+        };
+    }];
 
     addMissionEventHandler ["Draw3D", {
         private _camPos = positionCameraToWorld [0, 0, 0];
@@ -235,7 +508,80 @@ if (hasInterface) then {
                 1, 0.035, "PuristaMedium"
             ];
         };
+
+        private _nodeHm = missionNamespace getVariable ["DZ_nodeSupplies", createHashMap];
+        {
+            _x params [["_nid", ""], ["_nname", ""], ["_npos", [0,0,0]]];
+            if (_npos isEqualType [] && { (count _npos) >= 2 } && { (_camPos distance _npos) < _range }) then {
+                private _np = _nodeHm getOrDefault [_nid, 0];
+                drawIcon3D [
+                    "",
+                    [0.6, 1, 0.6, 1],
+                    [_npos # 0, _npos # 1, (_npos # 2) + 2],
+                    0, 0, 0,
+                    format ["Точка: %1 снаб.", round _np],
+                    1, 0.03, "PuristaMedium"
+                ];
+            };
+        } forEach (missionNamespace getVariable ["DZ_resourceNodes", []]);
     }];
+
+    DZ_fnc_supplyAddSelfActions = {
+        params [["_unit", objNull]];
+        if (isNull _unit) exitWith {};
+        if (_unit getVariable ["DZ_supplyActionsAdded", false]) exitWith {};
+        _unit setVariable ["DZ_supplyActionsAdded", true];
+
+        private _submenu = [
+            "DZ_SupplyLogi", "Снабжение (логистика)", "",
+            {}, { alive player }, {}, [], {[0, 0, 0]}, 4
+        ] call ace_interact_menu_fnc_createAction;
+        [_unit, 1, ["ACE_SelfActions"], _submenu] call ace_interact_menu_fnc_addActionToObject;
+
+        private _aCollect = [
+            "DZ_SupplyCollect", "Собрать снабжение с точки", "",
+            { private _c = [player] call DZ_fnc_supplyPlayerContainer; [player, _c] remoteExecCall ["DZ_fnc_supplyCollectFromNode", 2]; },
+            {
+                private _c = [player] call DZ_fnc_supplyPlayerContainer;
+                !isNull _c && { ([getPosATL _c, missionNamespace getVariable ["DZ_supplyTransferRadius", 25]] call DZ_fnc_supplyNearestNode) != "" }
+            },
+            {}, [], {[0, 0, 0]}, 4
+        ] call ace_interact_menu_fnc_createAction;
+        [_unit, 1, ["ACE_SelfActions", "DZ_SupplyLogi"], _aCollect] call ace_interact_menu_fnc_addActionToObject;
+
+        private _aOffload = [
+            "DZ_SupplyOffload", "Разгрузить снабжение на склад базы", "",
+            { private _c = [player] call DZ_fnc_supplyPlayerContainer; [player, _c] remoteExecCall ["DZ_fnc_supplyOffloadToBase", 2]; },
+            {
+                private _c = [player] call DZ_fnc_supplyPlayerContainer;
+                private _bp = missionNamespace getVariable ["DZ_supplyBasePos", []];
+                !isNull _c && { _bp isEqualType [] } && { (count _bp) >= 2 } && { (getPosATL _c) distance2D _bp < (missionNamespace getVariable ["DZ_supplyTransferRadius", 25]) } && { ([_c] call DZ_fnc_supplyGet) > 0 }
+            },
+            {}, [], {[0, 0, 0]}, 4
+        ] call ace_interact_menu_fnc_createAction;
+        [_unit, 1, ["ACE_SelfActions", "DZ_SupplyLogi"], _aOffload] call ace_interact_menu_fnc_addActionToObject;
+
+        private _aLoad = [
+            "DZ_SupplyLoad", "Загрузить снабжение со склада базы", "",
+            { private _c = [player] call DZ_fnc_supplyPlayerContainer; [player, _c] remoteExecCall ["DZ_fnc_supplyLoadFromBase", 2]; },
+            {
+                private _c = [player] call DZ_fnc_supplyPlayerContainer;
+                private _bp = missionNamespace getVariable ["DZ_supplyBasePos", []];
+                !isNull _c && { _bp isEqualType [] } && { (count _bp) >= 2 } && { (getPosATL _c) distance2D _bp < (missionNamespace getVariable ["DZ_supplyTransferRadius", 25]) } && { ([_c] call DZ_fnc_supplyGet) < ([_c] call DZ_fnc_supplyMax) }
+            },
+            {}, [], {[0, 0, 0]}, 4
+        ] call ace_interact_menu_fnc_createAction;
+        [_unit, 1, ["ACE_SelfActions", "DZ_SupplyLogi"], _aLoad] call ace_interact_menu_fnc_addActionToObject;
+    };
+
+    [
+        { !isNil "ace_interact_menu_fnc_createAction" && { !isNil "DZ_fnc_supplyPlayerContainer" } && { !isNull player } },
+        {
+            [player] call DZ_fnc_supplyAddSelfActions;
+            ["unit", { params ["_unit"]; [_unit] call DZ_fnc_supplyAddSelfActions; }] call CBA_fnc_addPlayerEventHandler;
+        },
+        []
+    ] call CBA_fnc_waitUntilAndExecute;
 };
 
 true

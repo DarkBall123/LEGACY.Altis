@@ -16,7 +16,7 @@ if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 private _replyTarget = owner _caller;
 
 if !((side _caller) isEqualTo east) exitWith {
-    ["КШМ", "КШМ доступна только бойцам APD."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+    ["КШМ", "КШМ доступна только бойцам ОКСВ."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
 if ((_caller distance _vehicle) > 20) exitWith {
@@ -39,7 +39,7 @@ if (_deploy) then {
     [true] call DZ_fnc_saveAssets;
 
     ["КШМ", "КШМ развернута. Точка возрождения активна."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
-    ["КШМ развернута. APD получает мобильную точку возрождения.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["КШМ развернута. ОКСВ получает мобильную точку возрождения.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
 } else {
     if !(_vehicle getVariable ["kshm_deployed", false]) exitWith {
         ["КШМ", "КШМ не развернута."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
@@ -56,5 +56,5 @@ if (_deploy) then {
     [true] call DZ_fnc_saveAssets;
 
     ["КШМ", "КШМ свернута."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
-    ["КШМ свернута. Мобильная точка возрождения APD отключена.", west] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["КШМ свернута. Мобильная точка возрождения ОКСВ отключена.", west] remoteExecCall ["DZ_fnc_sideMessage", 0];
 };
