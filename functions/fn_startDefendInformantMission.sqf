@@ -96,7 +96,7 @@ if (_extractPos isEqualTo []) then
 {
     {
         if (getMarkerType _x != "") exitWith { _extractPos = getMarkerPos _x; };
-    } forEach ["respawn_east", "respawn_west", "respawn_guerrila"];
+    } forEach ["respawn_east"];
 };
 if (_extractPos isEqualTo [] || { _extractPos isEqualTo [0, 0, 0] }) then
 {

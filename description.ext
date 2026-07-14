@@ -165,6 +165,7 @@ class CfgFunctions
             class endMission           {};
             class prepareMissionState  {};
             class addMissionAssets     {};
+            class missionRunStateMachine {};
 
 
             class getMissionDefinitions {};

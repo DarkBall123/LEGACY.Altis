@@ -115,39 +115,25 @@ missionNamespace setVariable ["DZ_heliInterceptTarget", _heli];
 ["Замечен вражеский вертолёт. Перехватите и уничтожьте его — позиция на карте.", _missionSide]
     remoteExecCall ["DZ_fnc_sideMessage", 0];
 
-private _stateHandle = [
+[
+    _missionSide,
     {
-        params ["_args", "_handle"];
-        _args params ["_missionSide", "_heli", "_startTime"];
-
-        if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith
-        {
-            [_handle] call CBA_fnc_removePerFrameHandler;
-        };
+        params ["_args", "_elapsed", "_side"];
+        _args params ["_heli"];
 
         if (isNull _heli || { !alive _heli }) exitWith
         {
-            [_handle] call CBA_fnc_removePerFrameHandler;
             diag_log "[HELI_INTERCEPT] SUCCESS: helicopter destroyed.";
-            ["success", _missionSide] call DZ_fnc_endMission;
-            ["Вражеский вертолёт уничтожен. Отличная работа!", _missionSide]
-                remoteExecCall ["DZ_fnc_sideMessage", 0];
-        };
-
-        if ((time - _startTime) > 3600) exitWith
-        {
-            [_handle] call CBA_fnc_removePerFrameHandler;
-            ["failure", _missionSide] call DZ_fnc_endMission;
-            ["Вертолёт ушёл из зоны. Перехват не удался.", _missionSide]
-                remoteExecCall ["DZ_fnc_sideMessage", 0];
+            ["success", "Вражеский вертолёт уничтожен. Отличная работа!"]
         };
 
         "marker_heli" setMarkerPos (getPosATL _heli);
+        ["continue", ""]
     },
+    [_heli],
+    3600,
     2,
-    [_missionSide, _heli, time]
-] call CBA_fnc_addPerFrameHandler;
-
-[[], [], [], [_stateHandle], _missionSide] call DZ_fnc_addMissionAssets;
+    "Вертолёт ушёл из зоны. Перехват не удался."
+] call DZ_fnc_missionRunStateMachine;
 
 true

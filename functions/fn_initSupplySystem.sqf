@@ -517,6 +517,32 @@ if (isServer) then {
             };
         };
 
+        missionNamespace setVariable ["DZ_supplyMissionRewards", createHashMapFromArray [
+            ["interdiction",     80],
+            ["destroy_cache",    120],
+            ["assassination",    40],
+            ["downed_pilot",     40],
+            ["artillery_hunt",   80],
+            ["humanitarian_aid", 30],
+            ["eod",              50],
+            ["idap_repair",      30],
+            ["air_defense",      120],
+            ["defend_informant", 100],
+            ["heli_intercept",   40]
+        ]];
+
+        ["DZ_missionEnded", {
+            params ["_missionId", "_result", "_source", "_title", "_side"];
+            if (_result != "success") exitWith {};
+            private _amt = (missionNamespace getVariable ["DZ_supplyMissionRewards", createHashMap]) getOrDefault [_missionId, 0];
+            if (_amt <= 0) exitWith {};
+            private _before = [("base")] call DZ_fnc_supplyGet;
+            private _new = ["base", _amt, format ["mission reward: %1", _missionId]] call DZ_fnc_supplyAdjust;
+            if (_new > _before) then {
+                [format ["Трофейное снабжение доставлено на склад базы (+%1). Склад: %2.", round (_new - _before), round _new], _side] remoteExecCall ["DZ_fnc_sideMessage", 0];
+            };
+        }] call CBA_fnc_addEventHandler;
+
         diag_log format ["[DZ_SUPPLY] Server framework online. Base stock %1/%2 at %3.",
             missionNamespace getVariable ["DZ_supplyStock_base", 0], DZ_supplyBaseCap, _basePos];
     };
