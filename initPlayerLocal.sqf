@@ -7,4 +7,5 @@
 [] call DZ_fnc_initVehicleFlagActions;
 call DZ_fnc_initFortifyEconomy;
 call DZ_fnc_initSupplySystem;
+call DZ_fnc_initFireSupport;
 call DZ_fnc_initPylonRestrictions;

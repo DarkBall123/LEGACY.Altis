@@ -45,6 +45,7 @@ call compile preprocessFileLineNumbers "Alfa\Civilians\Reputation\IedThreat.sqf"
 call DZ_fnc_initSquadFunds;
 call DZ_fnc_initFortifyEconomy;
 call DZ_fnc_initSupplySystem;
+call DZ_fnc_initFireSupport;
 call DZ_fnc_initTrophyVehicleStorage;
 call DZ_fnc_initResourceNodes;
 
