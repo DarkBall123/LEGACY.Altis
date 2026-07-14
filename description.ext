@@ -150,6 +150,7 @@ class CfgFunctions
             class initResourceNodes         {};
             class resourceTick              {};
             class initFortifyEconomy        {};
+            class initSupplySystem          {};
         };
 
 

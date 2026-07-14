@@ -60,7 +60,8 @@ _saveTargets = _saveTargets arrayIntersect _saveTargets;
             _veh getVariable ["DZ_trackAbandoned", false],
             _veh getVariable ["DZ_trophyVehicle", false],
             _ownerSideKey,
-            _veh getVariable ["kshm_deployed", false]
+            _veh getVariable ["kshm_deployed", false],
+            _veh getVariable ["DZ_supplies", -1]
         ];
 
         _snapshot pushBack [

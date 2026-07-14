@@ -32,7 +32,7 @@ if (_deploy) then {
         ["КШМ", "Остановите машину перед развертыванием."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
     };
 
-    private _respawnId = [east, _vehicle, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
+    private _respawnId = [east, _vehicle, "Мобильный штаб ОКСВ"] call BIS_fnc_addRespawnPosition;
     _vehicle setVariable ["respawn_id", _respawnId, true];
     _vehicle setVariable ["kshm_deployed", true, true];
     missionNamespace setVariable ["DZ_assetsDirty", true];

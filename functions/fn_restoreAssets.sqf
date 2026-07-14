@@ -95,9 +95,12 @@ private _restored = 0;
                     [_bCargo, _veh, { (_this # 0) addBackpackCargoGlobal (_this # 1) }] call _restoreCargo;
                 };
 
-                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false], ["_trophyOwnerKey", ""], ["_kshmDeployed", false]];
+                _flags params [["_purchased", false], ["_tracked", false], ["_trophy", false], ["_trophyOwnerKey", ""], ["_kshmDeployed", false], ["_supplies", -1]];
 
                 [_veh] call DZ_fnc_markPersistent;
+                if (_supplies >= 0) then {
+                    _veh setVariable ["DZ_supplies", _supplies, true];
+                };
                 if (_purchased) then {
                     _veh setVariable ["DZ_purchasedItem", true, true];
                     _veh setVariable ["DZ_noCleanup",     true, true];
@@ -125,7 +128,7 @@ private _restored = 0;
                 };
 
                 if (_kshmDeployed) then {
-                    private _respawnId = [east, _veh, "Мобильный штаб APD"] call BIS_fnc_addRespawnPosition;
+                    private _respawnId = [east, _veh, "Мобильный штаб ОКСВ"] call BIS_fnc_addRespawnPosition;
                     _veh setVariable ["respawn_id", _respawnId, true];
                     _veh setVariable ["kshm_deployed", true, true];
                 };
