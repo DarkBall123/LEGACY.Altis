@@ -21,7 +21,8 @@
  * Supplies interact with the existing systems, not replace them:
  *   ₽ (DZ_squadFunds*)  = strategic budget — buys vehicles/gear
  *   Снабжение (this)    = tactical stock   — builds / rearms / spawns
- *   Репутация (ALFA_*)  = multiplier on the loop (later phase)
+ *   Репутация (ALFA_*)  = multiplier on the loop (node yield, haul
+ *                         ambush chance, civilian delivery)
  */
 
 if (isNil "DZ_supplyBaseCap")          then { DZ_supplyBaseCap          = 1000; };
@@ -39,6 +40,13 @@ if (isNil "DZ_supplyNodeAccrualInterval") then { DZ_supplyNodeAccrualInterval = 
 if (isNil "DZ_supplyTransferRadius")   then { DZ_supplyTransferRadius   =   25; };
 if (isNil "DZ_supplySpawnCost")        then { DZ_supplySpawnCost        =   20; };
 if (isNil "DZ_supplySpawnBlockInterval") then { DZ_supplySpawnBlockInterval = 20; };
+if (isNil "DZ_supplyHaulAmbushEnabled")   then { DZ_supplyHaulAmbushEnabled   = true; };
+if (isNil "DZ_supplyHaulAmbushMaxChance") then { DZ_supplyHaulAmbushMaxChance = 0.35; };
+if (isNil "DZ_supplyHaulAmbushCooldown")  then { DZ_supplyHaulAmbushCooldown  = 300; };
+if (isNil "DZ_supplyCivDeliveryInterval")     then { DZ_supplyCivDeliveryInterval     = 600; };
+if (isNil "DZ_supplyCivDeliveryRepThreshold") then { DZ_supplyCivDeliveryRepThreshold = 70; };
+if (isNil "DZ_supplyCivDeliveryChance")       then { DZ_supplyCivDeliveryChance       = 0.5; };
+if (isNil "DZ_supplyCivDeliveryAmount")       then { DZ_supplyCivDeliveryAmount       = 100; };
 
 DZ_fnc_supplyGet = {
     params [["_c", objNull]];
@@ -192,6 +200,17 @@ DZ_fnc_supplyCollectFromNode = {
 
     [_container, _move, format ["collect from node %1", _nodeId]] call DZ_fnc_supplyAdjust;
     ["Логистика", format ["Загружено %1 снабжения. В транспорте: %2.", round _move, round ([_container] call DZ_fnc_supplyGet)]] remoteExecCall ["DZ_fnc_showHint", _reply];
+
+    if (missionNamespace getVariable ["DZ_supplyHaulAmbushEnabled", true]) then {
+        private _repF   = call DZ_fnc_supplyRepFactor;
+        private _chance = (1 - ((_repF - 0.5) / 1.0)) * (missionNamespace getVariable ["DZ_supplyHaulAmbushMaxChance", 0.35]);
+        private _last   = missionNamespace getVariable ["DZ_supplyLastHaulAmbush", -99999];
+        if (_chance > 0 && { random 1 < _chance } && { (time - _last) > (missionNamespace getVariable ["DZ_supplyHaulAmbushCooldown", 300]) }) then {
+            missionNamespace setVariable ["DZ_supplyLastHaulAmbush", time];
+            [getPosATL _container] call DZ_fnc_supplyHaulAmbush;
+            ["Логистика", "Засада! Недовольные местные навели противника на ваш конвой."] remoteExecCall ["DZ_fnc_showHint", _reply];
+        };
+    };
 };
 
 DZ_fnc_supplyOffloadToBase = {
@@ -262,6 +281,38 @@ DZ_fnc_supplyChargeSpawn = {
     } else {
         ["base", 0 - _cost, "spawn (база)"] call DZ_fnc_supplyAdjust;
     };
+};
+
+DZ_fnc_supplyRepFactor = {
+    if (isNil "ALFA_fnc_repGet") exitWith { 1 };
+    private _rep = [east] call ALFA_fnc_repGet;
+    ((0.5 + (_rep / 100)) max 0.25) min 1.5
+};
+
+DZ_fnc_supplyHaulAmbush = {
+    if (!isServer) exitWith {};
+    params [["_pos", [0,0,0]]];
+    if !(_pos isEqualType [] && { (count _pos) >= 2 }) exitWith {};
+
+    private _enemySide = missionNamespace getVariable ["CH_sideEnemy", west];
+    private _grp = createGroup [_enemySide, true];
+    private _spawnPos = _pos getPos [80 + random 80, random 360];
+
+    {
+        private _u = _grp createUnit [_x, _spawnPos, [], 5, "NONE"];
+        if (!isNil "DZ_fnc_prepareSpawnedUnit") then { [_u] call DZ_fnc_prepareSpawnedUnit; };
+    } forEach ["UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_RIF_5", "UK3CB_WEI_B_AR", "UK3CB_WEI_B_TL"];
+
+    _grp setBehaviour "AWARE";
+    _grp setCombatMode "RED";
+    _grp setSpeedMode "FULL";
+
+    private _wp = _grp addWaypoint [_pos, 20];
+    _wp setWaypointType "SAD";
+    _wp setWaypointBehaviour "AWARE";
+    _wp setWaypointCombatMode "RED";
+
+    _grp
 };
 
 if (isServer) then {
@@ -364,7 +415,7 @@ if (isServer) then {
                 private _nodeSectorIds = missionNamespace getVariable ["DZ_resourceNodeSectorIds", []];
                 private _sectorOwner   = missionNamespace getVariable ["DZ_sectorOwner", []];
                 private _playerSides   = missionNamespace getVariable ["DZ_playerSides", [east]];
-                private _perTick       = missionNamespace getVariable ["DZ_supplyNodePerTick", 200];
+                private _perTick       = round ((missionNamespace getVariable ["DZ_supplyNodePerTick", 200]) * (call DZ_fnc_supplyRepFactor));
                 private _cap           = missionNamespace getVariable ["DZ_supplyNodePoolCap", 600];
                 private _hm            = missionNamespace getVariable ["DZ_nodeSupplies", createHashMap];
                 private _changed       = false;
@@ -445,6 +496,24 @@ if (isServer) then {
                         ["КШМ снабжена — точка возрождения восстановлена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
                     };
                 } forEach (missionNamespace getVariable ["DZ_supplyContainers", []]);
+            };
+        };
+
+        [] spawn {
+            while { true } do {
+                sleep (missionNamespace getVariable ["DZ_supplyCivDeliveryInterval", 600]);
+                if (isNil "ALFA_fnc_repGet") then { continue };
+
+                private _rep = [east] call ALFA_fnc_repGet;
+                if (_rep >= (missionNamespace getVariable ["DZ_supplyCivDeliveryRepThreshold", 70])
+                    && { random 1 < (missionNamespace getVariable ["DZ_supplyCivDeliveryChance", 0.5]) }) then {
+                    private _amt    = missionNamespace getVariable ["DZ_supplyCivDeliveryAmount", 100];
+                    private _before = [("base")] call DZ_fnc_supplyGet;
+                    private _new    = ["base", _amt, "civilian delivery"] call DZ_fnc_supplyAdjust;
+                    if (_new > _before) then {
+                        [format ["Местные жители доставили снабжение на склад базы (+%1). Склад: %2.", round (_new - _before), round _new], east] remoteExecCall ["DZ_fnc_sideMessage", 0];
+                    };
+                };
             };
         };
 
