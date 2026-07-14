@@ -115,6 +115,8 @@ class CfgFunctions
             class playCrowdSound3DLocal {};
             class processTriggerZones {};
             class prepareSpawnedUnit {};
+            class enemyDemBehavior {};
+            class enemyMedicBehavior {};
             class publishSectorState {};
             class renderSectorState {};
             class resolveSpawnGroupDef {};

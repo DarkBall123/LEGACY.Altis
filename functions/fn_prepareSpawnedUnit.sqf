@@ -24,6 +24,22 @@ private _baseSkill   = missionNamespace getVariable ["DZ_aiBaseSkill", 0.55];
 private _skill       = _classSkills getOrDefault [typeOf _unit, _baseSkill];
 _unit setSkill _skill;
 
+if (isServer) then {
+    private _t            = typeOf _unit;
+    private _demClasses   = missionNamespace getVariable ["DZ_enemyDemClasses",   ["UK3CB_WEI_B_DEM", "UK3CB_WEI_B_ENG"]];
+    private _medicClasses = missionNamespace getVariable ["DZ_enemyMedicClasses", ["UK3CB_WEI_B_MD"]];
+
+    if ((_t in _demClasses) && { missionNamespace getVariable ["DZ_enemyDemEnabled", true] } && { !(_unit getVariable ["DZ_demInit", false]) }) then {
+        _unit setVariable ["DZ_demInit", true];
+        [_unit] spawn DZ_fnc_enemyDemBehavior;
+    };
+
+    if ((_t in _medicClasses) && { missionNamespace getVariable ["DZ_enemyMedicEnabled", true] } && { !(_unit getVariable ["DZ_medicInit", false]) }) then {
+        _unit setVariable ["DZ_medicInit", true];
+        [_unit] spawn DZ_fnc_enemyMedicBehavior;
+    };
+};
+
 private _uavOperatorClasses = missionNamespace getVariable ["DZ_uavOperatorClasses", []];
 if !((typeOf _unit) in _uavOperatorClasses) exitWith { true };
 
