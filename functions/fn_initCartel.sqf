@@ -46,18 +46,18 @@ _npc setCaptive true;
 
 private _catalog = [
 
-    ["helos",  "heli_mi8amt",       "Ми-8АМТ",              1500, ["UK3CB_CW_SOW_O_LATE_Mi8AMT", "UK3CB_CW_SOV_O_LATE_Mi8AMT"]],
-    ["helos",  "heli_mi8amtsh",     "Ми-8АМТШ",             2500, ["UK3CB_CW_SOV_O_LATE_Mi8AMTSh"]],
-    ["helos",  "heli_mi24p",        "Ми-24П",               3500, ["UK3CB_CW_SOV_O_LATE_Mi_24P"]],
+    ["helos",  "heli_mi8amt",       "Ми-8АМТ",              1500, 150, ["UK3CB_CW_SOW_O_LATE_Mi8AMT", "UK3CB_CW_SOV_O_LATE_Mi8AMT"]],
+    ["helos",  "heli_mi8amtsh",     "Ми-8АМТШ",             2500, 200, ["UK3CB_CW_SOV_O_LATE_Mi8AMTSh"]],
+    ["helos",  "heli_mi24p",        "Ми-24П",               3500, 250, ["UK3CB_CW_SOV_O_LATE_Mi_24P"]],
 
-    ["trucks", "truck_gaz66_ammo",  "ГАЗ-66 (Боеприпасы)",  1500, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Ammo"]],
-    ["trucks", "truck_gaz66_rep",   "ГАЗ-66 (Ремонтный)",   1500, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Repair"]],
-    ["trucks", "truck_gaz66_med",   "ГАЗ-66 (Медицинский)", 1000, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Med"]],
-    ["trucks", "truck_gaz66_radio", "ГАЗ-66 (Связь)",       1500, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Radio"]],
-    ["trucks", "truck_gaz66_open",  "ГАЗ-66 (Открытый)",    1000, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Open"]],
+    ["trucks", "truck_gaz66_ammo",  "ГАЗ-66 (Боеприпасы)",  1500, 100, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Ammo"]],
+    ["trucks", "truck_gaz66_rep",   "ГАЗ-66 (Ремонтный)",   1500,  80, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Repair"]],
+    ["trucks", "truck_gaz66_med",   "ГАЗ-66 (Медицинский)", 1000,  60, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Med"]],
+    ["trucks", "truck_gaz66_radio", "ГАЗ-66 (Связь)",       1500,  80, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Radio"]],
+    ["trucks", "truck_gaz66_open",  "ГАЗ-66 (Открытый)",    1000,  60, ["UK3CB_CW_SOV_LATE_VDV_Gaz66_Open"]],
 
-    ["cars",   "car_uaz_open",      "УАЗ-3151 (Открытый)",   600, ["UK3CB_CW_SOV_LATE_VDV_UAZ_Open"]],
-    ["cars",   "car_uaz_mg",        "УАЗ-3151 (ДШКМ)",      1000, ["UK3CB_CW_SOV_LATE_VDV_UAZ_MG"]]
+    ["cars",   "car_uaz_open",      "УАЗ-3151 (Открытый)",   600,  40, ["UK3CB_CW_SOV_LATE_VDV_UAZ_Open"]],
+    ["cars",   "car_uaz_mg",        "УАЗ-3151 (ДШКМ)",      1000,  60, ["UK3CB_CW_SOV_LATE_VDV_UAZ_MG"]]
 ];
 
 private _resolveClass = {
@@ -130,14 +130,14 @@ private _categoryActions = createHashMap;
 
 private _catalogLen = count _catalog;
 {
-    _x params ["_category", "_itemId", "_displayName", "_price", "_classCandidates"];
+    _x params ["_category", "_itemId", "_displayName", "_price", "_supplyCost", "_classCandidates"];
     private _itemIndex = _forEachIndex;
 
     private _resolvedClass = [_classCandidates] call _resolveClass;
     if (_resolvedClass == "") then {
         diag_log format ["[DZ_CARTEL] Skipping item '%1' — no class found in: %2", _itemId, _classCandidates];
     } else {
-        private _label = format ["%1 (%2₽)", _displayName, _price];
+        private _label = format ["%1 (%2₽ + %3 снаб.)", _displayName, _price, _supplyCost];
         private _itemPriority = _catalogLen - _itemIndex;
 
         private _itemAction = [
@@ -146,16 +146,16 @@ private _catalogLen = count _catalog;
             "",
             {
                 params ["_target", "_player", "_args"];
-                _args params ["_id", "_class", "_cost"];
+                _args params ["_id", "_class", "_cost", "_supplyCost"];
 
                 private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
 
-                [_id, _class, _cost, _actualPlayer, "cartel_delivery_pad", "СНАБЖЕНИЕ (ВДВ)"]
+                [_id, _class, _cost, _supplyCost, _actualPlayer, "cartel_delivery_pad", "СНАБЖЕНИЕ (ВДВ)"]
                     remoteExecCall ["DZ_fnc_purchaseItem", 2];
             },
             { true },
             {},
-            [_itemId, _resolvedClass, _price],
+            [_itemId, _resolvedClass, _price, _supplyCost],
             {[0, 0, 1.5]},
             _itemPriority,
             [false, false, true, false, true]

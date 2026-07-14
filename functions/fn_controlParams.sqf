@@ -343,10 +343,10 @@ missionNamespace setVariable ["DZ_resourceMarkerRefreshInterval", 15];
 missionNamespace setVariable ["DZ_resourceNodes",
 [
 
-    ["buchtov_fuel",       "Fuel Depot Buchtov",           [974.232,  11142.87, 0],  "oil",           300],
-    ["belin_ltd",          "Belin Ltd.",                   [1589.325, 4813.543, 0],  "manufacturing", 160],
-    ["jantina_depot",      "Jantina Depot",                [4046.559, 9614.416, 0],  "manufacturing", 160],
-    ["kostrulya_nuclear",  "Nuclear Power Plant Kostrulya",[6973.962, 5082.875, 0],  "manufacturing", 300]
+    ["buchtov_fuel",       "Fuel Depot Buchtov",           [974.232,  11142.87, 0],  "oil",           150],
+    ["belin_ltd",          "Belin Ltd.",                   [1589.325, 4813.543, 0],  "manufacturing", 80],
+    ["jantina_depot",      "Jantina Depot",                [4046.559, 9614.416, 0],  "manufacturing", 80],
+    ["kostrulya_nuclear",  "Nuclear Power Plant Kostrulya",[6973.962, 5082.875, 0],  "manufacturing", 150]
 ]];
 
 missionNamespace setVariable ["DZ_resourceNodeMarkerType", createHashMapFromArray

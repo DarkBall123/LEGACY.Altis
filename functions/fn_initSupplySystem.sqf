@@ -22,11 +22,11 @@
  *   Репутация (ALFA_*)  = multiplier on the loop (later phase)
  */
 
-if (isNil "DZ_supplyBaseCap")          then { DZ_supplyBaseCap          = 6000; };
-if (isNil "DZ_supplyBaseStart")        then { DZ_supplyBaseStart        = 3000; };
-if (isNil "DZ_supplyKshmCap")          then { DZ_supplyKshmCap          = 1500; };
-if (isNil "DZ_supplyKshmStart")        then { DZ_supplyKshmStart        =  750; };
-if (isNil "DZ_supplyTruckCap")         then { DZ_supplyTruckCap         = 1500; };
+if (isNil "DZ_supplyBaseCap")          then { DZ_supplyBaseCap          = 1000; };
+if (isNil "DZ_supplyBaseStart")        then { DZ_supplyBaseStart        =  500; };
+if (isNil "DZ_supplyKshmCap")          then { DZ_supplyKshmCap          =  500; };
+if (isNil "DZ_supplyKshmStart")        then { DZ_supplyKshmStart        =  250; };
+if (isNil "DZ_supplyTruckCap")         then { DZ_supplyTruckCap         =  500; };
 if (isNil "DZ_supplyBaseRegen")        then { DZ_supplyBaseRegen        =   50; };
 if (isNil "DZ_supplyBaseRegenInterval") then { DZ_supplyBaseRegenInterval = 300; };
 if (isNil "DZ_supplyContainerRescanInterval") then { DZ_supplyContainerRescanInterval = 15; };

@@ -27,16 +27,16 @@ _npc setCaptive true;
 
 private _catalog = [
 
-    ["trucks",  "qm_maz_refuel",   "МАЗ-543 (Топливный)", 1500, ["UK3CB_CW_SOV_O_LATE_MAZ_543_Refuel"]],
-    ["trucks",  "qm_maz_recovery", "МАЗ-543 (Тягач)",     1500, ["UK3CB_CW_SOV_O_LATE_MAZ_543_Recovery"]],
+    ["trucks",  "qm_maz_refuel",   "МАЗ-543 (Топливный)", 1500, 100, ["UK3CB_CW_SOV_O_LATE_MAZ_543_Refuel"]],
+    ["trucks",  "qm_maz_recovery", "МАЗ-543 (Тягач)",     1500, 100, ["UK3CB_CW_SOV_O_LATE_MAZ_543_Recovery"]],
 
-    ["armor",   "qm_brdm2um",      "БРДМ-2УМ",            1500, ["UK3CB_CW_SOV_O_LATE_BRDM2_UM"]],
-    ["armor",   "qm_brdm2",        "БРДМ-2",              2000, ["UK3CB_CW_SOV_O_LATE_BRDM2"]],
+    ["armor",   "qm_brdm2um",      "БРДМ-2УМ",            1500, 120, ["UK3CB_CW_SOV_O_LATE_BRDM2_UM"]],
+    ["armor",   "qm_brdm2",        "БРДМ-2",              2000, 150, ["UK3CB_CW_SOV_O_LATE_BRDM2"]],
 
-    ["cars",    "qm_uaz_closed",   "УАЗ-3151 (Крытый)",    600, ["UK3CB_CW_SOV_LATE_UAZ_Closed"]],
+    ["cars",    "qm_uaz_closed",   "УАЗ-3151 (Крытый)",    600,  40, ["UK3CB_CW_SOV_LATE_UAZ_Closed"]],
 
-    ["statics", "qm_pkm",          "ПКМ",                  250, ["UK3CB_CW_SOV_O_Late_PKM_High"]],
-    ["statics", "qm_2b14",         "2Б14 Поднос",          500, ["UK3CB_CW_SOV_O_Late_2b14_82mm"]]
+    ["statics", "qm_pkm",          "ПКМ",                  250,  20, ["UK3CB_CW_SOV_O_Late_PKM_High"]],
+    ["statics", "qm_2b14",         "2Б14 Поднос",          500,  30, ["UK3CB_CW_SOV_O_Late_2b14_82mm"]]
 ];
 
 private _resolveClass = {
@@ -110,14 +110,14 @@ private _categoryActions = createHashMap;
 
 private _catalogLen = count _catalog;
 {
-    _x params ["_category", "_itemId", "_displayName", "_price", "_classCandidates"];
+    _x params ["_category", "_itemId", "_displayName", "_price", "_supplyCost", "_classCandidates"];
     private _itemIndex = _forEachIndex;
 
     private _resolvedClass = [_classCandidates] call _resolveClass;
     if (_resolvedClass == "") then {
         diag_log format ["[DZ_QM] Skipping item '%1' — no class found in: %2", _itemId, _classCandidates];
     } else {
-        private _label = format ["%1 (%2₽)", _displayName, _price];
+        private _label = format ["%1 (%2₽ + %3 снаб.)", _displayName, _price, _supplyCost];
 
         private _itemPriority = (_catalogLen - _itemIndex);
 
@@ -127,14 +127,14 @@ private _catalogLen = count _catalog;
             "",
             {
                 params ["_target", "_player", "_args"];
-                _args params ["_id", "_class", "_cost"];
+                _args params ["_id", "_class", "_cost", "_supplyCost"];
 
                 private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
-                [_id, _class, _cost, _actualPlayer] remoteExecCall ["DZ_fnc_purchaseItem", 2];
+                [_id, _class, _cost, _supplyCost, _actualPlayer, "vehicle_delivery_pad", "СНАБЖЕНИЕ (ГРУ)"] remoteExecCall ["DZ_fnc_purchaseItem", 2];
             },
             { true },
             {},
-            [_itemId, _resolvedClass, _price],
+            [_itemId, _resolvedClass, _price, _supplyCost],
             {[0, 0, 1.5]},
             _itemPriority,
             [false, false, true, false, true]

@@ -10,12 +10,13 @@
 if (!isServer) exitWith {};
 
 params [
-    ["_itemId",   "",                       [""]],
-    ["_class",    "",                       [""]],
-    ["_cost",     0,                        [0]],
-    ["_buyer",    objNull,                  [objNull]],
-    ["_padName",  "vehicle_delivery_pad",   [""]],
-    ["_shopName", "Магазин",                [""]]
+    ["_itemId",     "",                       [""]],
+    ["_class",      "",                       [""]],
+    ["_cost",       0,                        [0]],
+    ["_supplyCost", 0,                        [0]],
+    ["_buyer",      objNull,                  [objNull]],
+    ["_padName",    "vehicle_delivery_pad",   [""]],
+    ["_shopName",   "Магазин",                [""]]
 ];
 
 private _replyTarget = [owner _buyer, 0] select (isNull _buyer);
@@ -47,6 +48,15 @@ if !([_cost, _buyerSide] call DZ_fnc_squadFundsHasEnough) exitWith {
     ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
 };
 
+if (_supplyCost > 0 && { !isNil "DZ_fnc_supplyHasEnough" } && { !(["base", _supplyCost] call DZ_fnc_supplyHasEnough) }) exitWith {
+    private _haveSup = round (["base"] call DZ_fnc_supplyGet);
+    [
+        _shopName,
+        format ["Машина на складе есть, но не хватает снабжения для снаряжения и доставки. Нужно: %1, на складе базы: %2.",
+            _supplyCost, _haveSup]
+    ] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
 private _padPos = missionNamespace getVariable [_padName, objNull];
 if (isNull _padPos) exitWith {
     diag_log format ["[DZ_PURCHASE] Delivery pad '%1' not found in mission.", _padName];
@@ -61,6 +71,11 @@ private _newBalance = [
     format ["Purchase: %1 by %2 (%3)", _itemId, name _buyer, _factionLabel],
     _buyerSide
 ] call DZ_fnc_squadFundsAdjust;
+
+private _baseSupplyAfter = -1;
+if (_supplyCost > 0 && { !isNil "DZ_fnc_supplyAdjust" }) then {
+    _baseSupplyAfter = ["base", 0 - _supplyCost, format ["Purchase prep: %1", _itemId]] call DZ_fnc_supplyAdjust;
+};
 
 private _padPosATL = getPosATL _padPos;
 private _spawnPos  = _padPosATL vectorAdd [(random 6) - 3, (random 6) - 3, 0];
@@ -81,14 +96,20 @@ _item setVariable ["DZ_purchasedSide", _buyerSide, true];
 diag_log format ["[DZ_PURCHASE] %1 bought by %2 (%3) for %4₽. Spawned at %5. New balance: %6₽.",
     _itemId, name _buyer, _factionLabel, _cost, _spawnPos, _newBalance];
 
-[
-    _shopName,
-    format ["Покупка совершена: %1. Цена: %2₽. Баланс %3: %4₽. Заказ доставлен на пункт выдачи.",
-        _class, _cost, _factionLabel, _newBalance]
-] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+private _supplySuffix = if (_supplyCost > 0) then {
+    format [" Снабжение: -%1 (склад базы: %2).", _supplyCost, round _baseSupplyAfter]
+} else { "" };
 
 [
-    format ["%1 заказал на базу: %2 (-%3₽). Баланс %4: %5₽.",
-        name _buyer, _itemId, _cost, _factionLabel, _newBalance],
+    _shopName,
+    format ["Покупка совершена: %1. Цена: %2₽. Баланс %3: %4₽.%5 Заказ доставлен на пункт выдачи.",
+        _class, _cost, _factionLabel, _newBalance, _supplySuffix]
+] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+
+private _supplyTag = if (_supplyCost > 0) then { format [", -%1 снаб.", _supplyCost] } else { "" };
+
+[
+    format ["%1 заказал на базу: %2 (-%3₽%4). Баланс %5: %6₽.",
+        name _buyer, _itemId, _cost, _supplyTag, _factionLabel, _newBalance],
     _buyerSide
 ] remoteExecCall ["DZ_fnc_sideMessage", 0];
