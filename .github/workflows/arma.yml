@@ -1,6 +1,13 @@
 name: Arma
 
 on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy the built mission to production (main branch only)
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -11,12 +18,16 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Validate Config
         run: python3 tools/config_style_checker.py
@@ -33,8 +44,12 @@ jobs:
       - name: Validate function headers
         run: python3 tools/document_functions.py --debug
 
+      - name: Test deployment tooling
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
+
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: validate
     env:
       HEMTT_VERSION: ${{ vars.HEMTT_VERSION || 'v1.19.1' }}
@@ -44,7 +59,7 @@ jobs:
       MISSION_OUTPUT_DIR: .hemttout
     steps:
       - name: Checkout the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup HEMTT
         shell: bash
@@ -78,18 +93,20 @@ jobs:
         run: python3 tools/package_mission_pbo.py
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ChudoYudo.yulakia-${{ github.sha }}-nobin
+          name: ${{ env.MISSION_PBO_NAME }}-${{ github.sha }}-nobin
           path: |
             .hemttout/build
             .hemttout/${{ env.MISSION_PBO_NAME }}
             .hemttout/${{ env.MISSION_PBO_NAME }}.pbo
           include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload deployment PBO
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy))
+        uses: actions/upload-artifact@v7
         with:
           name: mission-pbo-${{ github.sha }}
           path: .hemttout/${{ env.MISSION_PBO_NAME }}.pbo
@@ -97,8 +114,9 @@ jobs:
           retention-days: 7
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy))
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     environment: production
     concurrency:
@@ -113,14 +131,17 @@ jobs:
       DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
       DEPLOY_FTP_PASSIVE: ${{ vars.DEPLOY_FTP_PASSIVE || 'true' }}
       DEPLOY_FTP_TLS: ${{ vars.DEPLOY_FTP_TLS || 'off' }}
+      DEPLOY_FTP_TLS_VERIFY: ${{ vars.DEPLOY_FTP_TLS_VERIFY || 'true' }}
+      DEPLOY_FTP_TLS_CERT_SHA256: ${{ vars.DEPLOY_FTP_TLS_CERT_SHA256 }}
       DEPLOY_REMOTE_MISSIONS_DIR: ${{ vars.DEPLOY_REMOTE_MISSIONS_DIR || '/MPMissions' }}
       DEPLOY_BACKUP_EXISTING: ${{ vars.DEPLOY_BACKUP_EXISTING || 'true' }}
+      DEPLOY_BACKUP_KEEP: ${{ vars.DEPLOY_BACKUP_KEEP || '3' }}
     steps:
       - name: Checkout deployment tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download mission PBO
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: mission-pbo-${{ github.sha }}
           path: .hemttout
