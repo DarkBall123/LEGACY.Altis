@@ -45,7 +45,7 @@ exclude = ["**/*.sqfc"]
 
 
 def get_mission_name() -> str:
-    mission_name = os.environ.get("MISSION_PBO_NAME", "LEGACY.Altis")
+    mission_name = os.environ.get("MISSION_PBO_NAME", "ChudoYudo.yulakia")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", mission_name):
         raise ValueError(
             "MISSION_PBO_NAME may contain only letters, numbers, dots, underscores, and hyphens"

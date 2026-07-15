@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import ftplib
+import hashlib
+import hmac
 import os
 import posixpath
 import ssl
@@ -18,6 +20,39 @@ from package_mission_pbo import get_mission_name
 
 class MissionPboLockedError(RuntimeError):
     """The hosting provider cannot mutate the active mission PBO."""
+
+
+class SessionReuseFTP_TLS(ftplib.FTP_TLS):
+    """FTPS client for servers that require control-channel TLS session reuse."""
+
+    def ntransfercmd(self, cmd: str, rest: str | None = None):
+        connection, size = ftplib.FTP.ntransfercmd(self, cmd, rest)
+        if self._prot_p:
+            connection = self.context.wrap_socket(
+                connection,
+                server_hostname=self.host,
+                session=self.sock.session,
+            )
+        return connection, size
+
+
+def verify_tls_certificate(ftp: ftplib.FTP_TLS) -> None:
+    expected = os.environ.get("DEPLOY_FTP_TLS_CERT_SHA256", "")
+    if not expected.strip():
+        return
+
+    fingerprint = expected.replace(":", "").strip().lower()
+    if len(fingerprint) != 64 or any(
+        character not in "0123456789abcdef" for character in fingerprint
+    ):
+        raise ValueError("DEPLOY_FTP_TLS_CERT_SHA256 must be a SHA-256 fingerprint")
+
+    certificate = ftp.sock.getpeercert(binary_form=True)
+    actual = hashlib.sha256(certificate).hexdigest()
+    if not hmac.compare_digest(actual, fingerprint):
+        raise ssl.SSLError(
+            f"FTPS certificate fingerprint mismatch: expected {fingerprint}, got {actual}"
+        )
 
 
 def connect() -> ftplib.FTP:
@@ -37,11 +72,14 @@ def connect() -> ftplib.FTP:
             if not verify:
                 context.check_hostname = False
                 context.verify_mode = ssl.CERT_NONE
-            ftp: ftplib.FTP = ftplib.FTP_TLS(context=context)
+            ftp: ftplib.FTP = SessionReuseFTP_TLS(context=context)
         else:
             ftp = ftplib.FTP()
 
         ftp.connect(host, port, timeout=30)
+        if isinstance(ftp, ftplib.FTP_TLS):
+            ftp.auth()
+            verify_tls_certificate(ftp)
         ftp.login(user, password)
         ftp.set_pasv(env_bool("DEPLOY_FTP_PASSIVE", True))
         if isinstance(ftp, ftplib.FTP_TLS):
@@ -92,14 +130,28 @@ def upload_verified(ftp: ftplib.FTP, local_path: Path, remote_name: str) -> int:
 
 
 def stage_upload(ftp: ftplib.FTP, local_path: Path, remote_name: str) -> int:
-    local_size = local_path.stat().st_size
     if remote_exists(ftp, remote_name):
-        remote_size = ftp.size(remote_name)
-        if remote_size == local_size:
-            print(f"Reusing staged mission PBO {remote_name} ({remote_size} bytes)")
-            return remote_size
         delete_existing(ftp, remote_name)
     return upload_verified(ftp, local_path, remote_name)
+
+
+def prune_backups(ftp: ftplib.FTP, target_name: str, keep: int) -> None:
+    if keep < 0:
+        raise ValueError("DEPLOY_BACKUP_KEEP must be zero or greater")
+
+    prefix = f"{target_name}."
+    backups = sorted(
+        (
+            posixpath.basename(name)
+            for name in ftp.nlst()
+            if posixpath.basename(name).startswith(prefix)
+            and posixpath.basename(name).endswith(".bak")
+        ),
+        reverse=True,
+    )
+    for backup in backups[keep:]:
+        ftp.delete(backup)
+        print(f"Removed old mission backup {backup}")
 
 
 def locked_pbo_error(
@@ -138,6 +190,9 @@ def main() -> int:
     temporary_name = f"{target_name}.uploading"
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     backup_name = f"{target_name}.{timestamp}.bak"
+    backup_keep = int(os.environ.get("DEPLOY_BACKUP_KEEP", "3"))
+    if backup_keep < 0:
+        raise ValueError("DEPLOY_BACKUP_KEEP must be zero or greater")
 
     if args.dry_run:
         print(f"Would upload {pbo.name} ({pbo.stat().st_size} bytes) to {target}")
@@ -165,6 +220,11 @@ def main() -> int:
         except ftplib.error_perm as error:
             raise locked_pbo_error(target_name, temporary_name, error) from error
         print(f"Published {pbo.name} to {target} ({remote_size} bytes)")
+        if env_bool("DEPLOY_BACKUP_EXISTING", True):
+            try:
+                prune_backups(ftp, target_name, backup_keep)
+            except ftplib.Error as error:
+                print(f"Warning: could not prune old mission backups: {error}")
     finally:
         try:
             ftp.quit()
