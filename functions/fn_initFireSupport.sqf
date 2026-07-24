@@ -41,6 +41,7 @@ DZ_fnc_fireSupportCall = {
     if (!isServer) exitWith {};
     params [["_caller", objNull], ["_pos", [0,0,0]], ["_type", "smoke"]];
     if (isNull _caller) exitWith {};
+    if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 
     private _reply = [owner _caller, 0] select (isNull _caller);
 
@@ -152,18 +153,111 @@ if (hasInterface) then {
         params [["_type", "smoke"]];
         missionNamespace setVariable ["DZ_fireSupportPendingType", _type];
         missionNamespace setVariable ["DZ_fireSupportArmedUntil", time + 20];
-        ["Огневая поддержка", "Укажите цель на карте одиночным кликом (ЛКМ) в течение 20 с."] call DZ_fnc_showHint;
+
+        deleteMarkerLocal "DZ_fireSupportRangeLocal";
+        deleteMarkerLocal "DZ_fireSupportTargetLocal";
+
+        private _maxRange = missionNamespace getVariable ["DZ_fireSupportMaxRange", 2500];
+        private _rangeMarker = createMarkerLocal ["DZ_fireSupportRangeLocal", getPosATL player];
+        _rangeMarker setMarkerShapeLocal "ELLIPSE";
+        _rangeMarker setMarkerBrushLocal "Border";
+        _rangeMarker setMarkerColorLocal "ColorGreen";
+        _rangeMarker setMarkerSizeLocal [_maxRange, _maxRange];
+        _rangeMarker setMarkerAlphaLocal 0.8;
+
+        [
+            "ОГНЕВАЯ ПОДДЕРЖКА",
+            "Зелёная окружность показывает допустимую дальность. Укажите цель одиночным кликом.",
+            "info",
+            7
+        ] call DZ_fnc_uiNotify;
+
         openMap true;
         onMapSingleClick {
             params ["_u", "_pos"];
-            onMapSingleClick "";
             if (time > (missionNamespace getVariable ["DZ_fireSupportArmedUntil", 0])) exitWith { false };
+
+            private _maxRange = missionNamespace getVariable ["DZ_fireSupportMaxRange", 2500];
+            if ((player distance2D _pos) > _maxRange) exitWith
+            {
+                ["ОГНЕВАЯ ПОДДЕРЖКА", format ["Цель вне зоны действия (%1 м).", _maxRange], "error", 4] call DZ_fnc_uiNotify;
+                false
+            };
+
+            onMapSingleClick "";
+
+            private _targetMarker = createMarkerLocal ["DZ_fireSupportTargetLocal", _pos];
+            _targetMarker setMarkerShapeLocal "ICON";
+            _targetMarker setMarkerTypeLocal "mil_destroy";
+            _targetMarker setMarkerColorLocal "ColorRed";
+            _targetMarker setMarkerTextLocal "ЦЕЛЬ ПОДДЕРЖКИ";
+
             openMap false;
             private _t = missionNamespace getVariable ["DZ_fireSupportPendingType", "smoke"];
-            [player, _pos, _t] remoteExecCall ["DZ_fnc_fireSupportCall", 2];
-            ["Огневая поддержка", "Запрос передан на батарею."] call DZ_fnc_showHint;
+
+            [_pos, _t] spawn
+            {
+                params ["_pos", "_type"];
+
+                private _label = if (_type == "smoke") then { "Дымовая завеса" } else { "Осветительные боеприпасы" };
+                private _money = if (_type == "smoke") then
+                {
+                    missionNamespace getVariable ["DZ_fireSupportSmokeMoney", 100]
+                }
+                else
+                {
+                    missionNamespace getVariable ["DZ_fireSupportIllumMoney", 100]
+                };
+                private _supply = if (_type == "smoke") then
+                {
+                    missionNamespace getVariable ["DZ_fireSupportSmokeSupply", 20]
+                }
+                else
+                {
+                    missionNamespace getVariable ["DZ_fireSupportIllumSupply", 20]
+                };
+
+                private _confirmed =
+                [
+                    format ["%1<br/><br/>Квадрат: %2<br/>Дистанция: %3 м<br/>Стоимость: %4₽ + %5 снаб.<br/><br/>Подтвердить огневую задачу?",
+                        _label,
+                        mapGridPosition _pos,
+                        round (player distance2D _pos),
+                        _money,
+                        _supply],
+                    "Огневая поддержка",
+                    true,
+                    true
+                ] call BIS_fnc_guiMessage;
+
+                deleteMarkerLocal "DZ_fireSupportRangeLocal";
+                deleteMarkerLocal "DZ_fireSupportTargetLocal";
+
+                if (_confirmed) then
+                {
+                    [player, _pos, _type] remoteExecCall ["DZ_fnc_fireSupportCall", 2];
+                    ["ОГНЕВАЯ ПОДДЕРЖКА", "Запрос передан на батарею.", "success", 5] call DZ_fnc_uiNotify;
+                }
+                else
+                {
+                    ["ОГНЕВАЯ ПОДДЕРЖКА", "Запрос отменён.", "warning", 4] call DZ_fnc_uiNotify;
+                };
+            };
             true
         };
+
+        [
+            {
+                if (time > (missionNamespace getVariable ["DZ_fireSupportArmedUntil", 0])) then
+                {
+                    onMapSingleClick "";
+                    deleteMarkerLocal "DZ_fireSupportRangeLocal";
+                    deleteMarkerLocal "DZ_fireSupportTargetLocal";
+                };
+            },
+            [],
+            21
+        ] call CBA_fnc_waitAndExecute;
     };
 
     DZ_fnc_fireSupportAddActions = {

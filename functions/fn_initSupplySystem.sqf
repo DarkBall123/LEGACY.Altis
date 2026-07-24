@@ -174,6 +174,8 @@ DZ_fnc_supplyPlayerContainer = {
 DZ_fnc_supplyCollectFromNode = {
     if (!isServer) exitWith {};
     params [["_unit", objNull], ["_container", objNull]];
+    if (isNull _unit) exitWith {};
+    if (isRemoteExecuted && { owner _unit != remoteExecutedOwner }) exitWith {};
     private _reply = [owner _unit, 0] select (isNull _unit);
     if (isNull _container) then { _container = [_unit] call DZ_fnc_supplyPlayerContainer; };
     if (isNull _container) exitWith {
@@ -216,6 +218,8 @@ DZ_fnc_supplyCollectFromNode = {
 DZ_fnc_supplyOffloadToBase = {
     if (!isServer) exitWith {};
     params [["_unit", objNull], ["_container", objNull]];
+    if (isNull _unit) exitWith {};
+    if (isRemoteExecuted && { owner _unit != remoteExecutedOwner }) exitWith {};
     private _reply = [owner _unit, 0] select (isNull _unit);
     if (isNull _container) then { _container = [_unit] call DZ_fnc_supplyPlayerContainer; };
     if (isNull _container) exitWith {
@@ -243,6 +247,8 @@ DZ_fnc_supplyOffloadToBase = {
 DZ_fnc_supplyLoadFromBase = {
     if (!isServer) exitWith {};
     params [["_unit", objNull], ["_container", objNull]];
+    if (isNull _unit) exitWith {};
+    if (isRemoteExecuted && { owner _unit != remoteExecutedOwner }) exitWith {};
     private _reply = [owner _unit, 0] select (isNull _unit);
     if (isNull _container) then { _container = [_unit] call DZ_fnc_supplyPlayerContainer; };
     if (isNull _container) exitWith {
@@ -271,6 +277,7 @@ DZ_fnc_supplyChargeSpawn = {
     if (!isServer) exitWith {};
     params [["_unit", objNull], ["_pos", [0,0,0]]];
     if (isNull _unit) exitWith {};
+    if (isRemoteExecuted && { owner _unit != remoteExecutedOwner }) exitWith {};
 
     private _cost = missionNamespace getVariable ["DZ_supplySpawnCost", 20];
     if (_cost <= 0) exitWith {};

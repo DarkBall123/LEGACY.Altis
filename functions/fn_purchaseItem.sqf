@@ -16,12 +16,69 @@ params [
     ["_supplyCost", 0,                        [0]],
     ["_buyer",      objNull,                  [objNull]],
     ["_padName",    "vehicle_delivery_pad",   [""]],
-    ["_shopName",   "Магазин",                [""]]
+    ["_shopName",   "Магазин",                [""]],
+    ["_terminal",   objNull,                   [objNull]]
 ];
 
 private _replyTarget = [owner _buyer, 0] select (isNull _buyer);
-private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [east]];
 private _buyerSide   = if (isNull _buyer) then { sideUnknown } else { side _buyer };
+
+if (isRemoteExecuted && { owner _buyer != remoteExecutedOwner }) exitWith {};
+
+private _storeId = switch (_padName) do
+{
+    case "vehicle_delivery_pad": { "gru" };
+    case "cartel_delivery_pad":  { "vdv" };
+    default                      { "" };
+};
+
+if (
+    isRemoteExecuted
+    && {
+        isNull _terminal
+        || { _buyer distance _terminal > 8 }
+        || { (_terminal getVariable ["DZ_uiStoreId", ""]) != _storeId }
+    }
+) exitWith
+{
+    diag_log format ["[DZ_PURCHASE] Rejected invalid or remote terminal for %1.", name _buyer];
+    [_shopName, "Терминал магазина не прошёл проверку. Подойдите к снабженцу."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
+private _catalog = [_storeId] call DZ_fnc_getStoreCatalog;
+private _catalogIndex = _catalog findIf { (_x # 1) == _itemId };
+if (_catalogIndex < 0) exitWith
+{
+    diag_log format ["[DZ_PURCHASE] Rejected unknown item '%1' for store '%2'.", _itemId, _storeId];
+    [_shopName, "Ошибка проверки каталога. Позиция недоступна."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
+
+private _validated = _catalog # _catalogIndex;
+_validated params
+[
+    "_category",
+    "_validatedId",
+    "_displayName",
+    "_validatedCost",
+    "_validatedSupplyCost",
+    "_validatedClass",
+    "_validatedStore",
+    "_validatedPad",
+    "_validatedShop"
+];
+
+_itemId = _validatedId;
+_class = _validatedClass;
+_cost = _validatedCost;
+_supplyCost = _validatedSupplyCost;
+_padName = _validatedPad;
+_shopName = _validatedShop;
+
+if (!isNull _terminal && { _buyer distance _terminal > 8 }) exitWith
+{
+    [_shopName, "Соединение с терминалом потеряно. Подойдите ближе."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
+};
 
 if (_class == "") exitWith {
     [_shopName, "Ошибка: предмет не определён."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];

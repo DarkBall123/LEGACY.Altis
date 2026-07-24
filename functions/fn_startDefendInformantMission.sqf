@@ -141,6 +141,10 @@ missionNamespace setVariable ["DZ_defendPos",       _defendPos];
 
 private _prepTime  = missionNamespace getVariable ["DZ_defendPrepTime",   1200];
 private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
+missionNamespace setVariable ["DZ_defendUiPhase", "Подготовка"];
+missionNamespace setVariable ["DZ_defendUiWave", 0];
+missionNamespace setVariable ["DZ_defendUiWaveCount", _waveCount];
+missionNamespace setVariable ["DZ_defendUiDeadline", time + _prepTime];
 
 [
     "hint",
@@ -207,6 +211,8 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
     if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith {};
 
     ["Контратака началась! Защищайте перебежчика!", _missionSide] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    missionNamespace setVariable ["DZ_defendUiPhase", "Оборона"];
+    missionNamespace setVariable ["DZ_defendUiDeadline", 0];
 
     private _waveAborted = false;
 
@@ -216,6 +222,8 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
         if !([_missionSide] call DZ_fnc_missionActiveForSide) exitWith { _waveAborted = true; };
 
         private _forces = 1 + floor (_wave / 2);
+        missionNamespace setVariable ["DZ_defendUiWave", _wave];
+        missionNamespace setVariable ["DZ_defendUiDeadline", time + _maxWaveTime];
 
         [format ["Волна %1/%2 приближается!", _wave, _waveCount], _missionSide]
             remoteExecCall ["DZ_fnc_sideMessage", 0];
@@ -284,6 +292,9 @@ private _waveCount = missionNamespace getVariable ["DZ_defendWaveCount",  5];
 
     ["Все волны отбиты! Эвакуируйте перебежчика на главную базу.", _missionSide]
         remoteExecCall ["DZ_fnc_sideMessage", 0];
+    missionNamespace setVariable ["DZ_defendUiPhase", "Эвакуация"];
+    missionNamespace setVariable ["DZ_defendUiWave", _waveCount];
+    missionNamespace setVariable ["DZ_defendUiDeadline", 0];
 
     "marker_defend" setMarkerType "mil_pickup";
     "marker_defend" setMarkerText "Эвакуируйте перебежчика";

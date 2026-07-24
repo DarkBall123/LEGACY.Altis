@@ -1,19 +1,44 @@
 /*
  * DZ_fnc_initHqLaptop
- * Adds ACE mission start and status actions to the APD HQ laptop.
- *
- * Per-side (Wave 4): every action's condition checks the player is
- * APD (west). The APD laptop is the WEST mission slot — actions
- * gate on west's own slot, independent of Free Altis's mission.
+ * Adds the consolidated command terminal to the ОКСВ HQ laptop.
+ * The modern UI replaces the former row of individual ACE actions;
+ * the legacy actions below remain as a compatibility fallback.
  */
 
 params [["_laptop", objNull, [objNull]]];
 
 if (isNull _laptop) exitWith { false };
+_laptop setVariable ["DZ_uiTerminalType", "hq", true];
 if (!hasInterface) exitWith { true };
 if (_laptop getVariable ["hq_actions_added", false]) exitWith { true };
 
 _laptop setVariable ["hq_actions_added", true, false];
+
+if (!isNil "DZ_fnc_uiOpenTablet") exitWith
+{
+    private _terminalAction =
+    [
+        "DZ_CommandTerminal",
+        "Командный терминал ОКСВ",
+        "",
+        {
+            params ["_target"];
+            ["operations", "hq", _target, ""] call DZ_fnc_uiOpenTablet;
+        },
+        {
+            params ["_target", "_player"];
+            side _player == east
+        },
+        {},
+        [],
+        {[0, 0, 0.5]},
+        6,
+        [false, false, true, false, true]
+    ] call ace_interact_menu_fnc_createAction;
+
+    [_laptop, 0, ["ACE_MainActions"], _terminalAction] call ace_interact_menu_fnc_addActionToObject;
+    true
+};
 
 private _missionList = [
     ["interdiction",     "Миссия: Перехват конвоя Хунты"],

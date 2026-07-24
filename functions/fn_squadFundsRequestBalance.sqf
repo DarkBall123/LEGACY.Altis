@@ -10,9 +10,11 @@
 if (!isServer) exitWith {};
 
 params [["_caller", objNull, [objNull]]];
+if (isNull _caller) exitWith {};
+if (isRemoteExecuted && { owner _caller != remoteExecutedOwner }) exitWith {};
 private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
-private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [east]];
 private _callerSide  = if (isNull _caller) then { sideUnknown } else { side _caller };
 
 private _hintTitle = "Бюджет отряда";

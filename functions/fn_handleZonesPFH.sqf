@@ -1383,6 +1383,7 @@ for "_idx" from 0 to (_sectorCount - 1) do
 };
 
 missionNamespace setVariable ["DZ_zoneData", _zoneData];
+missionNamespace setVariable ["DZ_sectorCounts", _sectorCounts];
 missionNamespace setVariable ["DZ_sectorDominance", _sectorDominance];
 missionNamespace setVariable ["DZ_sectorOwner", _sectorOwner];
 missionNamespace setVariable ["DZ_spawnBlockedUntil", _spawnBlockedUntil];

@@ -8,7 +8,7 @@
  * Side resolution order:
  *   1. Explicit `_side` parameter.
  *   2. The caller's faction (DZ_fnc_missionSideOfPlayer).
- *   3. west (legacy default for unattended/auto calls).
+ *   3. ОКСВ / EAST (campaign default for unattended/auto calls).
  */
 
 params [
@@ -19,6 +19,7 @@ params [
 ];
 
 if (!isServer) exitWith {};
+if (isRemoteExecuted && { isNull _caller || { owner _caller != remoteExecutedOwner } }) exitWith {};
 
 private _replyTarget = [owner _caller, 0] select (isNull _caller);
 
@@ -31,7 +32,7 @@ if (_side isEqualTo sideUnknown) then {
     _side = missionNamespace getVariable ["CH_sidePlayers", east];
 };
 
-private _playerSides = missionNamespace getVariable ["DZ_playerSides", [west, resistance]];
+private _playerSides = missionNamespace getVariable ["DZ_playerSides", [east]];
 if !(_side in _playerSides) exitWith {
     diag_log format ["[DZ_START] Side %1 isn't a player side. Refusing %2.", _side, _missionId];
     ["Штаб", "Эта сторона не имеет штаба."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];

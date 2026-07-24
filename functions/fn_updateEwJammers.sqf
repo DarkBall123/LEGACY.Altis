@@ -60,12 +60,16 @@ if (_jamStrength > 0) exitWith
     player setVariable ["tf_unable_to_use_radio", true];
     missionNamespace setVariable ["DZ_ewWasJammed", true];
 
-    hintSilent format ["EW  %1\n%2", _bars, _status];
+    uiNamespace setVariable ["DZ_uiEwState", [_jamStrength, _status]];
 };
 
 if (_wasJammed) then
 {
     player setVariable ["tf_unable_to_use_radio", false];
     missionNamespace setVariable ["DZ_ewWasJammed", false];
-    hintSilent "";
+    uiNamespace setVariable ["DZ_uiEwState", [0, ""]];
+    if (!isNil "DZ_fnc_uiNotify") then
+    {
+        ["РЭБ", "Радиоканал восстановлен.", "success", 4] call DZ_fnc_uiNotify;
+    };
 };

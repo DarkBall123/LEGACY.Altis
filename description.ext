@@ -20,6 +20,8 @@ class Header
     disabledAI = 1;
 };
 
+#include "ui\DZ_UI.hpp"
+
 class DifficultyPresets
 {
     class CustomDifficulty
@@ -237,6 +239,28 @@ class CfgFunctions
             class raiseRussianVehicleFlag      {};
             class clearVehicleFlag             {};
         };
+
+        class ui
+        {
+            file = "functions";
+
+            class uiInit               {};
+            class uiNotify             {};
+            class uiReceiveSnapshot    {};
+            class requestUiSnapshot    {};
+            class uiTick               {};
+            class uiOpenTablet         {};
+            class uiTabletOnLoad       {};
+            class uiSetTabletTab       {};
+            class uiTabletOnSelect     {};
+            class uiRefreshTablet      {};
+            class uiPreviewSetClass    {};
+            class uiPreviewDestroy     {};
+            class uiTabletPrimary      {};
+            class uiTabletSecondary    {};
+            class uiServerAction       {};
+            class getStoreCatalog      {};
+        };
     };
 };
 
@@ -280,14 +304,47 @@ class CfgRemoteExec
         class DZ_fnc_playCrowdSound3DLocal { allowedTargets = 0; jip = 0; };
         class DZ_fnc_showHint              { allowedTargets = 1; jip = 0; };
         class DZ_fnc_sideMessage           { allowedTargets = 0; jip = 0; };
-        class DZ_fnc_manualSaveProgress  { allowedTargets = 2; jip = 0; };
-        class DZ_fnc_requestPersistMark  { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_uiReceiveSnapshot     { allowedTargets = 1; jip = 0; };
+        class DZ_fnc_radioPlayLocal        { allowedTargets = 1; jip = 0; };
+        class DZ_fnc_applySavedLoadout     { allowedTargets = 1; jip = 0; };
+        class DZ_fnc_missionShowHint       { allowedTargets = 1; jip = 0; };
+
+        class DZ_fnc_manualSaveProgress       { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestPersistMark       { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestSavedLoadout      { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestUiSnapshot        { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_uiServerAction            { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_startMission             { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_abortMission             { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestMissionStatus     { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestFobMission        { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestNightSkip         { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_purchaseItem             { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_squadFundsRequestBalance { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_requestTransport         { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_setKshmDeployed          { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_saveTrophyVehicle        { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_sellTrophyVehicle        { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_radioControl             { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_fireSupportCall          { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_supplyChargeSpawn        { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_supplyCollectFromNode    { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_supplyOffloadToBase      { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_supplyLoadFromBase       { allowedTargets = 2; jip = 0; };
+        class ALFA_fnc_repGiveWater           { allowedTargets = 2; jip = 0; };
+        class ALFA_fnc_repGiveRation          { allowedTargets = 2; jip = 0; };
+        class DZ_fnc_enforcePylonRestrictions { allowedTargets = 0; jip = 0; };
+        class DZ_fnc_missionStart             { allowedTargets = 2; jip = 0; };
     };
 
     class Commands
     {
         mode = 2;
         jip = 0;
+
+        class addAction        { allowedTargets = 0; jip = 1; };
+        class playSound3D      { allowedTargets = 1; jip = 0; };
+        class forceFlagTexture { allowedTargets = 0; jip = 1; };
     };
 };
 

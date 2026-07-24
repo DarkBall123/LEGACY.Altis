@@ -12,6 +12,7 @@
 params [["_npc", objNull, [objNull]]];
 
 if (isNull _npc) exitWith { false };
+_npc setVariable ["DZ_uiStoreId", "gru", true];
 if (!hasInterface) exitWith { true };
 if (_npc getVariable ["dz_quartermaster_added", false]) exitWith { true };
 _npc setVariable ["dz_quartermaster_added", true, false];
@@ -24,6 +25,29 @@ _npc disableAI "FSM";
 _npc setBehaviour "CARELESS";
 _npc allowDamage false;
 _npc setCaptive true;
+
+if (!isNil "DZ_fnc_uiOpenTablet") exitWith
+{
+    private _terminalAction =
+    [
+        "DZ_GruStoreTerminal",
+        "Открыть терминал снабжения ГРУ",
+        "",
+        {
+            params ["_target"];
+            ["store", "store", _target, "gru"] call DZ_fnc_uiOpenTablet;
+        },
+        { true },
+        {},
+        [],
+        {[0, 0, 1.5]},
+        6,
+        [false, false, true, false, true]
+    ] call ace_interact_menu_fnc_createAction;
+
+    [_npc, 0, ["ACE_MainActions"], _terminalAction] call ace_interact_menu_fnc_addActionToObject;
+    true
+};
 
 private _catalog = [
 
@@ -130,7 +154,8 @@ private _catalogLen = count _catalog;
                 _args params ["_id", "_class", "_cost", "_supplyCost"];
 
                 private _actualPlayer = [ACE_player, player] select (isNull ACE_player);
-                [_id, _class, _cost, _supplyCost, _actualPlayer, "vehicle_delivery_pad", "СНАБЖЕНИЕ (ГРУ)"] remoteExecCall ["DZ_fnc_purchaseItem", 2];
+                [_id, _class, _cost, _supplyCost, _actualPlayer, "vehicle_delivery_pad", "СНАБЖЕНИЕ (ГРУ)", _target]
+                    remoteExecCall ["DZ_fnc_purchaseItem", 2];
             },
             { true },
             {},

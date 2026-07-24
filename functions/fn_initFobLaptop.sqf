@@ -1,9 +1,7 @@
 /*
  * DZ_fnc_initFobLaptop
- * Adds Forward Operating Base contract ACE actions to the Free
- * Altis FOB laptop. The FOB is a resistance asset — every action
- * is gated to resistance and dispatches against the resistance
- * mission slot. APD's mission is irrelevant here.
+ * Adds the consolidated contract terminal to the ОКСВ forward base.
+ * The legacy ACE actions below remain as a compatibility fallback.
  *
  * Eden setup: place a laptop prop at the FOB, init field:
  *     [this] call DZ_fnc_initFobLaptop;
@@ -12,10 +10,37 @@
 params [["_laptop", objNull, [objNull]]];
 
 if (isNull _laptop) exitWith { false };
+_laptop setVariable ["DZ_uiTerminalType", "fob", true];
 if (!hasInterface) exitWith { true };
 if (_laptop getVariable ["fob_actions_added", false]) exitWith { true };
 
 _laptop setVariable ["fob_actions_added", true, false];
+
+if (!isNil "DZ_fnc_uiOpenTablet") exitWith
+{
+    private _terminalAction =
+    [
+        "DZ_FobTerminal",
+        "Терминал передовой базы",
+        "",
+        {
+            params ["_target"];
+            ["operations", "fob", _target, ""] call DZ_fnc_uiOpenTablet;
+        },
+        {
+            params ["_target", "_player"];
+            side _player == east
+        },
+        {},
+        [],
+        {[0, 0, 0.5]},
+        6,
+        [false, false, true, false, true]
+    ] call ace_interact_menu_fnc_createAction;
+
+    [_laptop, 0, ["ACE_MainActions"], _terminalAction] call ace_interact_menu_fnc_addActionToObject;
+    true
+};
 
 private _contractAction = [
     "dz_fob_contract",

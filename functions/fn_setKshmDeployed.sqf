@@ -56,5 +56,5 @@ if (_deploy) then {
     [true] call DZ_fnc_saveAssets;
 
     ["КШМ", "КШМ свернута."] remoteExecCall ["DZ_fnc_showHint", _replyTarget];
-    ["КШМ свернута. Мобильная точка возрождения ОКСВ отключена.", west] remoteExecCall ["DZ_fnc_sideMessage", 0];
+    ["КШМ свернута. Мобильная точка возрождения ОКСВ отключена.", east] remoteExecCall ["DZ_fnc_sideMessage", 0];
 };
